@@ -199,7 +199,7 @@ nav:
           - plugins/pipes/index.md
       - Pipelines:
           - plugins/pipelines/index.md
-          - MoE Prompt Refiner: plugins/pipelines/moe-prompt-refiner.md
+          - Wisdom Synthesizer: plugins/pipelines/wisdom-synthesizer.md
   - Prompts:
       - prompts/index.md
       - prompts/library.md

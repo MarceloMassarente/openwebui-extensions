@@ -2,7 +2,7 @@
 
 An external pipeline filter (Pipeline/Filter) for **Open WebUI** that intercepts multi-model aggregate requests to leverage collective wisdom, reshaping **basic and linear aggregate outputs** into structured, high-contrast **expert analysis reports**.
 
-![Effect Demonstration](wisdom_synthesizer.gif)
+![Effect Demonstration](https://raw.githubusercontent.com/Fu-Jie/open-webui-pipeline-wisdom-synthesizer/main/wisdom_synthesizer.gif)
 
 ---
 
@@ -35,7 +35,7 @@ This plugin runs as a single-file pipeline filter component and supports importi
 
 Below is the visual operational guide for getting it loaded:
 
-![Installation Guide](install.gif)
+![Installation Guide](https://raw.githubusercontent.com/Fu-Jie/open-webui-pipeline-wisdom-synthesizer/main/install.gif)
 
 ---
 

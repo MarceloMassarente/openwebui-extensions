@@ -2,7 +2,7 @@
 
 专为 **Open WebUI** 设计的外置管道过滤器（Pipeline/Filter），旨在通过智能拦截并重构多模型汇总请求，发挥集体智慧（Collective Wisdom），将原本较为**基础和扁平的常规汇总**熔炼为结构清晰、具备多维对比度的**专家级综合分析报告**。
 
-![效果演示](wisdom_synthesizer.gif)
+![效果演示](https://raw.githubusercontent.com/Fu-Jie/open-webui-pipeline-wisdom-synthesizer/main/wisdom_synthesizer.gif)
 
 ---
 
@@ -35,7 +35,7 @@
 
 以下是操作动态演示：
 
-![安装操作图](install.gif)
+![安装操作图](https://raw.githubusercontent.com/Fu-Jie/open-webui-pipeline-wisdom-synthesizer/main/install.gif)
 
 ---
 
