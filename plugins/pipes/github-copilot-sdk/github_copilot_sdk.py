@@ -8908,7 +8908,7 @@ class Pipe:
 
                     # Use the richer tool status text (which contains filenames/arguments context)
                     # and ensure it's only printed to the stream ONCE per unique tool run.
-                    queue.put_nowait(f"\n> 🧩 **{tool_status_text}**\n")
+                    # queue.put_nowait(f"\n> 🧩 **{tool_status_text}**\n")
 
                 # Close thinking tag if open before showing tool
                 if state["thinking_started"]:
