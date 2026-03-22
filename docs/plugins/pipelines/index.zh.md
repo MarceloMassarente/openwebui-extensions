@@ -17,15 +17,12 @@ Pipelines 不仅是简单转换，还可以实现：
 
 <div class="grid cards" markdown>
 
--   :material-view-module:{ .lg .middle } **MoE Prompt Refiner**
+-   :material-view-module:{ .lg .middle } **Wisdom Synthesizer**
+    [:octicons-tag-24: v0.1.0](https://github.com/Fu-Jie/open-webui-pipeline-wisdom-synthesizer){ .bubble }
 
-    ---
+    智能拦截并重构多模型汇总请求，发挥集体智慧（Collective Wisdom），将常规汇总熔炼为专家级对比报告。
 
-    为 Mixture of Experts（MoE）汇总请求优化提示词，生成高质量综合报告。
-
-    **版本：** 1.0.0
-
-    [:octicons-arrow-right-24: 查看文档](moe-prompt-refiner.md)
+    [:octicons-arrow-right-24: 查看文档](wisdom-synthesizer.md)
 
 </div>
 

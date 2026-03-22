@@ -80,9 +80,13 @@ A collection of enhancements, plugins, and prompts for [open-webui](https://gith
 
 **Experience interactive thinking.** Seamlessly transforms complex chat sessions into structured, clickable mind maps for better visual modeling and rapid idea extraction.
 
+![Smart Mind Map](./plugins/actions/smart-mind-map/smart_mind_map.png)
+
 ### 3. [Smart Infographic](https://openwebui.com/posts/smart_infographic_ad6f0c7f)
 
 **Professional data storytelling.** Converts raw information into sleek, boardroom-ready infographics powered by AntV, perfect for summarizing long-form content instantly.
+
+![Smart Infographic](./plugins/actions/infographic/infographic.png)
 
 ### 4. [Export to Word Enhanced](https://openwebui.com/posts/export_to_word_enhanced_formatting_fca6a315)
 
@@ -137,7 +141,7 @@ Located in the `plugins/` directory, containing Python-based enhancements:
 
 ### Pipelines
 
-- **MoE Prompt Refiner** (`moe_prompt_refiner`): Refines prompts for Mixture of Experts (MoE) summary requests to generate high-quality comprehensive reports.
+- **Wisdom Synthesizer** (`wisdom_synthesizer`): An external pipeline filter that refactors aggregate requests with collective wisdom to output structured expert reports.
 
 </details>
 <!-- markdownlint-enable MD033 -->
@@ -160,6 +164,8 @@ Standalone frontend extensions to supercharge your Open WebUI:
 - **[Open WebUI Prompt Plus](https://github.com/Fu-Jie/open-webui-prompt-plus)**
 
 [![Newsletter](https://img.shields.io/badge/OpenWebUI_Newsletter-Featured-blue?style=flat-square)](https://openwebui.com/blog/newsletter-january-28-2026): An all-in-one prompt management suite featuring AI-powered prompt generation, spotlight-style quick search, and advanced category organization.
+
+![Prompt Plus Demo](https://raw.githubusercontent.com/Fu-Jie/open-webui-prompt-plus/main/screenshots/08_ai_generation_demo.gif)
 
 ## 📖 Documentation
 

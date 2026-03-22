@@ -17,15 +17,12 @@ Pipelines extend beyond simple transformations to implement:
 
 <div class="grid cards" markdown>
 
--   :material-view-module:{ .lg .middle } **MoE Prompt Refiner**
+-   :material-view-module:{ .lg .middle } **Wisdom Synthesizer**
+    [:octicons-tag-24: v0.1.0](https://github.com/Fu-Jie/open-webui-pipeline-wisdom-synthesizer){ .bubble }
 
-    ---
+    An external pipeline filter that refactors aggregate requests with collective wisdom to output structured expert reports.
 
-    Refines prompts for Mixture of Experts (MoE) summary requests to generate high-quality comprehensive reports.
-
-    **Version:** 1.0.0
-
-    [:octicons-arrow-right-24: Documentation](moe-prompt-refiner.md)
+    [:octicons-arrow-right-24: Documentation](wisdom-synthesizer.md)
 
 </div>
 
