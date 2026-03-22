@@ -133,6 +133,7 @@ Must update ALL of these or the PR check fails:
 2. **Supported Languages**: en-US, zh-CN, zh-HK, zh-TW, ko-KR, ja-JP, fr-FR, de-DE, es-ES, it-IT, vi-VN, id-ID.
 3. **Fallback Map**: Must include variant redirects (e.g., `es-MX` -> `es-ES`, `fr-CA` -> `fr-FR`).
 4. **Tooltips**: All `description` fields in `Valves` must be **English only** to maintain clean UI.
+5. **Language Consistency**: All authored system prompts and templates MUST enforce that the Agent response language matches the exact same language as the user's input content (e.g., if concept/task input is in Chinese, provide response in Chinese).
 
 ---
 
