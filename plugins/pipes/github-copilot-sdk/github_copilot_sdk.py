@@ -78,10 +78,74 @@ RICHUI_BRIDGE_STYLE = """
 <style id="openwebui-richui-bridge-style" data-openwebui-richui-bridge="1">
 :root {
   color-scheme: light dark;
+  /* Theme-aware CSS variables for AI-generated content */
+  --richui-text: #1a202c;
+  --richui-text-secondary: #4a5568;
+  --richui-text-muted: #718096;
+  --richui-bg: #ffffff;
+  --richui-bg-secondary: #f7fafc;
+  --richui-bg-tertiary: #edf2f7;
+  --richui-border: #e2e8f0;
+  --richui-border-subtle: #edf2f7;
+  --richui-accent: #3182ce;
+  --richui-accent-hover: #2b6cb0;
+  --richui-success: #38a169;
+  --richui-warning: #d69e2e;
+  --richui-error: #e53e3e;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --richui-text: #f7fafc;
+    --richui-text-secondary: #cbd5e0;
+    --richui-text-muted: #a0aec0;
+    --richui-bg: #1a202c;
+    --richui-bg-secondary: #2d3748;
+    --richui-bg-tertiary: #4a5568;
+    --richui-border: #4a5568;
+    --richui-border-subtle: #2d3748;
+    --richui-accent: #63b3ed;
+    --richui-accent-hover: #90cdf4;
+    --richui-success: #68d391;
+    --richui-warning: #f6e05e;
+    --richui-error: #fc8181;
+  }
+}
+html[data-openwebui-applied-theme="dark"],
+html.dark {
+  --richui-text: #f7fafc;
+  --richui-text-secondary: #cbd5e0;
+  --richui-text-muted: #a0aec0;
+  --richui-bg: #1a202c;
+  --richui-bg-secondary: #2d3748;
+  --richui-bg-tertiary: #4a5568;
+  --richui-border: #4a5568;
+  --richui-border-subtle: #2d3748;
+  --richui-accent: #63b3ed;
+  --richui-accent-hover: #90cdf4;
+  --richui-success: #68d391;
+  --richui-warning: #f6e05e;
+  --richui-error: #fc8181;
+}
+html[data-openwebui-applied-theme="light"],
+html.light {
+  --richui-text: #1a202c;
+  --richui-text-secondary: #4a5568;
+  --richui-text-muted: #718096;
+  --richui-bg: #ffffff;
+  --richui-bg-secondary: #f7fafc;
+  --richui-bg-tertiary: #edf2f7;
+  --richui-border: #e2e8f0;
+  --richui-border-subtle: #edf2f7;
+  --richui-accent: #3182ce;
+  --richui-accent-hover: #2b6cb0;
+  --richui-success: #38a169;
+  --richui-warning: #d69e2e;
+  --richui-error: #e53e3e;
 }
 html,
 body {
   background: transparent !important;
+  color: var(--richui-text) !important;
   overflow-x: hidden !important;
   width: 100% !important;
   margin: 0 !important;
@@ -1655,7 +1719,7 @@ class Pipe:
             description="Copilot CLI log level: none, error, warning, info, debug, all",
         )
         TIMEOUT: int = Field(
-            default=300,
+            default=3600,
             description="Timeout for each stream chunk (seconds)",
         )
 
@@ -2051,12 +2115,12 @@ class Pipe:
             + "".join(button_html)
             + "</div></section>\n"
             "<style>\n"
-            ".openwebui-richui-fallback-actions{margin:20px auto 0;max-width:1200px;padding:14px 16px;border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(15,23,42,.04);}\n"
-            ".openwebui-richui-fallback-title{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-secondary, #64748b);margin-bottom:10px;}\n"
+            ".openwebui-richui-fallback-actions{margin:20px auto 0;max-width:1200px;padding:14px 16px;border:1px solid var(--richui-border, rgba(148,163,184,.18));border-radius:14px;background:var(--richui-bg-secondary, rgba(15,23,42,.04));}\n"
+            ".openwebui-richui-fallback-title{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--richui-text-secondary, #64748b);margin-bottom:10px;}\n"
             ".openwebui-richui-fallback-row{display:flex;flex-wrap:wrap;gap:10px;}\n"
-            ".openwebui-richui-action-btn{appearance:none;border:1px solid rgba(148,163,184,.24);background:var(--color-bg-secondary, rgba(255,255,255,.9));color:var(--color-text-primary, #0f172a);border-radius:999px;padding:8px 14px;font:500 13px/1.2 var(--font-sans, system-ui);cursor:pointer;transition:all .18s ease;}\n"
-            ".openwebui-richui-action-btn:hover{transform:translateY(-1px);border-color:rgba(59,130,246,.55);}\n"
-            ".openwebui-richui-action-btn:focus-visible{outline:2px solid rgba(59,130,246,.6);outline-offset:2px;}\n"
+            ".openwebui-richui-action-btn{appearance:none;border:1px solid var(--richui-border, rgba(148,163,184,.24));background:var(--richui-bg, rgba(255,255,255,.9));color:var(--richui-text, #0f172a);border-radius:999px;padding:8px 14px;font:500 13px/1.2 var(--font-sans, system-ui);cursor:pointer;transition:all .18s ease;}\n"
+            ".openwebui-richui-action-btn:hover{transform:translateY(-1px);border-color:var(--richui-accent, rgba(59,130,246,.55));}\n"
+            ".openwebui-richui-action-btn:focus-visible{outline:2px solid var(--richui-accent, rgba(59,130,246,.6));outline-offset:2px;}\n"
             "</style>\n"
         )
 
@@ -5107,6 +5171,10 @@ class Pipe:
                         f"[Tools] Skip private tool: {tool_name}",
                         __event_call__,
                     )
+                continue
+            tool_type = t_dict.get("type", "")
+            tool_id = t_dict.get("tool_id", "")
+            if tool_type == "terminal" or str(tool_id).startswith("terminal:"):
                 continue
             try:
                 copilot_tool = self._convert_openwebui_tool_to_sdk(
@@ -9608,7 +9676,7 @@ class Pipe:
                         break
 
                     now_ts = time.monotonic()
-                    no_progress_timeout = min(float(self.valves.TIMEOUT), 90.0)
+                    no_progress_timeout = float(self.valves.TIMEOUT)
                     time_since_last_event = now_ts - state.get(
                         "last_event_ts", stream_start_ts
                     )
