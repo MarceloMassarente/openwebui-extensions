@@ -38,23 +38,17 @@ A collection of enhancements, plugins, and prompts for [open-webui](https://gith
 
 ## 🌟 Star Features
 
-### 1. [GitHub Copilot Official SDK Pipe](https://openwebui.com/posts/github_copilot_official_sdk_pipe_ce96f7b4) ![v0.12.0](https://img.shields.io/badge/v0.12.0-blue?style=flat-square) ![active-dev](https://img.shields.io/badge/active--dev-orange?style=flat-square) ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_dl.json&style=flat-square) ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_vw.json&style=flat-square)
+### 1. [GitHub Copilot Official SDK Pipe](https://openwebui.com/posts/github_copilot_official_sdk_pipe_ce96f7b4) ![v0.12.1](https://img.shields.io/badge/v0.12.1-blue?style=flat-square) ![active-dev](https://img.shields.io/badge/active--dev-orange?style=flat-square) ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_dl.json&style=flat-square) ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_vw.json&style=flat-square)
 
 **The ultimate autonomous Agent integration for OpenWebUI.** Deeply bridging GitHub Copilot SDK with your OpenWebUI ecosystem. It enables the Agent to autonomously perform **intent recognition**, **web search**, and **context compaction** while reusing your existing tools, skills, and configurations for a professional, full-featured experience.
 
 > [!TIP]
 > **No GitHub Copilot subscription required!** Supports **BYOK (Bring Your Own Key)** mode using your own OpenAI/Anthropic API keys.
 
-#### 🚀 Key Leap (v0.12.0)
+#### 🚀 Key Leap (v0.12.1)
 
-- **🚀 High-Performance Shared Pool**: Eliminated 1-2s process startup latency between turns via a persistent client pool.
-- **🔑 Pure BYOK Mode**: Now supports full operation without a `GH_TOKEN`, relying solely on custom API keys.
-- **📏 RichUI Stability**: Fixed height calculation issues for a rock-solid interactive component experience.
-- **🩺 Smart Stall Detection**: Integrated `client.ping()` to rescue heavy tasks from premature timeouts.
-- **📋 Live TODO Widget**: Compact real-time task tracking synchronized with `session.db`, now automatically hidden when all tasks are completed.
-- **🔌 Seamless Ecosystem Integration**: Automatically injects and reuses your OpenWebUI **Tools**, **MCP**, **OpenAPI Servers**, and **Skills**.
-- **🌐 Language Consistency**: System prompts mandate that Agent output language remains strictly consistent with user input.
-- **🛡️ Secure Isolation**: Strict user/session-level **Workspace Sandboxing** with user-isolated environment variables.
+- **🛡️ Disable Terminal Tools for AI**: Terminal server tools are now filtered out at the pipe level, preventing AI from calling them while keeping terminal functionality available to users.
+- **🎨 RichUI Theme-Aware CSS Variables**: Added CSS custom properties that automatically adapt to light/dark themes for better text contrast.
 - **📊 Interactive Delivery**: Full support for **HTML Artifacts** and **RichUI** rendering, providing instant interactive previews and persistent downloadable results.
 - **🛠️ Deterministic Toolchain**: Built-in specialized tools for skill lifecycles (`manage_skills`) and system optimization.
 
