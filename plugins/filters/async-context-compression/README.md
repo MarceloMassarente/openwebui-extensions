@@ -1,6 +1,6 @@
 # Async Context Compression Filter
 
-| By [Fu-Jie](https://github.com/Fu-Jie) · v1.5.0 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| By [Fu-Jie](https://github.com/Fu-Jie) · v1.6.0 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -20,6 +20,12 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 
 > [!IMPORTANT]
 > If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
+
+## What's new in 1.6.0
+
+- **Fixed `keep_first` Logic**: Re-defined `keep_first` to protect the first N **non-system** messages plus all interleaved system messages. This ensures initial context (e.g., identity, task instructions) is preserved correctly.
+- **Absolute System Message Protection**: System messages are now strictly excluded from compression. Any system message encountered in the history (even late-injected ones) is preserved as an original message in the final context. This ensures dynamic instructions (like live time/location from other plugins) remain accurate and never summarized.
+- **Improved Context Assembly**: Summaries now only target User and Assistant dialogue, ensuring that system instructions injected by other plugins are never "eaten" by the summarizer.
 
 ## What's new in 1.5.0
 
@@ -54,6 +60,10 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 
 ## What This Fixes
 
+- **Problem: System Messages being summarized/lost.**
+  Previously, the filter could include system messages (especially those injected late by other plugins) in its summarization zone, causing important instructions to be lost. Now, all system messages are strictly preserved in their original role and never summarized.
+- **Problem: Incorrect `keep_first` behavior.**
+  Previously, `keep_first` simply took the first $N$ messages. If those were only system messages, the initial user/assistant messages (which are often important for context) would be summarized. Now, `keep_first` ensures that $N$ non-system messages are protected.
 - **Problem 1: A referenced chat could break the current request.**
   Before, if the filter needed to summarize a referenced chat and that LLM call failed, the current chat could fail with it. Now it degrades gracefully and injects direct context instead.
 - **Problem 2: Some referenced chats were being cut too aggressively.**
@@ -141,7 +151,7 @@ flowchart TD
 | `priority`                     | `10`     | Execution order; lower runs earlier.                                                                                                                                  |
 | `compression_threshold_tokens` | `64000`  | Trigger asynchronous summary when total tokens exceed this value. Set to 50%-70% of your model's context window.                                                      |
 | `max_context_tokens`           | `128000` | Hard cap for context; older messages (except protected ones) are dropped if exceeded.                                                                                 |
-| `keep_first`                   | `1`      | Always keep the first N messages (protects system prompts).                                                                                                           |
+| `keep_first`                   | `0`      | Number of initial **non-system** messages to always keep (plus all preceding system prompts).                                                                         |
 | `keep_last`                    | `6`      | Always keep the last N messages to preserve recent context.                                                                                                           |
 | `summary_model`                | `None`   | Model for summaries. Strongly recommended to set a fast, economical model (e.g., `gemini-2.5-flash`, `deepseek-v3`). Falls back to the current chat model when empty. |
 | `summary_model_max_context`    | `0`      | Input context window used to fit summary requests. If `0`, falls back to `model_thresholds` or global `max_context_tokens`.                                          |

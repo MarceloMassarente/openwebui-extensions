@@ -5,30 +5,23 @@ author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 description: Reduces token consumption in long conversations while maintaining coherence through intelligent summarization and message compression.
-version: 1.5.0
+version: 1.6.0
 openwebui_id: b1655bc8-6de9-4cad-8cb5-a6f7829a02ce
 license: MIT
-
-═══════════════════════════════════════════════════════════════════════════════
-📌 What's new in 1.5.0
-═══════════════════════════════════════════════════════════════════════════════
-
-  ✅ Stronger Working-Memory Prompt: Refined XML summary instructions to better preserve useful context in general chat and multi-step tool workflows.
-  ✅ Clearer Frontend Debug Logs: Reworked browser-console debug output into grouped, structured snapshots for faster diagnosis.
-  ✅ Safer Tool Trimming Defaults: Native tool-output trimming is now enabled by default with a configurable 600-character threshold.
 
 ═══════════════════════════════════════════════════════════════════════════════
 📌 Overview
 ═══════════════════════════════════════════════════════════════════════════════
 
-This filter significantly reduces token consumption in long conversations by using intelligent summarization and message compression, while maintaining conversational coherence.
+This filter reduces token consumption in long conversations through intelligent
+summarization and message compression while maintaining conversational coherence.
 
 Core Features:
-  ✅ Automatic compression triggered by Token count threshold
+  ✅ Automatic compression triggered by token count threshold
   ✅ Asynchronous summary generation (does not block user response)
   ✅ Persistent storage with database support (PostgreSQL and SQLite)
-  ✅ Flexible retention policy (configurable to keep first and last N messages)
-  ✅ Smart summary injection to maintain context
+  ✅ Flexible retention policy (keep first N non-system messages + last N messages)
+  ✅ Absolute system message protection (never compressed or discarded)
   ✅ Structure-aware trimming to preserve document skeleton
   ✅ Native tool output trimming for function calling support
 
@@ -41,20 +34,50 @@ Phase 1: Inlet (Pre-request processing)
   1. Receives all messages in the current conversation.
   2. Checks for a previously saved summary.
   3. If a summary exists and the message count exceeds the retention threshold:
-     ├─ Extracts the first N messages to be kept.
+     ├─ Extracts the first N non-system messages to be kept (plus all
+     │  interleaved system messages).
      ├─ Injects the summary into the first message.
      ├─ Extracts the last N messages to be kept.
-     └─ Combines them into a new message list: [Kept First Messages + Summary] + [Kept Last Messages].
+     └─ Combines them into: [Kept First + Summary + Gap System Messages + Kept Last]
   4. Sends the compressed message list to the LLM.
 
 Phase 2: Outlet (Post-response processing)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   1. Triggered after the LLM response is complete.
-  2. Checks if the Token count has reached the compression threshold.
-  3. If the threshold is met, an asynchronous background task is started to generate a summary:
-     ├─ Extracts messages to be summarized (excluding the kept first and last messages).
+  2. Checks if the token count has reached the compression threshold.
+  3. If the threshold is met, an asynchronous background task is started:
+     ├─ Extracts messages to be summarized (excluding the kept first and last).
      ├─ Calls the LLM to generate a concise summary.
      └─ Saves the summary to the database.
+
+═══════════════════════════════════════════════════════════════════════════════
+🛡️ System Message Protection
+═══════════════════════════════════════════════════════════════════════════════
+
+System messages are strictly excluded from compression and always preserved in
+the final context. This ensures that dynamic instructions injected by other
+plugins (e.g., live time/location context) remain accurate throughout the
+conversation.
+
+  Protection Rules:
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  1. `keep_first` counts only non-system messages. System messages within the
+     first N non-system messages are automatically preserved.
+  2. System messages in the compression gap (between kept-first and kept-last)
+     are extracted and preserved as original messages, not summarized.
+  3. During forced trimming (when exceeding `max_context_tokens`), system
+     messages from dropped atomic groups are re-inserted into the final output.
+
+  Example:
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    Messages: [sys, user1, sys(injected), user2, ..., user10, user11]
+    keep_first=0, keep_last=2
+
+    Effective keep_first=0 (no non-system messages protected)
+    Gap: [sys, user1, sys(injected), user2, ..., user9]
+    Preserved from gap: [sys, sys(injected)]
+
+    Final output: [sys, summary, sys(injected), user10, user11]
 
 ═══════════════════════════════════════════════════════════════════════════════
 💾 Storage
@@ -80,7 +103,7 @@ Open WebUI's database settings automatically.
 📊 Compression Example
 ═══════════════════════════════════════════════════════════════════════════════
 
-Scenario: A 20-message conversation (Default settings: keep first 1, keep last 6)
+Scenario: A 20-message conversation (Default settings: keep first 0, keep last 6)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   Before Compression:
     Message 1: [Initial prompt + First question]
@@ -104,75 +127,89 @@ Scenario: A 20-message conversation (Default settings: keep first 1, keep last 6
 
 priority
   Default: 10
-  Description: The execution order of the filter. Lower numbers run first.
+  Description: Priority level for the filter operations. Lower numbers run first.
 
 compression_threshold_tokens
   Default: 64000
-  Description: When the total context Token count exceeds this value, compression is triggered.
-  Recommendation: Adjust based on your model's context window and cost.
+  Description: When total context Token count exceeds this value, trigger compression (Global Default).
 
 max_context_tokens
   Default: 128000
-  Description: Hard limit for context. Exceeding this value will force removal of the earliest messages.
+  Description: Hard limit for context. Exceeding this value will force removal of earliest messages (Global Default).
 
 model_thresholds
-  Default: {}
-  Description: Threshold override configuration for specific models.
-  Example: {"gpt-4": {"compression_threshold_tokens": 8000, "max_context_tokens": 32000}}
+  Default: "" (empty string)
+  Description: Per-model threshold overrides.
+  Format: model_id:compression_threshold:max_context (comma-separated).
+  Example: gpt-4:8000:32000,claude-3:100000:200000
+
+keep_first
+  Default: 0
+  Description: Keep the first N non-system messages plus all interleaved system messages. Set to 0 to disable.
+
+keep_last
+  Default: 6
+  Description: Always keep the last N full messages.
+
+summary_model
+  Default: None
+  Description: The model ID used to generate the summary. If empty, uses the current conversation's model.
+  Recommendation:
+    - Configure a fast, economical, and compatible model, such as `deepseek-v3`, `gemini-2.5-flash`, `gpt-4.1`.
+    - If the current conversation uses a pipeline (Pipe) model or a model that does not support standard generation APIs, this field must be specified.
+
+summary_model_max_context
+  Default: 0
+  Description: Max context tokens for the summary model. If 0, falls back to model_thresholds or global max_context_tokens.
+  Example: gemini-flash=1000000, gpt-4o-mini=128000
+
+max_summary_tokens
+  Default: 16384
+  Description: The maximum number of tokens for the summary.
+
+summary_temperature
+  Default: 0.1
+  Description: The temperature for summary generation. Lower values produce more deterministic output.
 
 enable_tool_output_trimming
   Default: true
-  Description: When enabled and `function_calling: "native"` is active, collapses oversized native tool outputs to a short placeholder while preserving the tool-call chain structure.
+  Description: Enable trimming of large tool outputs (only works with native function calling).
 
 tool_trim_threshold_chars
   Default: 600
   Description: Trim native tool outputs when their total content length reaches this many characters.
 
-keep_first
-  Default: 1
-  Description: Always keep the first N messages of the conversation. Set to 0 to disable. The first message often contains important system prompts.
+show_token_usage_status
+  Default: true
+  Description: Show token usage status notification.
 
-keep_last
-  Default: 6
-  Description: Always keep the last N full messages of the conversation to ensure context coherence.
-
-summary_model
-  Default: None
-  Description: The LLM used to generate the summary.
-  Recommendation:
-    - It is strongly recommended to configure a fast, economical, and compatible model, such as `deepseek-v3`, `gemini-2.5-flash`, `gpt-4.1`.
-    - If left empty, the filter will attempt to use the model from the current conversation.
-  Note:
-    - If the current conversation uses a pipeline (Pipe) model or a model that does not support standard generation APIs, leaving this field empty may cause summary generation to fail. In this case, you must specify a valid model.
-
-max_summary_tokens
-  Default: 16384
-  Description: The maximum number of tokens allowed for the generated summary.
-
-summary_temperature
-  Default: 0.1
-  Description: Controls the randomness of the summary generation. Lower values produce more deterministic output.
+token_usage_status_threshold
+  Default: 80
+  Description: Only show token usage status when usage exceeds this percentage (0-100). Set to 0 to always show.
 
 debug_mode
   Default: false
-  Description: Prints detailed debug information to the log. Recommended to set to `false` in production.
+  Description: Enable detailed logging for debugging. Recommended to set to `false` in production.
 
 show_debug_log
   Default: false
-  Description: Print debug logs to browser console (F12). Useful for frontend debugging.
+  Description: Show debug logs in the frontend console (F12). Useful for frontend debugging.
 
+═══════════════════════════════════════════════════════════════════════════════
 🔧 Deployment
-═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════════════════
 
 The plugin automatically uses Open WebUI's shared database connection.
 No additional database configuration is required.
 
 Suggested Filter Installation Order:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-It is recommended to set the priority of this filter relatively high (a smaller number) to ensure it runs before other filters that might modify message content. A typical order might be:
+It is recommended to set the priority of this filter relatively high (a smaller
+number) to ensure it runs before other filters that might modify message content.
+A typical order might be:
 
   1. Filters that need access to the full, uncompressed history (priority < 10)
-     (e.g., a filter that injects a system-level prompt)
+     (e.g., a filter that injects a system-level prompt like live context)
   2. This compression filter (priority = 10)
   3. Filters that run after compression (priority > 10)
      (e.g., a final output formatting filter)
@@ -216,7 +253,8 @@ Statistics:
    ✓ The `chat_summary` table will be created automatically on first run.
 
 2. Retention Policy
-   ⚠ The `keep_first` setting is crucial for preserving initial messages that contain system prompts. Configure it as needed.
+   ⚠ `keep_first` counts only non-system messages. System messages are always
+     preserved regardless of this setting.
 
 3. Performance
    ⚠ Summary generation is asynchronous and will not block the user response.
@@ -252,7 +290,8 @@ Solution:
 
 Problem: Initial system prompt is lost
 Solution:
-  - Ensure `keep_first` is set to a value greater than 0 to preserve the initial messages containing this information.
+  - System messages are always preserved. If a system prompt is missing, check
+    whether another filter is modifying or removing it.
 
 Problem: Compression effect is not significant
 Solution:
@@ -1249,13 +1288,25 @@ class Filter:
         return groups
 
     def _get_effective_keep_first(self, messages: List[Dict]) -> int:
-        """Protect configured head messages and all leading system messages."""
-        last_system_index = -1
+        """
+        Calculate the index to protect the first N NON-SYSTEM messages.
+        All system messages encountered before reaching the Nth non-system message are also kept.
+        """
+        if not messages:
+            return 0
+            
+        non_system_count = 0
+        target_index = 0
+        
         for i, msg in enumerate(messages):
-            if msg.get("role") == "system":
-                last_system_index = i
-
-        return max(self.valves.keep_first, last_system_index + 1)
+            if msg.get("role") != "system":
+                non_system_count += 1
+            
+            target_index = i + 1
+            if non_system_count >= self.valves.keep_first:
+                break
+                
+        return target_index
 
     def _align_tail_start_to_atomic_boundary(
         self, messages: List[Dict], raw_start_index: int, protected_prefix: int
@@ -1475,9 +1526,9 @@ class Filter:
         )
 
         keep_first: int = Field(
-            default=1,
+            default=0,
             ge=0,
-            description="Always keep the first N messages. Set to 0 to disable.",
+            description="Keep the first N non-system messages plus all interleaved system messages. Set to 0 to disable.",
         )
         keep_last: int = Field(
             default=6, ge=0, description="Always keep the last N full messages."
@@ -3047,6 +3098,14 @@ class Filter:
                 messages, raw_start_index, effective_keep_first
             )
 
+            # --- Extract Preserved System Messages from the Gap ---
+            # Any system message in the gap (messages[effective_keep_first:start_index]) 
+            # must be preserved according to policy.
+            gap_messages = messages[effective_keep_first:start_index]
+            preserved_system_messages = [
+                msg for msg in gap_messages if isinstance(msg, dict) and msg.get("role") == "system"
+            ]
+
             # 3. Summary message (Inserted as Assistant message)
             external_refs = body.pop("__external_references__", None)
             summary_msg = self._build_summary_message(
@@ -3105,7 +3164,7 @@ class Filter:
             # --- Preflight Check & Budgeting (Simplified) ---
 
             # Assemble candidate messages (for output)
-            candidate_messages = head_messages + [summary_msg] + tail_messages
+            candidate_messages = head_messages + [summary_msg] + preserved_system_messages + tail_messages
 
             # Prepare messages for token calculation (include system prompt if missing)
             calc_messages = candidate_messages
@@ -3189,7 +3248,7 @@ class Filter:
                         )
 
                 # Re-assemble
-                candidate_messages = head_messages + [summary_msg] + tail_messages
+                candidate_messages = head_messages + [summary_msg] + preserved_system_messages + tail_messages
 
                 await self._log(
                     "[Inlet] ✂️ Sent-context history reduced\n"
@@ -3209,6 +3268,7 @@ class Filter:
                 )
                 head_tokens = self._estimate_messages_tokens(head_messages)
                 summary_tokens = self._estimate_content_tokens(summary_content)
+                preserved_system_tokens = self._estimate_messages_tokens(preserved_system_messages)
                 tail_tokens = self._estimate_messages_tokens(tail_messages)
             else:
                 system_tokens = (
@@ -3218,14 +3278,15 @@ class Filter:
                 )
                 head_tokens = self._calculate_messages_tokens(head_messages)
                 summary_tokens = self._count_tokens(summary_content)
+                preserved_system_tokens = self._calculate_messages_tokens(preserved_system_messages)
                 tail_tokens = self._calculate_messages_tokens(tail_messages)
 
             system_info = (
-                f"System({system_tokens}t)" if system_prompt_msg else "System(0t)"
+                f"System({system_tokens + preserved_system_tokens}t)" if (system_prompt_msg or preserved_system_messages) else "System(0t)"
             )
 
             total_section_tokens = (
-                system_tokens + head_tokens + summary_tokens + tail_tokens
+                system_tokens + head_tokens + summary_tokens + preserved_system_tokens + tail_tokens
             )
 
             await self._log(
@@ -3371,15 +3432,33 @@ class Filter:
                 # Use atomic grouping to preserve tool-calling integrity
                 trimmable = candidate_messages[effective_keep_first:]
                 atomic_groups = self._get_atomic_groups(trimmable)
+                
+                # To follow policy "system messages never lost", we maintain a list of 
+                # system messages that were part of dropped groups.
+                dropped_but_preserved_systems = []
 
                 while total_tokens > max_context_tokens and len(atomic_groups) > 1:
                     dropped_group_indices = atomic_groups.pop(0)
                     dropped_tokens = 0
                     for _ in range(len(dropped_group_indices)):
                         dropped = trimmable.pop(0)
+                        
+                        # Absolute protections: 
+                        # 1. External references (often large and specialized)
+                        # 2. System messages (instructions)
                         if self._is_external_reference_message(dropped):
                             trimmable.insert(0, dropped)
+                            # Stop dropping this group if we hit a protected message
+                            # (Though groups should be pure, this is a safety net)
                             break
+                            
+                        if isinstance(dropped, dict) and dropped.get("role") == "system":
+                            dropped_but_preserved_systems.append(dropped)
+                            # Even if preserved, it counts as "dropped" from the trimmable flow
+                            # to avoid infinite loop, but its tokens remain in the budget.
+                            # We don't subtract its tokens here.
+                            continue
+
                         if total_tokens == estimated_tokens:
                             dropped_tokens += self._estimate_content_tokens(
                                 dropped.get("content", "")
@@ -3390,8 +3469,9 @@ class Filter:
                             )
                     total_tokens -= dropped_tokens
 
+                # Re-assemble: [Head] + [Preserved Systems from Dropped Groups] + [Remaining Trimmable/Tail]
                 candidate_messages = (
-                    candidate_messages[:effective_keep_first] + trimmable
+                    candidate_messages[:effective_keep_first] + dropped_but_preserved_systems + trimmable
                 )
 
                 await self._log(

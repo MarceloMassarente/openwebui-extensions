@@ -1,6 +1,6 @@
 # 异步上下文压缩过滤器
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.5.0 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.6.0 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -22,6 +22,12 @@
 
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
+
+## 1.6.0 版本更新
+
+- **修正 `keep_first` 逻辑**：重新定义了 `keep_first` 的功能，现在它负责保护前 N 条**非系统消息**（以及它们之前的所有系统提示词）。这确保了初始对话背景（如身份设定、任务说明）能被正确保留。
+- **系统消息绝对保护**：系统消息现在被严格排除在压缩范围之外。历史记录中遇到的任何系统消息（甚至是后期注入的消息）都会作为原始消息保留在最终上下文中。
+- **改进的上下文组装**：摘要现在仅针对用户和助手的对话，确保其他插件注入的系统指令永远不会被摘要器“吃掉”。
 
 ## 1.5.0 版本更新
 
@@ -52,12 +58,14 @@
 - ✅ **智能模型匹配**: 自定义模型自动继承基础模型的阈值配置。
 - ⚠ **多模态支持**: 图片内容会被保留，但其 Token **不参与计算**。请相应调整阈值。
 
-详细的工作原理和更长说明仍可参考 [工作流程指南](https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/filters/async-context-compression/WORKFLOW_GUIDE_CN.md)。
-
 ---
 
 ## 这次解决了什么问题（通俗版）
 
+- **问题：系统消息被摘要或丢失。**
+  以前，过滤器可能会将被引用或后期注入的系统消息包含在摘要区域内，导致重要的指令丢失。现在，所有系统消息都严格按原样保留，永不被摘要。
+- **问题：`keep_first` 逻辑不符合预期。**
+  以前 `keep_first` 只是简单提取前 N 条消息。如果前几条全是系统消息，初始的问答（通常对上下文很重要）就会被压缩掉。现在 `keep_first` 确保保护 N 条非系统消息。
 - **问题 1：引用别的聊天时，摘要失败可能把当前对话一起弄挂。**
   以前如果过滤器需要先帮被引用聊天做摘要，而这一步的 LLM 调用失败了，当前请求也可能直接失败。现在改成了“能摘要就摘要，失败就退回直接塞上下文”，当前对话不会被一起拖死。
 - **问题 2：有些被引用聊天被截得太早，信息丢得太多。**
@@ -85,11 +93,11 @@ flowchart TD
     F -- 是 --> G[直接复用缓存摘要]
     F -- 否 --> H{能直接放进当前预算?}
     H -- 是 --> I[直接注入完整引用聊天文本]
-    H -- 否 --> J[准备引用聊天的摘要输入]
+    H -- No --> J[准备引用聊天的摘要输入]
 
     J --> K{引用聊天摘要调用成功?}
     K -- 是 --> L[注入生成后的引用摘要]
-    K -- 否 --> M[回退为直接注入上下文]
+    K -- No --> M[回退为直接注入上下文]
 
     G --> D
     I --> D
@@ -149,7 +157,7 @@ flowchart TD
 | `priority`                     | `10`     | 过滤器执行顺序，数值越小越先执行。                                                    |
 | `compression_threshold_tokens` | `64000`  | **重要**: 当上下文总 Token 超过此值时后台生成摘要，建议设为模型上下文窗口的 50%-70%。 |
 | `max_context_tokens`           | `128000` | **重要**: 上下文硬上限，超过即移除最早消息（保留受保护消息）。                        |
-| `keep_first`                   | `1`      | 始终保留对话开始的 N 条消息，保护系统提示或环境变量。                                 |
+| `keep_first`                   | `0`      | 始终保留对话开始的 N 条**非系统消息**（以及它们之前的所有系统提示词）。               |
 | `keep_last`                    | `6`      | 始终保留对话末尾的 N 条消息，确保最近上下文连贯。                                     |
 
 ### 摘要生成配置
