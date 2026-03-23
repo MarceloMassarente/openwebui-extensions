@@ -8,12 +8,29 @@
 
 一个 OpenWebUI 原生 Tool 插件，用于让任意模型直接管理 **Workspace > Skills**。
 
+## 使用 Batch Install Plugins 安装
+
+如果你已经安装了 [Batch Install Plugins from GitHub](https://openwebui.com/posts/batch_install_plugins_install_popular_plugins_in_s_c9fd6e80)，可以用下面这句来安装或更新当前插件：
+
+```text
+从 Fu-Jie/openwebui-extensions 安装插件
+```
+
+当选择弹窗打开后，搜索当前插件，勾选后继续安装即可。
+
+> [!IMPORTANT]
+> 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
+
 ## 最新更新
 
 - **🤖 自动发现仓库根目录**：现在可以直接提供 GitHub 仓库根 URL（如 `https://github.com/owner/repo`），系统会自动转换为发现模式并安装所有 skill。
 - **🔄 批量去重**：自动清除重复 URL，检测重复的 skill 名称。
 - `install_skill` 新增 GitHub 技能目录自动发现（例如 `.../tree/main/skills`），可一键安装目录下所有子技能。
 - 修复语言获取逻辑：前端优先（`__event_call__` + 超时保护），并回退到请求头与用户资料。
+
+> [!TIP]
+> **💡 想要批量安装/管理全局插件 (Actions, Filters, Pipes, Tools)？**
+> 本插件专注管理工作区的 AI 技能 (Skills)。如果你需要安装和管理全局函数型插件，请使用同系列的 [Batch Install Plugins from GitHub](https://openwebui.com/posts/batch_install_plugins_install_popular_plugins_in_s_c9fd6e80) 工具，不仅安装体验极致，而且完美接轨系统扩展体系。
 
 ## 核心特性
 

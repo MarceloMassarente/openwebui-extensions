@@ -2,6 +2,19 @@
 
 A specialized filter for OpenWebUI that displays real-time metadata (display name, token capacity, and remaining quota) for models managed via the Antigravity Auth API.
 
+## Install with Batch Install Plugins
+
+If you already use [Batch Install Plugins from GitHub](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/tools/batch-install-plugins), you can install or update this plugin with:
+
+```text
+Install "Auth Model Info Filter" from Fu-Jie/openwebui-extensions
+```
+
+When the selection dialog opens, confirm this plugin and continue.
+
+> [!IMPORTANT]
+> If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
+
 ## Features
 
 - **Automatic Metadata Injection**: Displays model details in the status bar of the chat interface.

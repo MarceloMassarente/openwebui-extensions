@@ -2,6 +2,19 @@
 
 一个专为 OpenWebUI 设计的过滤器插件，用于显示通过 Antigravity Auth API 管理的模型的实时元数据（显示名称、Token 容量和剩余配额）。
 
+## 使用 Batch Install Plugins 安装
+
+如果你已经安装了 [Batch Install Plugins from GitHub](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/tools/batch-install-plugins)，可以用下面这句来安装或更新当前插件：
+
+```text
+从 Fu-Jie/openwebui-extensions 安装“模型授权信息过滤器 (Auth Model Info Filter)”
+```
+
+当选择弹窗打开后，确认当前插件并继续安装即可。
+
+> [!IMPORTANT]
+> 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
+
 ## 功能特性
 
 - **自动元数据注入**: 在聊天界面的状态栏显示模型详细信息。
