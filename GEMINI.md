@@ -149,6 +149,10 @@ type(scope): brief English description
 Types: `feat` / `fix` / `docs` / `refactor` / `chore`
 Scope: plugin folder name (e.g., `github-copilot-sdk`)
 
+> [!IMPORTANT]
+> **Issue Association**:
+> If the changes are related to or fix a GitHub Issue/PR, **MUST** explicitly link and associate it in both Release Notes docs (`v1.x.md`) and Commit Messages Body/Footers (e.g. `(fixes #123)`). Sync those references on GitHub Releases Page bodies when publishing.
+
 ---
 
 ## Full Reference
