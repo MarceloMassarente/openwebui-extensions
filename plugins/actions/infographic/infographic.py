@@ -759,7 +759,7 @@ data
 4. **Impact**: Use strong verbs and nouns. Avoid filler words.
 
 ## Output Requirements
-1. **Language**: Output content in the user's language.
+1. **Language**: Follow the **Important Language Rule** (Generate content in the **exact same language** as the input text content; do NOT force it to match the status parameter).
 2. **Format**: Wrap output in ```infographic ... ```.
 3. **No Colons**: Do NOT use colons after keys.
 4. **Indentation**: Use 2 spaces.
@@ -782,6 +782,9 @@ OpenWebUI Theme: {user_theme}
 {long_text_content}
 
 Please select the most appropriate infographic template based on text characteristics and output standard infographic syntax. Pay attention to correct indentation format (two spaces).
+
+⚠️ **Language Consistency Rule (CRITICAL)**:
+The title, desc, labels, and text items in your output **MUST STRICTLY MATCH the primary language of the original {long_text_content}**. Do NOT translate the content just to match default status parameters. Everything should follow the input flow natively.
 
 **Visual Optimization Guide (MUST FOLLOW):**
 - **Point-based Generation:** Infographics are not articles. Extract KEYWORDS ONLY, avoid complete sentences.
