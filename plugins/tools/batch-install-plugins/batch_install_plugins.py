@@ -44,7 +44,7 @@ METADATA_KEY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_-]*$")
 
 TRANSLATIONS = {
     "en-US": {
-        "status_fetching": "Fetching plugin list from GitHub...",
+        "status_fetching": "Discovering plugins from {repo}...",
         "status_installing": "Installing [{type}] {title}...",
         "status_done": "Installation complete: {success}/{total} plugins installed.",
         "status_list_title": "Available Plugins ({count} total)",
@@ -67,7 +67,7 @@ TRANSLATIONS = {
         "err_no_match": "No plugins match the specified types.",
     },
     "zh-CN": {
-        "status_fetching": "正在从 GitHub 获取插件列表...",
+        "status_fetching": "正在从 {repo} 发现插件...",
         "status_installing": "正在安装 [{type}] {title}...",
         "status_done": "安装完成：成功安装 {success}/{total} 个插件。",
         "status_list_title": "可用插件（共 {count} 个）",
@@ -90,7 +90,7 @@ TRANSLATIONS = {
         "err_no_match": "没有符合指定类型的插件。",
     },
     "zh-HK": {
-        "status_fetching": "正在從 GitHub 取得外掛列表...",
+        "status_fetching": "正在從 {repo} 發現外掛...",
         "status_installing": "正在安裝 [{type}] {title}...",
         "status_done": "安裝完成：成功安裝 {success}/{total} 個外掛。",
         "status_list_title": "可用外掛（共 {count} 個）",
@@ -113,7 +113,7 @@ TRANSLATIONS = {
         "err_no_match": "沒有符合指定類型的外掛。",
     },
     "zh-TW": {
-        "status_fetching": "正在從 GitHub 取得外掛列表...",
+        "status_fetching": "正在從 {repo} 發現外掛...",
         "status_installing": "正在安裝 [{type}] {title}...",
         "status_done": "安裝完成：成功安裝 {success}/{total} 個外掛。",
         "status_list_title": "可用外掛（共 {count} 個）",
@@ -136,7 +136,7 @@ TRANSLATIONS = {
         "err_no_match": "沒有符合指定類型的外掛。",
     },
     "ko-KR": {
-        "status_fetching": "GitHub에서 플러그인 목록을 가져오는 중...",
+        "status_fetching": "{repo}에서 플러그인 검색 중...",
         "status_installing": "[{type}] {title} 설치 중...",
         "status_done": "설치 완료: {success}/{total}개 플러그인 설치됨.",
         "status_list_title": "사용 가능한 플러그인 (총 {count}개)",
@@ -159,7 +159,7 @@ TRANSLATIONS = {
         "err_no_match": "지정된 유형과 일치하는 플러그인이 없습니다.",
     },
     "ja-JP": {
-        "status_fetching": "GitHubからプラグインリストを取得中...",
+        "status_fetching": "{repo}からプラグインを検索中...",
         "status_installing": "[{type}] {title} をインストール中...",
         "status_done": "インストール完了: {success}/{total}個のプラグインがインストールされました。",
         "status_list_title": "利用可能なプラグイン (合計{count}個)",
@@ -182,7 +182,7 @@ TRANSLATIONS = {
         "err_no_match": "指定されたタイプのプラグインがありません。",
     },
     "fr-FR": {
-        "status_fetching": "Récupération de la liste des plugins depuis GitHub...",
+        "status_fetching": "Recherche de plugins dans {repo}...",
         "status_installing": "Installation de [{type}] {title}...",
         "status_done": "Installation terminée: {success}/{total} plugins installés.",
         "status_list_title": "Plugins disponibles ({count} au total)",
@@ -205,7 +205,7 @@ TRANSLATIONS = {
         "err_no_match": "Aucun plugin ne correspond aux types spécifiés.",
     },
     "de-DE": {
-        "status_fetching": "Plugin-Liste wird von GitHub abgerufen...",
+        "status_fetching": "Plugins werden in {repo} gesucht...",
         "status_installing": "[{type}] {title} wird installiert...",
         "status_done": "Installation abgeschlossen: {success}/{total} Plugins installiert.",
         "status_list_title": "Verfügbare Plugins (insgesamt {count})",
@@ -228,7 +228,7 @@ TRANSLATIONS = {
         "err_no_match": "Keine Plugins entsprechen den angegebenen Typen.",
     },
     "es-ES": {
-        "status_fetching": "Obteniendo lista de plugins de GitHub...",
+        "status_fetching": "Buscando plugins en {repo}...",
         "status_installing": "Instalando [{type}] {title}...",
         "status_done": "Instalación completada: {success}/{total} plugins instalados.",
         "status_list_title": "Plugins disponibles ({count} en total)",
@@ -251,7 +251,7 @@ TRANSLATIONS = {
         "err_no_match": "No hay plugins que coincidan con los tipos especificados.",
     },
     "it-IT": {
-        "status_fetching": "Recupero lista plugin da GitHub...",
+        "status_fetching": "Ricerca plugin in {repo}...",
         "status_installing": "Installazione di [{type}] {title}...",
         "status_done": "Installazione completata: {success}/{total} plugin installati.",
         "status_list_title": "Plugin disponibili ({count} totali)",
@@ -274,7 +274,7 @@ TRANSLATIONS = {
         "err_no_match": "Nessun plugin corrisponde ai tipi specificati.",
     },
     "vi-VN": {
-        "status_fetching": "Đang lấy danh sách plugin từ GitHub...",
+        "status_fetching": "Đang tìm kiếm plugin trong {repo}...",
         "status_installing": "Đang cài đặt [{type}] {title}...",
         "status_done": "Cài đặt hoàn tất: {success}/{total} plugin đã được cài đặt.",
         "status_list_title": "Plugin khả dụng ({count} tổng cộng)",
@@ -983,7 +983,7 @@ def _filter_candidates(
             if not (c.source_repo.lower() == DEFAULT_REPO.lower() and _matches_self_plugin(c))
         ]
 
-    exclude_list = [item.strip().lower() for item in exclude_keywords.split(",") if item.strip()]
+    exclude_list = [item.strip().lower() for item in (exclude_keywords or "").split(",") if item.strip()]
     if exclude_list:
         filtered = [
             c
@@ -1458,6 +1458,19 @@ async def discover_plugins(
     skip_keywords: str = "test",
     source_repo: str = "",
 ) -> Tuple[List[PluginCandidate], List[Tuple[str, str]]]:
+    """Fetch and parse all plugins from a single GitHub repository.
+
+    Scans the repo's file tree for Python files, validates each as a plugin,
+    and extracts metadata (title, description, type, version).
+
+    Args:
+        url: GitHub repository URL (e.g. https://github.com/owner/repo).
+        skip_keywords: Comma-separated keywords to skip in filenames.
+        source_repo: Override the repo identifier (owner/repo format).
+
+    Returns:
+        Tuple of (valid_plugins, skipped_files_with_reasons).
+    """
     parsed = parse_github_url(url)
     if not parsed:
         return [], [("url", "invalid github url")]
@@ -1539,6 +1552,15 @@ async def discover_plugins_from_repos(
     repos: List[str],
     skip_keywords: str = "test",
 ) -> Tuple[List[PluginCandidate], List[Tuple[str, str]]]:
+    """Fetch plugins from multiple repositories in parallel.
+
+    Args:
+        repos: List of owner/repo strings (e.g. ["Fu-Jie/openwebui-extensions"]).
+        skip_keywords: Comma-separated keywords to skip in filenames.
+
+    Returns:
+        Tuple of (all_plugins, all_skipped_files_with_reasons).
+    """
     tasks = [
         discover_plugins(f"https://github.com/{repo}", skip_keywords, source_repo=repo)
         for repo in repos
@@ -1604,10 +1626,18 @@ class Tools:
         repo: str = DEFAULT_REPO,
         plugin_types: List[str] = ["pipe", "action", "filter", "tool"],
     ) -> str:
-        """List plugins from one or more repositories in a single call.
+        """List all available plugins without installing.
 
-        If a user request mentions multiple repositories, combine them into the
-        `repo` argument instead of calling this tool multiple times.
+        Use this to preview what plugins are available before installation.
+        For installation, use install_all_plugins instead.
+
+        Args:
+            repo: One or more GitHub repositories (owner/repo format), comma or
+                  semicolon separated. Defaults to Fu-Jie/openwebui-extensions.
+            plugin_types: Filter by plugin type (pipe, action, filter, tool).
+
+        Returns:
+            Markdown formatted list of available plugins grouped by repository.
         """
         user_ctx = await _get_user_context(__user__, __event_call__, __request__)
         lang = user_ctx.get("user_language", "en-US")
@@ -1650,11 +1680,25 @@ class Tools:
         exclude_keywords: str = "",
         timeout: int = DEFAULT_TIMEOUT,
     ) -> str:
-        """Install plugins from one or more repositories in a single call.
+        """Discover and install plugins interactively.
 
-        If a user request mentions multiple repositories, combine them into the
-        `repo` argument and call this tool once instead of making parallel
-        calls for each repository.
+        Always fetches all available plugins regardless of user input, then
+        presents a selection dialog for the user to choose which to install.
+
+        Workflow:
+            1. Discover all plugins from repo(s)
+            2. Present interactive selection dialog
+            3. Install selected plugins to OpenWebUI
+
+        Args:
+            repo: One or more GitHub repositories (owner/repo format), comma or
+                  semicolon separated. Defaults to Fu-Jie/openwebui-extensions.
+            plugin_types: Filter by plugin type (pipe, action, filter, tool).
+            exclude_keywords: Comma-separated keywords to skip matching plugins.
+            timeout: HTTP request timeout in seconds.
+
+        Returns:
+            Status message with installation results.
         """
         user_ctx = await _get_user_context(__user__, __event_call__, __request__)
         lang = user_ctx.get("user_language", "en-US")
@@ -1705,9 +1749,10 @@ class Tools:
 
         base_url = base_url.rstrip("/")
 
-        await _emit_status(event_emitter, _t(lang, "status_fetching"), done=False)
-
         repo_list = _parse_repo_inputs(repo)
+        repo_display = repo_list[0] if len(repo_list) == 1 else f"{repo_list[0]} +{len(repo_list)-1}"
+        await _emit_status(event_emitter, _t(lang, "status_fetching", repo=repo_display), done=False)
+
         candidates, _ = await discover_plugins_from_repos(repo_list, skip_keywords)
 
         if not candidates:
