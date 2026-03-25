@@ -5,7 +5,7 @@ author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 openwebui_id: ce96f7b4-12fc-4ac3-9a01-875713e69359
 description: A powerful Agent SDK integration for OpenWebUI. It deeply bridges GitHub Copilot SDK with OpenWebUI's ecosystem, enabling the Agent to autonomously perform intent recognition, web search, and context compaction. It seamlessly reuses your existing Tools, MCP servers, OpenAPI servers, and Skills for a professional, full-featured experience.
-version: 0.12.1
+version: 0.12.2
 requirements: github-copilot-sdk==0.1.30
 """
 
@@ -6173,36 +6173,149 @@ class Pipe:
         shared_dir.mkdir(parents=True, exist_ok=True)
         return str(shared_dir)
 
+    def _normalize_skill_md_newlines(self, text: str) -> str:
+        """Normalize CRLF/CR text to LF for stable SKILL.md parsing."""
+        return text.replace("\r\n", "\n").replace("\r", "\n")
+
+    def _strip_skill_meta_quotes(self, value: str) -> str:
+        """Remove matching wrapping quotes from a frontmatter scalar."""
+        value = (value or "").strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            return value[1:-1]
+        return value
+
+    def _collect_skill_meta_block(
+        self, lines: List[str], start_index: int
+    ) -> Tuple[List[str], int]:
+        """Collect indented frontmatter block lines until the next top-level key."""
+        block_lines: List[str] = []
+        index = start_index
+
+        while index < len(lines):
+            line = lines[index]
+            if not line.strip():
+                block_lines.append("")
+                index += 1
+                continue
+
+            indent = len(line) - len(line.lstrip(" "))
+            if indent == 0 and re.match(r"^[A-Za-z0-9_-]+:(.*)$", line):
+                break
+            if indent == 0:
+                break
+
+            block_lines.append(line)
+            index += 1
+
+        non_empty_indents = [
+            len(line) - len(line.lstrip(" ")) for line in block_lines if line.strip()
+        ]
+        min_indent = min(non_empty_indents) if non_empty_indents else 0
+        dedented = [line[min_indent:] if line else "" for line in block_lines]
+        return dedented, index
+
+    def _fold_skill_meta_block(self, lines: List[str]) -> str:
+        """Fold YAML `>` block lines into paragraphs separated by blank lines."""
+        parts: List[str] = []
+        paragraph: List[str] = []
+
+        for line in lines:
+            if line == "":
+                if paragraph:
+                    parts.append(" ".join(segment.strip() for segment in paragraph))
+                    paragraph = []
+                if parts and parts[-1] != "":
+                    parts.append("")
+                continue
+            paragraph.append(line.strip())
+
+        if paragraph:
+            parts.append(" ".join(segment.strip() for segment in paragraph))
+
+        return "\n".join(parts).strip()
+
+    def _parse_skill_frontmatter_scalars(self, frontmatter_text: str) -> Dict[str, str]:
+        """Parse simple top-level YAML frontmatter scalars, including block scalars."""
+        lines = self._normalize_skill_md_newlines(frontmatter_text).split("\n")
+        metadata: Dict[str, str] = {}
+        index = 0
+
+        while index < len(lines):
+            line = lines[index]
+            stripped = line.strip()
+
+            if not stripped or stripped.startswith("#") or line.startswith(" "):
+                index += 1
+                continue
+
+            match = re.match(r"^([A-Za-z0-9_-]+):(.*)$", line)
+            if not match:
+                index += 1
+                continue
+
+            key = match.group(1)
+            raw_value = match.group(2).lstrip()
+
+            if raw_value[:1] in {"|", ">"}:
+                block_lines, index = self._collect_skill_meta_block(lines, index + 1)
+                metadata[key] = (
+                    "\n".join(block_lines).strip()
+                    if raw_value.startswith("|")
+                    else self._fold_skill_meta_block(block_lines)
+                )
+                continue
+
+            block_lines, next_index = self._collect_skill_meta_block(lines, index + 1)
+            if block_lines:
+                segments = [self._strip_skill_meta_quotes(raw_value)] + [
+                    segment.strip() for segment in block_lines
+                ]
+                metadata[key] = self._fold_skill_meta_block(segments)
+                index = next_index
+                continue
+
+            metadata[key] = self._strip_skill_meta_quotes(raw_value)
+            index += 1
+
+        return metadata
+
     def _parse_skill_md_meta(self, content: str, fallback_name: str) -> tuple:
         """Parse SKILL.md content into (name, description, body).
 
         Handles files with or without YAML frontmatter.
         Strips quotes from frontmatter string values.
         """
-        fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
+        normalized_content = self._normalize_skill_md_newlines(content)
+        fm_match = re.match(
+            r"^---\s*\n(.*?)\n---\s*(?:\n|$)", normalized_content, re.DOTALL
+        )
         if fm_match:
             fm_text = fm_match.group(1)
-            body = content[fm_match.end() :].strip()
-            name = fallback_name
-            description = ""
-            for line in fm_text.split("\n"):
-                m = re.match(r"^name:\s*(.+)$", line)
-                if m:
-                    name = m.group(1).strip().strip("\"'")
-                m = re.match(r"^description:\s*(.+)$", line)
-                if m:
-                    description = m.group(1).strip().strip("\"'")
+            body = normalized_content[fm_match.end() :].strip()
+            metadata = self._parse_skill_frontmatter_scalars(fm_text)
+            name = (
+                metadata.get("name") or metadata.get("title") or fallback_name
+            ).strip()
+            description = (metadata.get("description") or "").strip()
             return name, description, body
         # No frontmatter: try to extract H1 as name
-        h1_match = re.search(r"^#\s+(.+)$", content.strip(), re.MULTILINE)
+        stripped_content = normalized_content.strip()
+        h1_match = re.search(r"^#\s+(.+)$", stripped_content, re.MULTILINE)
         name = h1_match.group(1).strip() if h1_match else fallback_name
-        return name, "", content.strip()
+        return name, "", stripped_content
 
     def _build_skill_md_content(self, name: str, description: str, body: str) -> str:
         """Construct a SKILL.md file string from name, description, and body."""
-        desc_line = description or name
-        if any(c in desc_line for c in ":#\n"):
-            desc_line = f'"{desc_line}"'
+        desc_value = (description or name).strip()
+        if "\n" in desc_value:
+            desc_body = "\n".join(
+                f"  {line}" if line else "" for line in desc_value.split("\n")
+            )
+            desc_line = f"|\n{desc_body}"
+        else:
+            desc_line = desc_value
+            if any(c in desc_line for c in ":#"):
+                desc_line = f'"{desc_line}"'
         return (
             f"---\n"
             f"name: {name}\n"

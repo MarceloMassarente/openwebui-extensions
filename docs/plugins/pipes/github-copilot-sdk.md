@@ -1,6 +1,6 @@
 # GitHub Copilot SDK Pipe for OpenWebUI
 
-| By [Fu-Jie](https://github.com/Fu-Jie) · v0.12.1 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| By [Fu-Jie](https://github.com/Fu-Jie) · v0.12.2 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -39,23 +39,12 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 > [!IMPORTANT]
 > If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
 
-## ✨ v0.12.0: Adaptive Actions Console, Stream Deduplication & Full TTFT Profiling
+## ✨ v0.12.2: Multi-line Skill Frontmatter Support for `manage_skills`
 
-- **📊 Predictive Adaptive Console**: Automatically models continuous decision layouts using `interactive_controls` state tables on the per-session workspace database so visual panels don't go stale.
-- **🛡️ Stream Overlap Deduplication**: Mitigated overlay dual delivery bugs on `assistant.message_delta` frames using conservative overlap trimming rules during turn resumptions.
-- **⏱️ Segmented Profiling Loadtimes**: Fine-grained timers identifying local startup overhead and pure cloud network turnaround time tracking calibration.
-- **🧹 Eliminate Redundancies**: Reduced redundant secondary heavy `_parse_mcp_servers()` loops inside session resumes for faster handshake callbacks.
-
----
-
-## ✨ v0.10.0: Native Prompt Restoration, Live TODO Widget & SDK v0.1.30
-
-- **⌨️ Authentic Prompt Restoration**: Restored the native Copilot CLI **Plan Mode** for complex task orchestration and native SQLite-backed session management for robust state persistence.
-- **📋 Live TODO Widget**: Added a compact real-time task tracking widget synchronized with `session.db`, keeping in-progress work visible without cluttering the chat history.
-- **🧩 OpenWebUI Tool Call Fixes**: Fixed custom tool invocation by syncing injected context with OpenWebUI 0.8.x expectations, including `__request__`, `request`, `body`, `__messages__`, `__metadata__`, `__files__`, `__task__`, and session/chat/message IDs.
-- **🔒 SDK v0.1.30 + Adaptive Workstyle**: Upgraded the pipe to `github-copilot-sdk==0.1.30`, moving workflow logic into the system prompt for autonomous "Plan-vs-Execute" decisions.
-- **🐛 Intent + Widget UX Fixes**: Fixed `report_intent` localization and cleaned up TODO widget layout for a more professional look.
-- **🧾 Better Embedded Tool Results**: Improved HTML/embedded tool outcomes and synchronized documentation surface.
+- **📝 Multi-line `description` Parsing**: `manage_skills` now understands `description: >` and `description: |` blocks in `SKILL.md`, including CRLF input from external repositories.
+- **💾 Safer `SKILL.md` Writing**: When a skill description contains line breaks, the pipe now writes YAML block scalars instead of fragile quoted single-line text.
+- **↩️ Better Metadata Fallbacks**: `title` can now act as the skill name fallback when `name` is absent, reducing generic directory-based names during skill import/sync.
+- **🧪 Regression Tests**: Added targeted parse/write round-trip coverage so future skill manager updates stay stable.
 
 ---
 

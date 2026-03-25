@@ -1,6 +1,6 @@
 # GitHub Copilot Official SDK Pipe
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.12.1 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.12.2 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -40,23 +40,12 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## ✨ v0.12.0：自适应动作面板、流排重拦截与全链路 TTFT 测定
+## ✨ v0.12.2：`manage_skills` 支持多行 Skill Frontmatter
 
-- **📊 连续自适应看板 (Adaptive Actions Console)**：自动在 `interactive_controls` 辅助常驻状态表中追踪动作，引导 LLM 有选择性地在最新输出中展示最可能用到的点击控制面板，实现不翻页连续持久化点击操作。
-- **🛡️ 叠加流排重拦截 (Deduplicate Stream overlap)**：对接 `_dedupe_stream_chunk` 保守重叠裁剪，彻底消除二轮对话流重叠叠加异常。
-- **⏱️ 分段 ⏱️ Profiling 埋点**：拆装本地预热阻断与云端网络 Trip 数据时间，直观测算 Time-to-First-Byte。
-- **🧹 消除冗余解析**：剔除 Resume 过程对 MCP 的二次昂贵循环，提效握手微观时延。
-
----
-
-## ✨ v0.10.0 最新更新：原生提示词恢复、Live TODO 小组件与 SDK v0.1.30 完善
-
-- **⌨️ 原生提示词恢复**：恢复了原生 Copilot CLI **原生计划模式 (Native Plan Mode)** 复杂任务编排能力，并集成了基于 SQLite 的原生会话与持久化管理，提升 Agent 的状态把控能力。
-- **📋 Live TODO 小组件**：新增基于 `session.db` 实时任务状态的紧凑型嵌入式 TODO 小组件，任务进度常驻可见，无需在正文中重复显示全部待办列表。
-- **🧩 OpenWebUI 工具调用修复**：修复自定义工具调用时上下文注入不完整的问题，完全对齐 OpenWebUI 0.8.x 所需的系统级上下文（`__request__`、`body`、`__metadata__` 等）。
-- **🔒 SDK v0.1.30 与自适应工作流**：升级到 `github-copilot-sdk==0.1.30`，将规划与执行逻辑移至系统提示词，让 Agent 根据任务复杂度自主决策工作流。
-- **🐛 意图与体验优化**：修复 `report_intent` 国际化问题，优化 TODO 小组件的视觉布局，减少冗余空白。
-- **🧾 嵌入结果与文档更新**：改进 HTML/嵌入式工具结果处理，同步中英 README 与 docs 镜像页，确保发布状态一致。
+- **📝 多行 `description` 解析**：`manage_skills` 现在可以正确识别 `SKILL.md` 里的 `description: >` 和 `description: |`，并兼容来自外部仓库的 CRLF 输入。
+- **💾 更安全的 `SKILL.md` 回写**：当技能描述包含换行时，Pipe 会改用 YAML block scalar 写回，而不是脆弱的单行引号文本。
+- **↩️ 更稳的元数据回退**：当 `name` 缺失时，`title` 现在可以作为技能名回退，减少导入/同步时退回通用目录名的情况。
+- **🧪 回归测试补齐**：新增针对解析与写回 round-trip 的定向测试，保证后续技能管理改动更稳定。
 
 ---
 
