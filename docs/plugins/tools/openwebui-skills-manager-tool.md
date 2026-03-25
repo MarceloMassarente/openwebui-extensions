@@ -1,13 +1,13 @@
 # OpenWebUI Skills Manager Tool
 
-**Author:** [Fu-Jie](https://github.com/Fu-Jie/openwebui-extensions) | **Version:** 0.3.0 | **Project:** [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions)
+**Author:** [Fu-Jie](https://github.com/Fu-Jie/openwebui-extensions) | **Version:** 0.3.1 | **Project:** [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions)
 
 A standalone OpenWebUI Tool plugin for managing native Workspace Skills across models.
 
 ## What's New
 
-- Added GitHub skills-directory auto-discovery for `install_skill` (e.g., `.../tree/main/skills`) to install all child skills in one request.
-- Fixed language detection with robust frontend-first fallback (`__event_call__` + timeout), request header fallback, and profile fallback.
+- `install_skill` now supports multi-line `description: >` / `description: |` frontmatter blocks when importing remote `SKILL.md` files.
+- Added metadata fallback to use `title` when `name` is missing, plus regression tests for CRLF and YAML block scalars.
 
 ## Key Features
 

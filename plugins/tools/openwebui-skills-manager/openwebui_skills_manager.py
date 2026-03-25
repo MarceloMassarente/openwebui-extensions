@@ -3,7 +3,7 @@ title: OpenWebUI Skills Manager Tool
 author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
-version: 0.3.0
+version: 0.3.1
 openwebui_id: b4bce8e4-08e7-4f90-bea7-dc31d463a0bb
 requirements:
 description: Standalone OpenWebUI tool for managing native Workspace Skills (list/show/install/create/update/delete) for any model.
@@ -846,26 +846,138 @@ async def _fetch_bytes(valves, url: str) -> bytes:
     )
 
 
+_FRONTMATTER_KEY_RE = re.compile(r"^([A-Za-z0-9_-]+):(.*)$")
+
+
+def _normalize_newlines(text: str) -> str:
+    """Normalize CRLF/CR text to LF for stable frontmatter parsing."""
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _strip_matching_quotes(value: str) -> str:
+    """Remove matching wrapping quotes from a scalar value."""
+    value = (value or "").strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1]
+    return value
+
+
+def _collect_frontmatter_block(lines: List[str], start_index: int) -> Tuple[List[str], int]:
+    """Collect indented block lines until the next top-level frontmatter key."""
+    block_lines: List[str] = []
+    index = start_index
+
+    while index < len(lines):
+        line = lines[index]
+        if not line.strip():
+            block_lines.append("")
+            index += 1
+            continue
+
+        indent = len(line) - len(line.lstrip(" "))
+        if indent == 0 and _FRONTMATTER_KEY_RE.match(line):
+            break
+        if indent == 0:
+            break
+
+        block_lines.append(line)
+        index += 1
+
+    non_empty_indents = [
+        len(line) - len(line.lstrip(" ")) for line in block_lines if line.strip()
+    ]
+    min_indent = min(non_empty_indents) if non_empty_indents else 0
+    dedented = [line[min_indent:] if line else "" for line in block_lines]
+    return dedented, index
+
+
+def _fold_yaml_block(lines: List[str]) -> str:
+    """Fold YAML `>` block lines into paragraphs separated by blank lines."""
+    parts: List[str] = []
+    paragraph: List[str] = []
+
+    for line in lines:
+        if line == "":
+            if paragraph:
+                parts.append(" ".join(segment.strip() for segment in paragraph))
+                paragraph = []
+            if parts and parts[-1] != "":
+                parts.append("")
+            continue
+        paragraph.append(line.strip())
+
+    if paragraph:
+        parts.append(" ".join(segment.strip() for segment in paragraph))
+
+    return "\n".join(parts).strip()
+
+
+def _parse_frontmatter_scalars(frontmatter_text: str) -> Dict[str, str]:
+    """Parse simple top-level YAML frontmatter scalars, including block scalars."""
+    lines = _normalize_newlines(frontmatter_text).split("\n")
+    metadata: Dict[str, str] = {}
+    index = 0
+
+    while index < len(lines):
+        line = lines[index]
+        stripped = line.strip()
+
+        if not stripped or stripped.startswith("#") or line.startswith(" "):
+            index += 1
+            continue
+
+        match = _FRONTMATTER_KEY_RE.match(line)
+        if not match:
+            index += 1
+            continue
+
+        key = match.group(1)
+        raw_value = match.group(2).lstrip()
+
+        if raw_value[:1] in {"|", ">"}:
+            block_lines, index = _collect_frontmatter_block(lines, index + 1)
+            metadata[key] = (
+                "\n".join(block_lines).strip()
+                if raw_value.startswith("|")
+                else _fold_yaml_block(block_lines)
+            )
+            continue
+
+        block_lines, next_index = _collect_frontmatter_block(lines, index + 1)
+        if block_lines:
+            segments = [_strip_matching_quotes(raw_value)] + [
+                segment.strip() for segment in block_lines
+            ]
+            metadata[key] = _fold_yaml_block(segments)
+            index = next_index
+            continue
+
+        metadata[key] = _strip_matching_quotes(raw_value)
+        index += 1
+
+    return metadata
+
+
 def _parse_skill_md_meta(content: str, fallback_name: str) -> Tuple[str, str, str]:
     """Parse markdown skill content into (name, description, body)."""
-    fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
+    normalized_content = _normalize_newlines(content)
+    fm_match = re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", normalized_content, re.DOTALL)
     if fm_match:
         fm_text = fm_match.group(1)
-        body = content[fm_match.end() :].strip()
-        name = fallback_name
-        description = ""
-        for line in fm_text.split("\n"):
-            m_name = re.match(r"^name:\s*(.+)$", line)
-            if m_name:
-                name = m_name.group(1).strip().strip("\"'")
-            m_desc = re.match(r"^description:\s*(.+)$", line)
-            if m_desc:
-                description = m_desc.group(1).strip().strip("\"'")
+        body = normalized_content[fm_match.end() :].strip()
+        metadata = _parse_frontmatter_scalars(fm_text)
+        name = (
+            metadata.get("name")
+            or metadata.get("title")
+            or fallback_name
+        ).strip()
+        description = (metadata.get("description") or "").strip()
         return name, description, body
 
-    h1_match = re.search(r"^#\s+(.+)$", content.strip(), re.MULTILINE)
+    stripped_content = normalized_content.strip()
+    h1_match = re.search(r"^#\s+(.+)$", stripped_content, re.MULTILINE)
     name = h1_match.group(1).strip() if h1_match else fallback_name
-    return name, "", content.strip()
+    return name, "", stripped_content
 
 
 def _append_source_url_to_content(content: str, url: str, lang: str = "en-US") -> str:

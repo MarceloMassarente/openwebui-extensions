@@ -1,13 +1,13 @@
 # OpenWebUI Skills 管理工具
 
-**Author:** [Fu-Jie](https://github.com/Fu-Jie/openwebui-extensions) | **Version:** 0.3.0 | **Project:** [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions)
+**Author:** [Fu-Jie](https://github.com/Fu-Jie/openwebui-extensions) | **Version:** 0.3.1 | **Project:** [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions)
 
 一个可跨模型使用的 OpenWebUI 原生 Tool 插件，用于管理 Workspace Skills。
 
 ## 最新更新
 
-- `install_skill` 新增 GitHub 技能目录自动发现（例如 `.../tree/main/skills`），可一键安装目录下所有子技能。
-- 修复语言获取逻辑：前端优先（`__event_call__` + 超时保护），并回退到请求头与用户资料。
+- `install_skill` 现已支持远程 `SKILL.md` 中的多行 `description: >` / `description: |` frontmatter 描述。
+- 新增 `title` 作为 `name` 缺失时的元数据回退，并补齐 CRLF 与 YAML 块标量回归测试。
 
 ## 核心特性
 

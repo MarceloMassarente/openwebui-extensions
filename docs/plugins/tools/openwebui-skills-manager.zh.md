@@ -1,6 +1,6 @@
 # 🧰 OpenWebUI Skills 管理工具
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.3.0 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.3.1 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -23,10 +23,9 @@
 
 ## 最新更新
 
-- **🤖 自动发现仓库根目录**：现在可以直接提供 GitHub 仓库根 URL（如 `https://github.com/owner/repo`），系统会自动转换为发现模式并安装所有 skill。
-- **🔄 批量去重**：自动清除重复 URL，检测重复的 skill 名称。
-- `install_skill` 新增 GitHub 技能目录自动发现（例如 `.../tree/main/skills`），可一键安装目录下所有子技能。
-- 修复语言获取逻辑：前端优先（`__event_call__` + 超时保护），并回退到请求头与用户资料。
+- **📝 支持多行 Frontmatter 描述**：`install_skill` 现在可以正确解析远程 `SKILL.md` 里的 `description: >` 和 `description: |`，导入后的技能描述不再被截断成单行。
+- **↩️ 更稳的元数据回退**：当 frontmatter 只有 `title` 没有 `name` 时，安装器会优先使用 `title`，避免退回到通用目录名。
+- **🧪 回归测试补齐**：新增 folded/literal YAML 块和 CRLF 换行场景测试，保证外部技能导入行为稳定。
 
 > [!TIP]
 > **💡 想要批量安装/管理全局插件 (Actions, Filters, Pipes, Tools)？**
