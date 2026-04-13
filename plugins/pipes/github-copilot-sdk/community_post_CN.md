@@ -29,7 +29,7 @@
 flowchart TD
     User["👤 用户<br/>OpenWebUI Chat"]
     Pipe["🤖 Copilot SDK Pipe<br/>(Leader)"]
-    Config["📋 Agent Team 配置<br/>Leader · Agent 1 · Agent 2 · ···"]
+    Config["📋 Agent Team 配置<br/>Leader · Agent 1 · ··· · Agent N"]
     A1["📊 Agent 1<br/>数据处理分析"]
     A2["📈 Agent 2<br/>可视化报告"]
     Tools["🔧 Skills + Tools + MCP Servers<br/>(所有 Agent 共享)"]
