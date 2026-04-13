@@ -1,4 +1,4 @@
-# GitHub Copilot SDK Pipe v0.13.0 — Agent Team + Session Mode Now Work End-to-End
+# GitHub Copilot SDK Pipe v0.13.0 — Agent Team + Autopilot/Plan Mode Switching
 
 Hi OpenWebUI community! 👋
 
@@ -48,7 +48,7 @@ flowchart TD
 
 ---
 
-## 🎯 What's New: Session Mode
+## 🎯 What's New: Autopilot / Plan Mode Switching
 
 v0.13.0 introduces full **Session Mode** support, giving you control over the Agent's working rhythm. A mode-specific **`[Active Session Mode]`** block is injected into the system prompt, aligned with the official [Copilot SDK agent-loop docs](https://github.com/github/copilot-sdk/blob/main/docs/features/agent-loop.md):
 

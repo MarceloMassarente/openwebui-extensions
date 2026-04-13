@@ -1,4 +1,4 @@
-# GitHub Copilot SDK Pipe v0.13.0 — Agent Team 多智能体 + Session Mode 全链路生效
+# GitHub Copilot SDK Pipe v0.13.0 — Agent Team 多智能体 + Autopilot/Plan 模式切换
 
 大家好 👋
 
@@ -48,7 +48,7 @@ flowchart TD
 
 ---
 
-## 🎯 新功能：Session Mode
+## 🎯 新功能：Autopilot / Plan 模式切换
 
 v0.13.0 引入了完整的 **Session Mode** 支持，可以控制 Agent 的工作节奏。一个模式专属的 **`[Active Session Mode]`** 指令块会被注入到系统提示词中，语言与官方 [Copilot SDK agent-loop 文档](https://github.com/github/copilot-sdk/blob/main/docs/features/agent-loop.md) 对齐：
 
