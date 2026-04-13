@@ -106,11 +106,14 @@ Examples:
   # Force update all existing plugins
   python scripts/publish_plugin.py --force
 
+  # Publish only a specific plugin
+  python scripts/publish_plugin.py --only plugins/tools/batch-install-plugins
+
   # Publish new plugins from a specific directory
   python scripts/publish_plugin.py --new plugins/actions/summary
 
   # Preview what would be done
-  python scripts/publish_plugin.py --new plugins/actions/summary --dry-run
+  python scripts/publish_plugin.py --only plugins/tools/batch-install-plugins --dry-run
         """,
     )
     parser.add_argument(
@@ -120,6 +123,11 @@ Examples:
         "--new",
         metavar="DIR",
         help="Publish new plugins from the specified directory (required for first-time publishing)",
+    )
+    parser.add_argument(
+        "--only",
+        metavar="PATH",
+        help="Only publish a specific plugin file or directory (e.g. plugins/tools/batch-install-plugins)",
     )
     parser.add_argument(
         "--dry-run",
@@ -142,8 +150,74 @@ Examples:
     skipped = 0
     failed = 0
 
+    # 处理 --only 参数：只更新指定的插件
+    if args.only:
+        target = args.only
+        if not os.path.isabs(target):
+            target = os.path.join(base_dir, target)
+
+        # 如果是目录，查找该目录下的插件
+        if os.path.isdir(target):
+            print(f"📦 Publishing plugins from: {target}\n")
+            plugins_to_publish = find_new_plugins_in_dir(target)
+        # 如果是文件，直接处理
+        elif os.path.isfile(target):
+            print(f"📦 Publishing plugin: {os.path.basename(target)}\n")
+            with open(target, "r", encoding="utf-8") as f:
+                content = f.read(2000)
+            title_match = re.search(r"title:\s*(.+)", content)
+            id_match = re.search(r"(?:openwebui_id|post_id):\s*([a-z0-9-]+)", content)
+            plugins_to_publish = [
+                {
+                    "file_path": target,
+                    "title": title_match.group(1).strip() if title_match else os.path.basename(target),
+                    "post_id": id_match.group(1).strip() if id_match else None,
+                    "is_new": id_match is None,
+                }
+            ]
+        else:
+            print(f"Error: {target} not found")
+            sys.exit(1)
+
+        if not plugins_to_publish:
+            print("No plugins found.")
+            return
+
+        for plugin in plugins_to_publish:
+            file_path = plugin["file_path"]
+            file_name = os.path.basename(file_path)
+            title = plugin["title"]
+            is_new = plugin.get("is_new", True)
+
+            if is_new:
+                print(f"🆕 Creating: {file_name} ({title})")
+            else:
+                print(f"📦 Updating: {file_name} (ID: {plugin['post_id'][:8]}...)")
+
+            if args.dry_run:
+                print(f"  [DRY-RUN] Would {'create' if is_new else 'update'}")
+                continue
+
+            success, message = client.publish_plugin_from_file(
+                file_path, force=args.force, auto_create=True
+            )
+
+            if success:
+                if "Created" in message:
+                    print(f"  🎉 {message}")
+                    created += 1
+                elif "Skipped" in message:
+                    print(f"  ⏭️  {message}")
+                    skipped += 1
+                else:
+                    print(f"  ✅ {message}")
+                    updated += 1
+            else:
+                print(f"  ❌ {message}")
+                failed += 1
+
     # 处理新插件发布
-    if args.new:
+    elif args.new:
         target_dir = args.new
         if not os.path.isabs(target_dir):
             target_dir = os.path.join(base_dir, target_dir)

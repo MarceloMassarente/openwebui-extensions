@@ -1,6 +1,6 @@
 # GitHub Copilot Official SDK Pipe
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.12.2 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.12.3 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -40,12 +40,13 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## ✨ v0.12.2：`manage_skills` 支持多行 Skill Frontmatter
+## ✨ v0.12.3：SDK 0.2.2 升级 + 模型管理改进
 
-- **📝 多行 `description` 解析**：`manage_skills` 现在可以正确识别 `SKILL.md` 里的 `description: >` 和 `description: |`，并兼容来自外部仓库的 CRLF 输入。
-- **💾 更安全的 `SKILL.md` 回写**：当技能描述包含换行时，Pipe 会改用 YAML block scalar 写回，而不是脆弱的单行引号文本。
-- **↩️ 更稳的元数据回退**：当 `name` 缺失时，`title` 现在可以作为技能名回退，减少导入/同步时退回通用目录名的情况。
-- **🧪 回归测试补齐**：新增针对解析与写回 round-trip 的定向测试，保证后续技能管理改动更稳定。
+- **🔧 SDK 升级**：github-copilot-sdk 从 0.1.30 升级到 0.2.2，更新 API（SubprocessConfig、关键字参数会话方法、位置参数 send()）。
+- **🗂️ 模型过滤**：移除已停用的 Sonnet 4/4.5 和 Opus 4/4.5 型号（仅保留 4.6）。修复过滤规则以匹配实际 SDK 模型 ID（`claude-sonnet-4` 格式）。
+- **📊 智能排序**：按供应商排序（OpenAI → Anthropic → 其他），同供应商内按倍率升序排列，0x 免费模型在各厂商内优先显示。
+- **⚙️ 默认倍率**：默认 MAX_MULTIPLIER 从 1.0 提高到 3.0，支持更多模型。
+- **📝 重启说明**：插件更新后如遇报错，请重启 OpenWebUI 服务器以清除缓存的字节码。
 
 ---
 

@@ -1,6 +1,6 @@
 # GitHub Copilot SDK Pipe for OpenWebUI
 
-| By [Fu-Jie](https://github.com/Fu-Jie) · v0.12.2 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| By [Fu-Jie](https://github.com/Fu-Jie) · v0.12.3 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -39,12 +39,13 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 > [!IMPORTANT]
 > If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
 
-## ✨ v0.12.2: Multi-line Skill Frontmatter Support for `manage_skills`
+## ✨ v0.12.3: SDK 0.2.2 Upgrade + Model Management Improvements
 
-- **📝 Multi-line `description` Parsing**: `manage_skills` now understands `description: >` and `description: |` blocks in `SKILL.md`, including CRLF input from external repositories.
-- **💾 Safer `SKILL.md` Writing**: When a skill description contains line breaks, the pipe now writes YAML block scalars instead of fragile quoted single-line text.
-- **↩️ Better Metadata Fallbacks**: `title` can now act as the skill name fallback when `name` is absent, reducing generic directory-based names during skill import/sync.
-- **🧪 Regression Tests**: Added targeted parse/write round-trip coverage so future skill manager updates stay stable.
+- **🔧 SDK Upgrade**: Upgraded github-copilot-sdk from 0.1.30 to 0.2.2 with updated API (SubprocessConfig, keyword-argument session methods, positional send()).
+- **🗂️ Model Filtering**: Remove deprecated Sonnet 4/4.5 and Opus 4/4.5 models (keep only 4.6). Fixed filter patterns to match actual SDK model IDs (`claude-sonnet-4` format).
+- **📊 Smart Sorting**: Sort by provider (OpenAI → Anthropic → others), within same provider by multiplier ascending, 0x free models appear first within each provider.
+- **⚙️ Default Multiplier**: Default MAX_MULTIPLIER raised from 1.0 to 3.0 for broader model access.
+- **📝 Restart Note**: If plugin update shows errors, restart OpenWebUI server to clear cached bytecode.
 
 ---
 

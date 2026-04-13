@@ -5,8 +5,8 @@ author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 openwebui_id: ce96f7b4-12fc-4ac3-9a01-875713e69359
 description: A powerful Agent SDK integration for OpenWebUI. It deeply bridges GitHub Copilot SDK with OpenWebUI's ecosystem, enabling the Agent to autonomously perform intent recognition, web search, and context compaction. It seamlessly reuses your existing Tools, MCP servers, OpenAPI servers, and Skills for a professional, full-featured experience.
-version: 0.12.2
-requirements: github-copilot-sdk==0.1.30
+version: 0.12.3
+requirements: github-copilot-sdk==0.2.2
 """
 
 import os
@@ -34,12 +34,12 @@ from pydantic import BaseModel, Field, create_model
 from fastapi.responses import HTMLResponse
 from datetime import datetime
 
-# Import copilot SDK modules
-try:
-    from copilot import CopilotClient, define_tool, PermissionHandler
-except ImportError:
-    from copilot import CopilotClient, define_tool
+from copilot import CopilotClient, define_tool
 
+# PermissionHandler moved from copilot to copilot.session in v0.2.x
+try:
+    from copilot.session import PermissionHandler
+except ImportError:
     PermissionHandler = None
 
 # Import Tool Server Connections and Tool System from OpenWebUI Config
@@ -1505,25 +1505,25 @@ RICHUI_VISUALIZATION_PATTERNS = (
     "When generating Rich UI pages, think like a visualization builder, not a static document writer.\n"
     "- Rich UI pages should feel like exploration interfaces embedded in chat.\n"
     "- Keep explanatory prose primarily in your assistant response. Keep the HTML focused on structure, controls, diagrams, metrics, and interactive navigation.\n"
-    "- Use the **recommended interaction contract** to avoid ambiguity: (1) `data-openwebui-prompt=\"...\"` for immediate chat continuation, (2) `data-openwebui-prompt=\"...\" data-openwebui-action=\"fill\"` to prefill the chat input without sending, (3) `data-openwebui-action=\"submit\"` to submit the current chat input, and (4) `data-openwebui-link=\"https://...\"` for external links.\n"
+    '- Use the **recommended interaction contract** to avoid ambiguity: (1) `data-openwebui-prompt="..."` for immediate chat continuation, (2) `data-openwebui-prompt="..." data-openwebui-action="fill"` to prefill the chat input without sending, (3) `data-openwebui-action="submit"` to submit the current chat input, and (4) `data-openwebui-link="https://..."` for external links.\n'
     "- Treat `data-openwebui-copy`, `data-openwebui-select`, and template placeholders such as `data-openwebui-prompt-template` as **advanced optional patterns**. Use them only when the page truly needs copy buttons or pick-then-act selection flows.\n"
     "- Only use bridge JavaScript helpers when local state or dynamic code makes declarative attributes awkward. The recommended object methods are `window.OpenWebUIBridge.prompt(text)`, `fill(text)`, `submit()`, `openLink(url)`, and `reportHeight()`.\n"
     "- Write prompt text as a natural, specific follow-up request. Avoid vague labels like 'More' or 'Explain'. Prefer prompts such as 'Break down the reviewer agent responsibilities and handoff rules.'\n"
     "- Use local JavaScript only for instant client-side state changes such as tabs, filters, sliders, zoom, and expand/collapse. Use prompt/fill/submit actions when the user is asking the model to explain, compare, personalize, evaluate, or generate next steps.\n"
-    "- Do not mix declarative prompt/link attributes with inline `onclick` on the same element unless you intentionally add `data-openwebui-force-declarative=\"1\"`.\n"
+    '- Do not mix declarative prompt/link attributes with inline `onclick` on the same element unless you intentionally add `data-openwebui-force-declarative="1"`.\n'
     "- If a control looks clickable, it must either submit a prompt, prefill the input, open a real URL, or visibly change local state. Do not generate dead controls.\n"
     "- Prefer actionable labels such as 'Deep dive', 'Compare approaches', 'Draft reply', 'Turn into TODOs', or 'Generate rollout plan'.\n"
     "- External references should use `openLink(url)` or declarative link attributes rather than plain iframe navigation.\n"
-    "- **Decision guide for controls**: If the user should get an answer immediately, use `data-openwebui-prompt`. If the user should review/edit text first, use `data-openwebui-action=\"fill\"`. If the page is a final review step for already-prepared input, use `data-openwebui-action=\"submit\"`. If the target is outside chat, use `data-openwebui-link`. Only use copy/select/template features for explicit advanced workflows.\n"
+    '- **Decision guide for controls**: If the user should get an answer immediately, use `data-openwebui-prompt`. If the user should review/edit text first, use `data-openwebui-action="fill"`. If the page is a final review step for already-prepared input, use `data-openwebui-action="submit"`. If the target is outside chat, use `data-openwebui-link`. Only use copy/select/template features for explicit advanced workflows.\n'
     "- **Avoid choice overload**: For most pages, 2-4 actions are enough. Prefer one primary action style per surface. Example: a dashboard should mostly use prompt actions; a drafting wizard should mostly use fill + submit; a documentation viewer should mostly use links.\n"
     "- **Multilingual UI rule**: Keep control labels short and concrete in the user's language. Prefer verb-first labels such as 'Explain', 'Draft in input', 'Send draft', 'Open docs', or their direct equivalents in the user's language.\n"
     "- **Minimal examples**:\n"
-    "  1. Immediate answer: `<button data-openwebui-prompt=\"Explain this diagram step by step\">Explain</button>`\n"
-    "  2. Prefill only: `<button data-openwebui-prompt=\"Draft a migration checklist for this design\" data-openwebui-action=\"fill\">Draft in input</button>`\n"
-    "  3. Submit current draft: `<button data-openwebui-action=\"submit\">Send current draft</button>`\n"
-    "  4. External docs: `<a data-openwebui-link=\"https://docs.example.com\">Open docs</a>`\n"
-    "  5. Advanced copy: `<button data-openwebui-copy=\"npm run build && npm test\">Copy command</button>`\n"
-    "  6. Advanced pick-then-act: `<button data-openwebui-select=\"role\" data-openwebui-value=\"reviewer\">Reviewer</button><button data-openwebui-prompt-template=\"Explain the responsibilities of {{role}}\">Explain selected role</button>`\n"
+    '  1. Immediate answer: `<button data-openwebui-prompt="Explain this diagram step by step">Explain</button>`\n'
+    '  2. Prefill only: `<button data-openwebui-prompt="Draft a migration checklist for this design" data-openwebui-action="fill">Draft in input</button>`\n'
+    '  3. Submit current draft: `<button data-openwebui-action="submit">Send current draft</button>`\n'
+    '  4. External docs: `<a data-openwebui-link="https://docs.example.com">Open docs</a>`\n'
+    '  5. Advanced copy: `<button data-openwebui-copy="npm run build && npm test">Copy command</button>`\n'
+    '  6. Advanced pick-then-act: `<button data-openwebui-select="role" data-openwebui-value="reviewer">Reviewer</button><button data-openwebui-prompt-template="Explain the responsibilities of {{role}}">Explain selected role</button>`\n'
     "</richui_visualization_patterns>\n"
 )
 
@@ -1581,8 +1581,8 @@ BASE_GUIDELINES = (
     "   - **CRITICAL**: When using this protocol in **Rich UI mode** (`embed_type='richui'`), **DO NOT** output the raw HTML code in a code block. Provide ONLY the **[Preview]** and **[Download]** links returned by the tool. The interactive embed will appear automatically after your message finishes.\n"
     "   - **Primary language rule**: The visible UI copy of generated HTML pages must use the **same language as the user's latest message** by default, unless the user explicitly requests another language or the task itself requires multilingual output. This includes titles, buttons, labels, helper text, empty states, and validation messages.\n"
     "   - **Built-in Rich UI bridge**: Rich UI embeds automatically expose a small recommended API on `window.OpenWebUIBridge`: `prompt(text)` = submit text immediately, `fill(text)` = prefill the chat input without sending, `submit()` = submit the current chat input, `openLink(url)` = open an external URL, and `reportHeight()` = force iframe resizing. Advanced optional helpers also exist for `copy(text)` and structured selection (`setSelection`, `applyTemplate`), but do not use them unless the page genuinely needs those flows. Legacy aliases such as `sendPrompt(...)` remain supported for compatibility, but prefer the object methods above in newly generated pages. Do not redefine these reserved helper names in your page code.\n"
-    "   - **Declarative interaction contract**: Prefer zero-JS bindings on clickable UI elements. Recommended patterns: `data-openwebui-prompt=\"...\"` for immediate continuation, `data-openwebui-prompt=\"...\" data-openwebui-action=\"fill\"` for prefill-only flows, `data-openwebui-action=\"submit\"` to send the current chat input, and `data-openwebui-link=\"https://...\"` for external links. Advanced optional patterns: `data-openwebui-copy=\"...\"` for copy buttons, and `data-openwebui-select=\"key\" data-openwebui-value=\"value\"` plus `data-openwebui-prompt-template=\"...{{key}}...\"` for pick-then-act flows. The Rich UI bridge auto-binds these attributes and adds keyboard accessibility.\n"
-    "   - **Ownership rule**: Do not mix declarative prompt/link attributes with inline `onclick` on the same element unless you intentionally add `data-openwebui-force-declarative=\"1\"`. By default, inline `onclick` owns the click behavior.\n"
+    '   - **Declarative interaction contract**: Prefer zero-JS bindings on clickable UI elements. Recommended patterns: `data-openwebui-prompt="..."` for immediate continuation, `data-openwebui-prompt="..." data-openwebui-action="fill"` for prefill-only flows, `data-openwebui-action="submit"` to send the current chat input, and `data-openwebui-link="https://..."` for external links. Advanced optional patterns: `data-openwebui-copy="..."` for copy buttons, and `data-openwebui-select="key" data-openwebui-value="value"` plus `data-openwebui-prompt-template="...{{key}}..."` for pick-then-act flows. The Rich UI bridge auto-binds these attributes and adds keyboard accessibility.\n'
+    '   - **Ownership rule**: Do not mix declarative prompt/link attributes with inline `onclick` on the same element unless you intentionally add `data-openwebui-force-declarative="1"`. By default, inline `onclick` owns the click behavior.\n'
     "   - **No dead controls**: If you generate buttons, cards, tabs, diagram nodes, or CTA blocks that imply a follow-up action, they MUST either continue the chat, prefill the input, submit the current input, open a real URL, or be visibly marked as static. Do not generate decorative controls that do nothing.\n"
     "   - **Artifacts mode** (`embed_type='artifacts'`): Use this when the user explicitly asks for artifacts. You MUST provide the **[Preview]** and **[Download]** links. DO NOT output HTML code block. The system will automatically append the HTML visualization to the chat string.\n"
     "   - **Process Visibility**: While raw code is often replaced by links/frames, you SHOULD provide a **very brief Markdown summary** of the component's structure or key features (e.g., 'Generated login form with validation') before publishing. This keeps the user informed of the 'processing' progress.\n"
@@ -1602,7 +1602,7 @@ BASE_GUIDELINES = (
     "     - **Auto-Correction Rule**: If you generated a non-whitelisted link (including `/c/...`), you MUST discard it, run/confirm `publish_file_from_workspace`, and only output the returned whitelisted URL.\n"
     "        - **For PDF files**: You MUST output ONLY Markdown links from the tool output (preview + download). **CRITICAL: NEVER output iframe/html_embed for PDF.**\n"
     "        - **For HTML files**: Prefer **Rich UI mode** (`embed_type='richui'`) by default so the effect is shown directly in chat. Output ONLY [Preview]/[Download]; do NOT output HTML block because Rich UI will render automatically via emitter. The page's primary language must follow the user's latest message unless the user explicitly asks for another language. If the HTML may need more space, add a clickable 'Full Screen' button inside your HTML design. Prefer the declarative interaction contract for buttons/cards/nodes: immediate send = `data-openwebui-prompt`, prefill-only = `data-openwebui-prompt` + `data-openwebui-action=\\\"fill\\\"`, submit current input = `data-openwebui-action=\\\"submit\\\"`, and external links = `data-openwebui-link`. Use `window.OpenWebUIBridge.prompt/fill/submit/openLink` only when local JavaScript truly needs it. Use copy/select/template capabilities only for explicit advanced needs such as copy buttons or pick-then-act dashboards. Use **Artifacts mode** (`embed_type='artifacts'`) only when the user explicitly asks for artifacts; in that case, still output ONLY [Preview]/[Download], and do NOT output any iframe/html block because the protocol will automatically append the html code block via emitter.\n"
-    "        - **Rich UI interaction examples**: `<button data-openwebui-prompt=\\\"Explain the hotfix workflow step by step\\\">Explain</button>`, `<button data-openwebui-prompt=\\\"Draft a rollout checklist for this design\\\" data-openwebui-action=\\\"fill\\\">Draft in input</button>`, `<button data-openwebui-action=\\\"submit\\\">Send current draft</button>`, `<a data-openwebui-link=\\\"https://git-scm.com/docs/git-worktree\\\">Official docs</a>`, and advanced optional patterns such as `<button data-openwebui-copy=\\\"npm run build && npm test\\\">Copy command</button>` or `<button data-openwebui-select=\\\"role\\\" data-openwebui-value=\\\"reviewer\\\">Reviewer</button><button data-openwebui-prompt-template=\\\"Explain the responsibilities of {{role}}\\\">Explain selected role</button>`. Prefer these declarative attributes when generating cards, tiles, SVG nodes, or dashboard controls because they survive templating better than custom JavaScript.\n"
+    '        - **Rich UI interaction examples**: `<button data-openwebui-prompt=\\"Explain the hotfix workflow step by step\\">Explain</button>`, `<button data-openwebui-prompt=\\"Draft a rollout checklist for this design\\" data-openwebui-action=\\"fill\\">Draft in input</button>`, `<button data-openwebui-action=\\"submit\\">Send current draft</button>`, `<a data-openwebui-link=\\"https://git-scm.com/docs/git-worktree\\">Official docs</a>`, and advanced optional patterns such as `<button data-openwebui-copy=\\"npm run build && npm test\\">Copy command</button>` or `<button data-openwebui-select=\\"role\\" data-openwebui-value=\\"reviewer\\">Reviewer</button><button data-openwebui-prompt-template=\\"Explain the responsibilities of {{role}}\\">Explain selected role</button>`. Prefer these declarative attributes when generating cards, tiles, SVG nodes, or dashboard controls because they survive templating better than custom JavaScript.\n'
     "     - **URL Format**: You MUST use the **ABSOLUTE URLs** provided in the tool output, copied verbatim. NEVER modify, concatenate, or reconstruct them manually.\n"
     "     - **Bypass RAG**: This protocol automatically handles S3 storage and bypasses RAG, ensuring 100% accurate data delivery.\n"
     "6. **TODO Visibility**: When TODO state changes, prefer the environment's embedded TODO widget and lightweight status surfaces. Do not repeat the full TODO list in the main answer unless the user explicitly asks for a textual TODO list or the text itself is the requested deliverable. When using SQL instead of `update_todo`, follow the environment's default workflow: create descriptive todo rows in `todos`, mark them `in_progress` before execution, mark them `done` after completion, and record blocking relationships in `todo_deps`.\n"
@@ -1728,7 +1728,7 @@ class Pipe:
             description="Exclude models containing these keywords (comma separated, e.g.: codex, haiku)",
         )
         MAX_MULTIPLIER: float = Field(
-            default=1.0,
+            default=3.0,
             description="Maximum allowed billing multiplier for standard Copilot models. 0 means only free models (0x). Set to a high value (e.g., 100) to allow all.",
         )
         COMPACTION_THRESHOLD: float = Field(
@@ -2061,7 +2061,9 @@ class Pipe:
     ) -> str:
         """Create a small fallback action bar when a page has no chat interactions."""
         title = self._extract_html_title_or_heading(html_content) or (
-            "this visualization" if not str(embed_lang).lower().startswith("zh") else "这个页面"
+            "this visualization"
+            if not str(embed_lang).lower().startswith("zh")
+            else "这个页面"
         )
         is_zh = str(embed_lang or user_lang or "").lower().startswith("zh")
 
@@ -2139,15 +2141,13 @@ class Pipe:
 
         embed_lang = self._resolve_embed_lang(user_lang)
         inferred_lang = self._infer_lang_from_html_content(html_content)
-        if inferred_lang and (
-            not user_lang or embed_lang.lower().startswith("en")
-        ):
+        if inferred_lang and (not user_lang or embed_lang.lower().startswith("en")):
             embed_lang = inferred_lang
         lang_json = json.dumps(embed_lang, ensure_ascii=False)
         lang_head_block = (
             "\n"
             '<meta name="openwebui-user-language" content="'
-            f'{embed_lang}'
+            f"{embed_lang}"
             '">\n'
             '<script id="openwebui-richui-language" data-openwebui-richui-bridge="1">'
             "(function(){"
@@ -2164,7 +2164,9 @@ class Pipe:
         style_block = "\n" + RICHUI_BRIDGE_STYLE.strip() + "\n"
         script_block = "\n" + RICHUI_BRIDGE_SCRIPT.strip() + "\n"
         looks_like_document = bool(
-            re.search(r"<!doctype html|<html\b|<head\b|<body\b", html_content, re.IGNORECASE)
+            re.search(
+                r"<!doctype html|<html\b|<head\b|<body\b", html_content, re.IGNORECASE
+            )
         )
 
         if not looks_like_document:
@@ -3100,6 +3102,7 @@ class Pipe:
     ):
         """Initialize custom tools based on configuration"""
         import time
+
         t_start = time.perf_counter()
         # 1. Determine effective settings (User override > Global)
         uv = self._get_user_valves(__user__)
@@ -3135,7 +3138,9 @@ class Pipe:
 
         # 3. If all OpenWebUI tool types are disabled, skip loading and return early
         if not enable_tools and not enable_openapi:
-            logger.info(f"[Perf] _initialize_custom_tools (fast return): {(time.perf_counter() - t_start)*1000:.2f}ms")
+            logger.info(
+                f"[Perf] _initialize_custom_tools (fast return): {(time.perf_counter() - t_start)*1000:.2f}ms"
+            )
             return final_tools
 
         # 4. Extract chat-level tool selection (P4: user selection from Chat UI)
@@ -3181,7 +3186,9 @@ class Pipe:
         final_tools.extend(openwebui_tools)
 
         t_total = time.perf_counter() - t_start
-        logger.info(f"[Perf] _initialize_custom_tools total: {t_total*1000:.2f}ms (Base tools: {(t_base_tools_done-t_start)*1000:.2f}ms, Dyn Load: {(t_dyn_tools_done-t_dyn_tools_start)*1000:.2f}ms)")
+        logger.info(
+            f"[Perf] _initialize_custom_tools total: {t_total*1000:.2f}ms (Base tools: {(t_base_tools_done-t_start)*1000:.2f}ms, Dyn Load: {(t_dyn_tools_done-t_dyn_tools_start)*1000:.2f}ms)"
+        )
 
         return final_tools
 
@@ -3282,7 +3289,7 @@ class Pipe:
                 description=(
                     "Rendering style for HTML files. For PDF files, embedding is disabled and you MUST only provide preview/download Markdown links from tool output. "
                     "Default to 'richui' so the HTML effect is shown directly in OpenWebUI. DO NOT output html_embed in richui mode. If richui is used for long content, you MUST add a 'Full Screen' expansion button in the HTML logic. "
-                    "For diagrams, dashboards, timelines, architectures, and explainers, make the page interactive by default, but keep the interaction menu simple: use `data-openwebui-prompt` for immediate continuation, add `data-openwebui-action=\"fill\"` only when you want prefill-only behavior, use `data-openwebui-action=\"submit\"` to send the current chat input, and `data-openwebui-link` for external URLs. Prefer declarative bindings over custom JavaScript. "
+                    'For diagrams, dashboards, timelines, architectures, and explainers, make the page interactive by default, but keep the interaction menu simple: use `data-openwebui-prompt` for immediate continuation, add `data-openwebui-action="fill"` only when you want prefill-only behavior, use `data-openwebui-action="submit"` to send the current chat input, and `data-openwebui-link` for external URLs. Prefer declarative bindings over custom JavaScript. '
                     "Use 'artifacts' only when the user explicitly asks for artifacts. "
                     "Only 'artifacts' and 'richui' are supported."
                 ),
@@ -3491,7 +3498,7 @@ class Pipe:
                     )
                     if embed_type == "richui":
                         hint += "\n\nCRITICAL: You are in 'richui' mode. DO NOT output an HTML code block or iframe in your message. Just output the links above."
-                        hint += "\n\nINTERACTION RULE: If the HTML is a diagram, architecture page, explainer, dashboard, or workflow, it SHOULD behave like an exploration interface instead of a static poster. Prefer the declarative contract and keep it simple: use `data-openwebui-prompt` for immediate continuation, add `data-openwebui-action=\"fill\"` only when prefill-only behavior is needed, use `data-openwebui-action=\"submit\"` to send the current chat input, and `data-openwebui-link` for external links. Only use `data-openwebui-copy`, `data-openwebui-select`, or template placeholders for explicit advanced needs."
+                        hint += '\n\nINTERACTION RULE: If the HTML is a diagram, architecture page, explainer, dashboard, or workflow, it SHOULD behave like an exploration interface instead of a static poster. Prefer the declarative contract and keep it simple: use `data-openwebui-prompt` for immediate continuation, add `data-openwebui-action="fill"` only when prefill-only behavior is needed, use `data-openwebui-action="submit"` to send the current chat input, and `data-openwebui-link` for external links. Only use `data-openwebui-copy`, `data-openwebui-select`, or template placeholders for explicit advanced needs.'
                     elif embed_type == "artifacts":
                         hint += "\n\nIMPORTANT: You are in 'artifacts' mode. DO NOT output an HTML code block in your message. The system will automatically inject it after you finish."
                 elif has_preview:
@@ -4983,12 +4990,15 @@ class Pipe:
                     )
 
                 import time
+
                 t_get_opw_start = time.perf_counter()
                 tools_dict = await get_openwebui_tools(
                     tool_request, tool_ids, user, extra_params
                 )
                 t_get_opw_done = time.perf_counter()
-                logger.info(f"[Perf] get_openwebui_tools ({len(tool_ids)} IDs): {(t_get_opw_done-t_get_opw_start)*1000:.2f}ms")
+                logger.info(
+                    f"[Perf] get_openwebui_tools ({len(tool_ids)} IDs): {(t_get_opw_done-t_get_opw_start)*1000:.2f}ms"
+                )
 
                 if self.valves.DEBUG:
                     if tools_dict:
@@ -5690,8 +5700,10 @@ class Pipe:
             metadata_dir = self._get_session_metadata_dir(chat_id)
             db_path = os.path.join(metadata_dir, "session.db")
             import sqlite3
+
             with sqlite3.connect(db_path) as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS interactive_controls (
                         id TEXT PRIMARY KEY,
                         label TEXT NOT NULL,
@@ -5701,9 +5713,12 @@ class Pipe:
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
+                """
+                )
         except Exception as e:
-            logger.warning(f"Failed to initialize interactive_controls table for {chat_id}: {e}")
+            logger.warning(
+                f"Failed to initialize interactive_controls table for {chat_id}: {e}"
+            )
 
     def _get_plan_file_path(self, chat_id: Optional[str]) -> Optional[str]:
         """Return the canonical plan.md path for the current chat session."""
@@ -6114,14 +6129,14 @@ class Pipe:
             if stats is not None
             else self._read_todo_status_from_session_db(chat_id)
         )
-        
+
         # If there are tasks but they are all done, do not emit the widget.
         # We also clear the previous hash so if a new task is added later, it will re-trigger.
         if current_stats:
             total_tasks = int(current_stats.get("total", 0))
             done_tasks = int(current_stats.get("done", 0))
             if total_tasks > 0 and done_tasks == total_tasks:
-                self._write_todo_widget_hash(chat_id, "") # Reset hash
+                self._write_todo_widget_hash(chat_id, "")  # Reset hash
                 return {
                     "emitted": False,
                     "changed": False,
@@ -6829,8 +6844,12 @@ class Pipe:
         except Exception as e:
             logger.warning(f"[Session Tracking] Failed to persist mapping: {e}")
 
-    def _build_client_config(self, user_id: str = None, chat_id: str = None, token: str = None) -> dict:
+    def _build_client_config(
+        self, user_id: str = None, chat_id: str = None, token: str = None
+    ):
         """Build CopilotClient config from valves and request body."""
+        from copilot import SubprocessConfig
+
         cwd = self._get_workspace_dir(user_id=user_id, chat_id=chat_id)
         config_dir = self._get_copilot_config_dir()
 
@@ -6838,14 +6857,14 @@ class Pipe:
         if os.environ.get("COPILOT_CLI_PATH"):
             client_config["cli_path"] = os.environ["COPILOT_CLI_PATH"]
         client_config["cwd"] = cwd
-        client_config["config_dir"] = config_dir
+        client_config["github_token"] = token
 
         if self.valves.LOG_LEVEL:
             client_config["log_level"] = self.valves.LOG_LEVEL
 
         # Setup persistent CLI tool installation directories
         agent_env = dict(os.environ)
-        
+
         # Safely inject token and config dir into the local agent environment
         agent_env["COPILOTSDK_CONFIG_DIR"] = config_dir
         if token:
@@ -6897,7 +6916,7 @@ class Pipe:
 
         client_config["env"] = agent_env
 
-        return client_config
+        return SubprocessConfig(**client_config)
 
     def _build_final_system_message(
         self,
@@ -7021,7 +7040,7 @@ class Pipe:
         manage_skills_intent: bool = False,
     ):
         """Build SessionConfig for Copilot SDK."""
-        from copilot.types import SessionConfig, InfiniteSessionConfig
+        from copilot.session import SessionConfig, InfiniteSessionConfig
 
         infinite_session_config = None
         if self.valves.INFINITE_SESSION:
@@ -7134,7 +7153,7 @@ class Pipe:
         except Exception as e:
             logger.debug(f"[Copilot] skill directory debug check failed: {e}")
 
-        return SessionConfig(**session_params)
+        return session_params
 
     async def _abort_stale_resumed_turn_if_needed(
         self,
@@ -7399,15 +7418,28 @@ class Pipe:
                     f"BYOK: Using user-configured BYOK_MODELS ({len(model_list)} models)."
                 )
 
-        return [
+        # Infer per-model provider from ID string (BYOK endpoints can return multi-provider lists)
+        byok_models = [
             {
                 "id": m,
                 "name": f"-{self._clean_model_id(m)}",
                 "source": "byok",
+                "provider": self._infer_provider_from_id(m),
                 "raw_id": m,
             }
             for m in model_list
         ]
+
+        # Sort BYOK models by provider + name
+        _provider_order = {"openai": 0, "anthropic": 1, "google": 2, "unknown": 3}
+        byok_models.sort(
+            key=lambda x: (
+                _provider_order.get(x.get("provider", "unknown"), 3),
+                x.get("raw_id", ""),
+            )
+        )
+
+        return byok_models
 
     def _clean_model_id(self, model_id: str) -> str:
         """Remove copilot prefixes from model ID."""
@@ -7436,6 +7468,36 @@ class Pipe:
             if "google" in t:
                 return "Google"
         return "Unknown"
+
+    def _infer_provider_from_id(self, model_id: str) -> str:
+        """Infer provider from model ID string — used for BYOK models where API doesn't expose provider."""
+        id_lower = model_id.lower()
+        if any(
+            k in id_lower for k in ["gpt", "codex", "o1", "o3", "o4", "o5", "chatgpt"]
+        ):
+            return "openai"
+        if any(k in id_lower for k in ["claude", "anthropic"]):
+            return "anthropic"
+        if any(k in id_lower for k in ["gemini", "aistudio", "vertex"]):
+            return "google"
+        # Third-party providers grouped with OpenAI for sorting
+        if any(
+            k in id_lower
+            for k in [
+                "qwen",
+                "qwen3",
+                "qwq",
+                "deepseek",
+                "mistral",
+                "mixtral",
+                "llama",
+                "llm",
+            ]
+        ):
+            return "openai"
+        if "/" in model_id:  # OpenRouter format: provider/model
+            return "openai"
+        return "unknown"
 
     def _get_user_valves(self, __user__: Optional[dict]) -> "Pipe.UserValves":
         """Robustly extract UserValves from __user__ context."""
@@ -7489,7 +7551,9 @@ class Pipe:
                 "raw_id": mid,
                 "source": source,
                 "provider": (
-                    self._get_provider_name(m) if source == "copilot" else "BYOK"
+                    self._get_provider_name(m).lower()
+                    if source == "copilot"
+                    else "byok"
                 ),
             }
         except Exception as e:
@@ -7527,8 +7591,36 @@ class Pipe:
         standard_results = results[0] if not isinstance(results[0], Exception) else []
         byok_results = results[1] if not isinstance(results[1], Exception) else []
 
-        # Merge all discovered models
+        # Merge all discovered models and sort by source (copilot=0, byok=1), then provider, then multiplier
+        # Ensure explicit group: copilot models always before byok models
         all_models = standard_results + byok_results
+        _provider_order = {"openai": 0, "anthropic": 1, "google": 2, "unknown": 3}
+        all_models.sort(
+            key=lambda x: (
+                0 if x.get("source") == "copilot" else 1,  # copilot=0, byok=1, explicit
+                _provider_order.get(x.get("provider", "unknown"), 3),
+                (0.0 if x.get("multiplier") is None else x.get("multiplier", 1.0)),
+                x.get("raw_id", ""),
+            )
+        )
+
+        # Insert visual separator between copilot and byok groups if both exist
+        if byok_results and standard_results:
+            sep_idx = next(
+                (i for i, m in enumerate(all_models) if m.get("source") == "byok"),
+                None,
+            )
+            if sep_idx and sep_idx > 0:
+                all_models.insert(
+                    sep_idx,
+                    {
+                        "id": "__byok__",
+                        "name": "───── BYOK ─────",
+                        "source": "separator",
+                        "provider": "separator",
+                        "raw_id": "__byok__",
+                    },
+                )
 
         # Update local instance cache for validation purposes in _pipe_impl
         self.__class__._model_cache = all_models
@@ -7581,11 +7673,11 @@ class Pipe:
                 self._setup_env(token=token)
 
             # Build configuration and start persistent client
-            client_config = self._build_client_config(user_id=None, chat_id=None, token=token)
-            client_config["github_token"] = token
-            client_config["auto_start"] = True
+            client_config = self._build_client_config(
+                user_id=None, chat_id=None, token=token
+            )
 
-            new_client = CopilotClient(client_config)
+            new_client = CopilotClient(client_config, auto_start=True)
             await new_client.start()
             self.__class__._shared_clients[token_hash] = new_client
             return new_client
@@ -7605,7 +7697,15 @@ class Pipe:
                 if formatted:
                     models.append(formatted)
 
-            models.sort(key=lambda x: (x.get("multiplier", 1.0), x.get("raw_id", "")))
+            # Sort: OpenAI first, then Anthropic, then others; within same provider by multiplier ascending (free/0x first)
+            _provider_order = {"openai": 0, "anthropic": 1, "google": 2, "unknown": 3}
+            models.sort(
+                key=lambda x: (
+                    _provider_order.get(x.get("provider", "unknown").lower(), 3),
+                    (0.0 if x.get("multiplier") is None else x.get("multiplier", 1.0)),
+                    x.get("raw_id", ""),
+                )
+            )
             return models
         except Exception as e:
             logger.error(f"[Pipes] Standard fetch failed: {e}")
@@ -7671,17 +7771,29 @@ class Pipe:
                 ):
                     continue
 
-                # Filter out older iterations of Claude Sonnet (3.5, 4.0, 4.5) as 3.7/4.6 is now available.
-                # We target both specific IDs and user-visible names.
-                claude_targets = [
-                    "claude-3-5-sonnet",
-                    "claude-3.5-sonnet",
-                    "claude-4-0-sonnet",
-                    "claude-4.0-sonnet",
-                    "claude-4-5-sonnet",
-                    "claude-4.5-sonnet",
-                ]
-                if any(t in mid or t in mname for t in claude_targets):
+                # Filter out older iterations of Claude Sonnet (4, 4.5) as 4.6 is now available.
+                # Use exact/prefix-safe match: must equal or end with "-<target>" to avoid
+                # "claude-sonnet-4" matching "claude-sonnet-4.6".
+                def is_target(mid: str, target: str) -> bool:
+                    return mid == target or mid.endswith("-" + target)
+
+                if any(
+                    is_target(mid, t) or is_target(mname, t)
+                    for t in [
+                        "claude-sonnet-4",
+                        "claude-sonnet-4.5",
+                    ]
+                ):
+                    continue
+
+                # Filter out older Opus (4) keeping only 4.6
+                if any(
+                    is_target(mid, t) or is_target(mname, t)
+                    for t in [
+                        "claude-opus-4",
+                        "claude-opus-4.5",
+                    ]
+                ):
                     continue
 
             # 2. User-defined Keyword Filter
@@ -7692,6 +7804,10 @@ class Pipe:
             if msource == "copilot":
                 if float(m.get("multiplier", 1.0)) > (eff_max + epsilon):
                     continue
+
+            # 4. Filter out separator items — they are display-only, not selectable models
+            if msource == "separator":
+                continue
 
             res.append(m)
 
@@ -7924,7 +8040,7 @@ class Pipe:
             body, __metadata__, __event_call__, debug_enabled=effective_debug
         )
         chat_id = chat_ctx.get("chat_id") or "default"
-        
+
         # Initialize Adaptive Interactive Controls Table pre-emptively
         if chat_id and chat_id != "default":
             self._initialize_interactive_controls_table(chat_id)
@@ -8142,7 +8258,7 @@ class Pipe:
         if live_todo_stats:
             total_tasks = int(live_todo_stats.get("total", 0))
             done_tasks = int(live_todo_stats.get("done", 0))
-            
+
             # Only show the widget if there are tasks and not ALL of them are done.
             if total_tasks > 0 and done_tasks < total_tasks:
                 await self._emit_todo_widget(
@@ -8281,7 +8397,6 @@ class Pipe:
         client_config = self._build_client_config(
             user_id=user_id, chat_id=chat_id, token=effective_token
         )
-        client_config["github_token"] = effective_token
         client = CopilotClient(client_config)
         should_stop_client = True
         try:
@@ -8308,7 +8423,7 @@ class Pipe:
                 __message_id__=__message_id__,
             )
             t_after_tools = time.monotonic()
-            
+
             if custom_tools:
                 await self._emit_debug_log(
                     f"Enabled {len(custom_tools)} tools (Custom/Built-in)",
@@ -8321,7 +8436,7 @@ class Pipe:
                 __event_call__, enable_mcp=effective_mcp, chat_tool_ids=chat_tool_ids
             )
             t_after_mcp = time.monotonic()
-            
+
             # Emit Profiling Log to Frontend
             self._emit_debug_log_sync(
                 f"⏱️ [Profiling] Client.start: {t_after_client - t_before_client:.3f}s | "
@@ -8366,7 +8481,6 @@ class Pipe:
                 if byok_bearer_token:
                     provider_config["bearer_token"] = byok_bearer_token
                 pass
-
 
             if chat_id:
                 try:
@@ -8414,11 +8528,17 @@ class Pipe:
                     # Only run heavy IO skill debugging if debug is actually on
                     if effective_debug:
                         try:
-                            skill_dirs_dbg = resume_params.get("skill_directories") or []
+                            skill_dirs_dbg = (
+                                resume_params.get("skill_directories") or []
+                            )
                             for sd in skill_dirs_dbg:
                                 path = Path(sd)
-                                skill_md_count = sum(1 for p in path.glob("*/SKILL.md") if p.is_file())
-                                logger.info(f"[Copilot] resume skill_dir check: {sd} skill_md_count={skill_md_count}")
+                                skill_md_count = sum(
+                                    1 for p in path.glob("*/SKILL.md") if p.is_file()
+                                )
+                                logger.info(
+                                    f"[Copilot] resume skill_dir check: {sd} skill_md_count={skill_md_count}"
+                                )
                         except:
                             pass
 
@@ -8461,7 +8581,9 @@ class Pipe:
                     )
 
                     t_before_rpc = time.monotonic()
-                    session = await client.resume_session(chat_id, resume_params)
+                    session = await client.resume_session(
+                        session_id=chat_id, **resume_params
+                    )
                     t_after_rpc = time.monotonic()
 
                     self._emit_debug_log_sync(
@@ -8511,7 +8633,7 @@ class Pipe:
                 )
 
                 t_before_rpc2 = time.monotonic()
-                session = await client.create_session(config=session_config)
+                session = await client.create_session(**session_config)
                 t_after_rpc2 = time.monotonic()
 
                 self._emit_debug_log_sync(
@@ -8552,9 +8674,8 @@ class Pipe:
             if effective_debug:
                 try:
                     await self._emit_debug_log(
-                        f"[Pipe Send] payload_keys={list(send_payload.keys())}, "
-                        f"prompt_len={len(prompt or '')}, prompt_preview={repr((prompt or '')[:220])}, "
-                        f"attachments_count={len(attachments)}",
+                        f"[Pipe Send] prompt_len={len(prompt or '')}, prompt_preview={repr((prompt or '')[:220])}, "
+                        f"attachments_count={len(attachments) if attachments else 0}",
                         __event_call__,
                         debug_enabled=effective_debug,
                     )
@@ -8600,7 +8721,11 @@ class Pipe:
                 )
             else:
                 try:
-                    response = await session.send_and_wait(send_payload)
+                    response = await session.send_and_wait(
+                        send_payload["prompt"],
+                        attachments=send_payload.get("attachments"),
+                        mode=send_payload.get("mode"),
+                    )
                     return response.data.content if response else "Empty response."
                 finally:
                     # Cleanup: destroy session if no chat_id (temporary session)
@@ -8711,7 +8836,6 @@ class Pipe:
 
             # Try as object attribute
             return getattr(data, attr, default)
-
 
         async def _flush_pending_embeds(flush_source: str) -> List[str]:
             if state.get("embeds_flushed"):
@@ -8877,7 +9001,7 @@ class Pipe:
                 state["turn_ended"] = False
                 state["turn_started_ts"] = state["last_event_ts"]
                 state["turn_end_ts"] = None
-                
+
                 # Calculate and log request latency (TTFT)
                 if request_start_ts > 0:
                     elapsed = state["last_event_ts"] - request_start_ts
@@ -8890,7 +9014,7 @@ class Pipe:
                         __event_call__,
                         debug_enabled=True,
                     )
-                
+
                 state["message_stream_tail"] = ""
                 state["reasoning_sent"] = False
                 state["reasoning_stream_tail"] = ""
@@ -8943,7 +9067,7 @@ class Pipe:
                     if state["thinking_started"]:
                         queue.put_nowait("\n</think>\n")
                         state["thinking_started"] = False
-                    
+
                     queue.put_nowait(delta)
 
             # === Complete Message Event (Non-streaming response) ===
@@ -9291,7 +9415,10 @@ class Pipe:
                 _max_result_display = 2000
                 _result_raw = result_content or "Success"
                 if len(_result_raw) > _max_result_display:
-                    _result_raw = _result_raw[:_max_result_display] + f"\n... ({len(result_content)} chars total, truncated)"
+                    _result_raw = (
+                        _result_raw[:_max_result_display]
+                        + f"\n... ({len(result_content)} chars total, truncated)"
+                    )
                 result_for_attr = escape_html_attr(_result_raw)
 
                 # Emit the unified native tool_calls block:
@@ -9558,7 +9685,13 @@ class Pipe:
         # Use asyncio.create_task used to prevent session.send from blocking the stream reading
         # if the SDK implementation waits for completion.
         state["send_start_ts"] = time.monotonic()
-        send_task = asyncio.create_task(session.send(send_payload))
+        send_task = asyncio.create_task(
+            session.send(
+                send_payload["prompt"],
+                attachments=send_payload.get("attachments"),
+                mode=send_payload.get("mode"),
+            )
+        )
 
         def _handle_send_task_done(task: asyncio.Task):
             if done.is_set():
@@ -9749,7 +9882,9 @@ class Pipe:
 
                     if chunk is ERROR_SENTINEL:
                         # Extract error message if possible or use default
-                        error_desc = state.get("last_error_msg", "Error during processing")
+                        error_desc = state.get(
+                            "last_error_msg", "Error during processing"
+                        )
                         artifact_chunks = await _flush_pending_embeds("error")
                         for artifact_chunk in artifact_chunks:
                             if artifact_chunk:
@@ -9832,9 +9967,7 @@ class Pipe:
                             )
                             continue
                         except Exception as ping_err:
-                            stall_msg = (
-                                f"Copilot stalled after assistant.turn_start. Ping failed ({ping_err}). The request was aborted."
-                            )
+                            stall_msg = f"Copilot stalled after assistant.turn_start. Ping failed ({ping_err}). The request was aborted."
                             state["last_error_msg"] = stall_msg
                             state["final_status_desc"] = stall_msg
                             self._emit_debug_log_sync(

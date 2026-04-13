@@ -1,14 +1,11 @@
 ---
 name: Plugin Implementer
-description: Implement OpenWebUI plugin and docs updates with strict project standards
+description: Implement plugin code changes in parallel with Doc Writer. Follows the approved plan with strict project standards. No sequential handoffs.
 argument-hint: Provide approved plan or feature request to implement
-tools: ['execute/getTerminalOutput', 'execute/runInTerminal', 'read/readFile', 'read/terminalSelection', 'read/terminalLastCommand', 'edit/createFile', 'edit/editFiles', 'search', 'web', 'web/fetch', 'web/githubRepo', 'agent']
-infer: true
-handoffs:
-  - label: Run Review
-    agent: Plugin Reviewer
-    prompt: Review the implementation for i18n, safety, and consistency issues.
-    send: false
+tools: vscode, search, read, agent, web, execute, edit
+handoffs: []
+agents: ['Coordinator', 'Plugin Planner', 'Doc Writer', 'Plugin Reviewer', 'Release Prep']
+user-invocable: true
 ---
 You are the **implementation specialist** for the `openwebui-extensions` repository.
 

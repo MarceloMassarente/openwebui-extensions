@@ -9,6 +9,7 @@ A collection of enhancements, plugins, and prompts for [open-webui](https://gith
 
 <!-- STATS_START -->
 ## 📊 Community Stats
+>
 > ![updated](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_updated.json&style=flat)
 
 | 👤 Author | 👥 Followers | ⭐ Points | 🧩 Plugin Contributions |
@@ -19,8 +20,8 @@ A collection of enhancements, plugins, and prompts for [open-webui](https://gith
 | :---: | :---: | :---: | :---: | :---: |
 | ![home_posts](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_home_posts.json&style=flat) | ![home_downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_home_downloads.json&style=flat) | ![home_views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_home_views.json&style=flat) | ![home_upvotes](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_home_upvotes.json&style=flat) | ![home_saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_home_saves.json&style=flat) |
 
-
 ### 🔥 Top 6 Popular Plugins
+
 | Rank | Plugin | Version | Downloads | Views | 📅 Updated |
 | :---: | :--- | :---: | :---: | :---: | :---: |
 | 🥇 | [Smart Mind Map](https://openwebui.com/posts/turn_any_text_into_beautiful_mind_maps_3094c59a) | ![v](https://img.shields.io/badge/v-1.0.0-blue?style=flat) | ![p1_dl](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_p1_dl.json&style=flat) | ![p1_vw](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_p1_vw.json&style=flat) | ![updated](https://img.shields.io/badge/2026--03--22-gray?style=flat) |
@@ -31,6 +32,7 @@ A collection of enhancements, plugins, and prompts for [open-webui](https://gith
 | 6️⃣ | [AI Task Instruction Generator](https://openwebui.com/posts/ai_task_instruction_generator_9bab8b37) | ![v](https://img.shields.io/badge/v-N/A-gray?style=flat) | ![p6_dl](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_p6_dl.json&style=flat) | ![p6_vw](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_p6_vw.json&style=flat) | ![updated](https://img.shields.io/badge/2026--03--22-gray?style=flat) |
 
 ### 📈 Total Downloads Trend
+
 ![Activity](https://gist.githubusercontent.com/Fu-Jie/db3d95687075a880af6f1fba76d679c6/raw/chart.svg)
 
 *See full stats and charts in [Community Stats Report](./docs/community-stats.md)*
@@ -38,16 +40,18 @@ A collection of enhancements, plugins, and prompts for [open-webui](https://gith
 
 ## 🌟 Star Features
 
-### 1. [GitHub Copilot Official SDK Pipe](https://openwebui.com/posts/github_copilot_official_sdk_pipe_ce96f7b4) ![v0.12.1](https://img.shields.io/badge/v0.12.1-blue?style=flat-square) ![active-dev](https://img.shields.io/badge/active--dev-orange?style=flat-square) ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_dl.json&style=flat-square) ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_vw.json&style=flat-square)
+### 1. [GitHub Copilot Official SDK Pipe](https://openwebui.com/posts/github_copilot_official_sdk_pipe_ce96f7b4) ![v0.12.3](https://img.shields.io/badge/v0.12.3-blue?style=flat-square) ![active-dev](https://img.shields.io/badge/active--dev-orange?style=flat-square) ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_dl.json&style=flat-square) ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_vw.json&style=flat-square)
 
 **The ultimate autonomous Agent integration for OpenWebUI.** Deeply bridging GitHub Copilot SDK with your OpenWebUI ecosystem. It enables the Agent to autonomously perform **intent recognition**, **web search**, and **context compaction** while reusing your existing tools, skills, and configurations for a professional, full-featured experience.
 
 > [!TIP]
 > **No GitHub Copilot subscription required!** Supports **BYOK (Bring Your Own Key)** mode using your own OpenAI/Anthropic API keys.
 
-#### 🚀 Key Leap (v0.12.1)
+#### 🚀 Key Leap (v0.12.3)
 
-- **🛡️ Disable Terminal Tools for AI**: Terminal server tools are now filtered out at the pipe level, preventing AI from calling them while keeping terminal functionality available to users.
+- **� SDK & CLI Upgrade**: Migrated from `github-copilot-sdk` v0.1.30 to **v0.2.2**, with full compatibility for the new dataclass-based API and positional `send()` arguments.
+- **🗂️ Model Filtering & Sorting**: Added provider-aware sorting (OpenAI → Anthropic → others) and exact-prefix model filtering to remove legacy/sunset models cleanly.
+- **�🛡️ Disable Terminal Tools for AI**: Terminal server tools are now filtered out at the pipe level, preventing AI from calling them while keeping terminal functionality available to users.
 - **🎨 RichUI Theme-Aware CSS Variables**: Added CSS custom properties that automatically adapt to light/dark themes for better text contrast.
 - **📊 Interactive Delivery**: Full support for **HTML Artifacts** and **RichUI** rendering, providing instant interactive previews and persistent downloadable results.
 - **🛠️ Deterministic Toolchain**: Built-in specialized tools for skill lifecycles (`manage_skills`) and system optimization.
@@ -131,7 +135,7 @@ Located in the `plugins/` directory, containing Python-based enhancements:
 
 ### Pipes
 
-- **GitHub Copilot SDK** (`github-copilot-sdk`): Official GitHub Copilot SDK integration (v0.12.0). Supports dynamic models (GPT-4o, Claude 3.7, o1), multi-turn conversation, and high-performance process pooling.
+- **GitHub Copilot SDK** (`github-copilot-sdk`): Official GitHub Copilot SDK integration (v0.12.3). Supports dynamic models (GPT-4o, Claude 3.7, o1), multi-turn conversation, and high-performance process pooling.
 
 ### Pipelines
 

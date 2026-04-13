@@ -1,0 +1,18 @@
+# ── GitHub Token (optional — without it only BYOK models show) ──────────────
+# GH_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# ── BYOK Configuration ────────────────────────────────────────────────────────
+# Provider base URL (e.g. https://api.openai.com/v1 or https://api.anthropic.com)
+BYOK_BASE_URL=
+
+# API Key or Bearer Token for the BYOK provider
+BYOK_API_KEY=
+BYOK_BEARER_TOKEN=
+
+# Provider type: openai | anthropic | google
+# (Determines sorting group — openai sorts before anthropic, etc.)
+BYOK_TYPE=openai
+
+# Fallback: comma-separated model list if BYOK_BASE_URL fetch fails
+# Example: BYOK_MODELS=gpt-4o,gpt-4-turbo,claude-3.5-sonnet
+BYOK_MODELS=
