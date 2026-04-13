@@ -17,23 +17,23 @@
 - 支持全局（Valves）和按用户（User Valves）两级配置
 
 比如：一个数据分析团队，在 OpenWebUI 中配置三个自定义模型：
-- **Leader**（OpenWebUI 模型 A）：系统提示词 = "你是一个首席数据分析师，统筹协调团队工作"
-- **Agent 1**（OpenWebUI 模型 B）：系统提示词 = "你专注于数据处理和统计分析，擅长用 Python/pandas 处理海量数据"
+- **Agent 1**（OpenWebUI 模型 A）：系统提示词 = "你是一个首席数据分析师，统筹协调团队工作"
+- **Agent 2**（OpenWebUI 模型 B）：系统提示词 = "你专注于数据处理和统计分析，擅长用 Python/pandas 处理海量数据"
 - **Agent 2**（OpenWebUI 模型 C）：系统提示词 = "你专注于数据可视化和报告生成，擅长制作图表和撰写分析结论"
 
-用户说"分析这份销售数据"，Leader 识别出这是一个需要并行的多维度任务，将数据处理和可视化**同时**分发给 Agent 1 和 Agent 2 并行执行，最后汇总成一份完整的分析报告返回给用户。
+用户说"分析这份销售数据"，Agent 1 识别出这是一个需要并行的多维度任务，将数据处理和可视化**同时**分发给 Agent 2 和其他 Agent 并行执行，最后汇总成一份完整的分析报告返回给用户。
 
 所有 Agent 共享相同的 OpenWebUI Skills 和 MCP 服务器工具集；具体调用哪个模型由 Copilot SDK 根据系统提示词自行选择。
 
 ```mermaid
 flowchart TD
     User["👤 用户<br/>OpenWebUI Chat"]
-    Pipe["🤖 Copilot SDK Pipe<br/>(Leader)"]
+    Pipe["🤖 Copilot SDK Pipe"]
     Config["📋 Agent Team 配置<br/>Agent 1 (Leader) · Agent 2 · ··· · Agent N"]
     A1["📊 Agent 1 (Leader)<br/>数据处理分析"]
     A2["📈 Agent 2<br/>可视化报告"]
     Tools["🔧 Skills + Tools + MCP Servers<br/>(所有 Agent 共享)"]
-    Result["✅ Leader 汇总 → 返回用户"]
+    Result["✅ Agent 1 汇总 → 返回用户"]
 
     User -->|"分析这份销售数据"| Pipe
     Pipe --> Config

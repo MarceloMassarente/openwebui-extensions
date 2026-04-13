@@ -17,23 +17,23 @@ How it works:
 - Works at both global (Valves) and per-user (User Valves) level
 
 For example: a data analysis team, configured in OpenWebUI as three custom models:
-- **Leader** (OpenWebUI Model A): system prompt = "You are the chief data analyst, coordinating the team's work"
-- **Agent 1** (OpenWebUI Model B): system prompt = "You specialize in data processing and statistical analysis, expert at handling large datasets with Python/pandas"
+- **Agent 1** (OpenWebUI Model A): system prompt = "You are the chief data analyst, coordinating the team's work"
+- **Agent 2** (OpenWebUI Model B): system prompt = "You specialize in data processing and statistical analysis, expert at handling large datasets with Python/pandas"
 - **Agent 2** (OpenWebUI Model C): system prompt = "You specialize in data visualization and report generation, skilled at creating charts and writing analysis conclusions"
 
-When you say "analyze this sales data", the Leader recognizes this requires parallel multi-dimensional work and **dispatches data processing and visualization to Agent 1 and Agent 2 simultaneously**. Both agents work in parallel, and the Leader synthesizes their findings into a complete analysis report returned to you.
+When you say "analyze this sales data", Agent 1 recognizes this requires parallel multi-dimensional work and **dispatches data processing and visualization to Agent 2 and other agents simultaneously**. All agents work in parallel, and Agent 1 synthesizes their findings into a complete analysis report returned to you.
 
 All agents share the same OpenWebUI Skills and MCP server tools; which actual models are called is decided by the Copilot SDK based on the system prompts.
 
 ```mermaid
 flowchart TD
     User["👤 User<br/>OpenWebUI Chat"]
-    Pipe["🤖 Copilot SDK Pipe<br/>(Leader)"]
+    Pipe["🤖 Copilot SDK Pipe"]
     Config["📋 Agent Team Config<br/>Agent 1 (Leader) · Agent 2 · ··· · Agent N"]
     A1["📊 Agent 1 (Leader)<br/>Data Processing"]
     A2["📈 Agent 2<br/>Viz & Report"]
     Tools["🔧 Skills + Tools + MCP Servers<br/>(shared by all)"]
-    Result["✅ Leader synthesizes → user"]
+    Result["✅ Agent 1 synthesizes → user"]
 
     User -->|"Analyze this sales data"| Pipe
     Pipe --> Config
