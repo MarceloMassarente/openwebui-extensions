@@ -1,6 +1,6 @@
 # GitHub Copilot SDK Pipe for OpenWebUI
 
-| By [Fu-Jie](https://github.com/Fu-Jie) · v0.12.3 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| By [Fu-Jie](https://github.com/Fu-Jie) · v0.13.0 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -39,13 +39,13 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 > [!IMPORTANT]
 > If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
 
-## ✨ v0.12.3: SDK 0.2.2 Upgrade + Model Management Improvements
+## ✨ v0.13.0: Agent Team + Session Mode Now Work End-to-End
 
-- **🔧 SDK Upgrade**: Upgraded github-copilot-sdk from 0.1.30 to 0.2.2 with updated API (SubprocessConfig, keyword-argument session methods, positional send()).
-- **🗂️ Model Filtering**: Remove deprecated Sonnet 4/4.5 and Opus 4/4.5 models (keep only 4.6). Fixed filter patterns to match actual SDK model IDs (`claude-sonnet-4` format).
-- **📊 Smart Sorting**: Sort by provider (OpenAI → Anthropic → others), within same provider by multiplier ascending, 0x free models appear first within each provider.
-- **⚙️ Default Multiplier**: Default MAX_MULTIPLIER raised from 1.0 to 3.0 for broader model access.
-- **📝 Restart Note**: If plugin update shows errors, restart OpenWebUI server to clear cached bytecode.
+- **🤖 Agent Team** (New): Coordinate multiple OpenWebUI custom models as a sub-agent team within one session. Select by tag (`AGENT_TEAM_TAG`) or model IDs (`AGENT_TEAM_MODEL_IDS`), assign a leader (`AGENT_TEAM_LEADER`) — every agent inherits the same tools (OpenWebUI skills + MCP servers) as the base session.
+- **🎯 Active Session Mode Awareness**: The Agent now knows which session mode is active (`autopilot` / `interactive` / `plan`) via an injected `[Active Session Mode]` system prompt directive, aligned with the official Copilot SDK agent-loop docs. Autopilot drives tasks to completion; interactive stops between steps; plan gates execution behind your approval.
+- **⚡ Mode-Aware Workstyle**: Each mode now injects its own preamble — autopilot encourages full end-to-end completion, interactive enforces step-by-step pausing, plan requires approval before any action.
+- **🔒 SDK Mode Set Hardened**: Both resume and create session paths now call `session.rpc.mode.set()` with `asyncio.wait_for(timeout=5.0)` to prevent hangs, with full debug visibility on failure.
+- **🧹 System Prompt Overhaul**: Removed hardcoded Copilot CLI tool names and inapplicable conventions; resolved SQL pattern contradiction; SESSION_MODE now resolves globally as user_valve > global valve > `autopilot`.
 
 ---
 

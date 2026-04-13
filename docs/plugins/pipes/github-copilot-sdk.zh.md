@@ -1,6 +1,6 @@
 # GitHub Copilot Official SDK Pipe
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.12.3 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.13.0 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -40,13 +40,13 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## ✨ v0.12.3：SDK 0.2.2 升级 + 模型管理改进
+## ✨ v0.13.0：Agent Team 多智能体 + Session Mode 全链路生效
 
-- **🔧 SDK 升级**：github-copilot-sdk 从 0.1.30 升级到 0.2.2，更新 API（SubprocessConfig、关键字参数会话方法、位置参数 send()）。
-- **🗂️ 模型过滤**：移除已停用的 Sonnet 4/4.5 和 Opus 4/4.5 型号（仅保留 4.6）。修复过滤规则以匹配实际 SDK 模型 ID（`claude-sonnet-4` 格式）。
-- **📊 智能排序**：按供应商排序（OpenAI → Anthropic → 其他），同供应商内按倍率升序排列，0x 免费模型在各厂商内优先显示。
-- **⚙️ 默认倍率**：默认 MAX_MULTIPLIER 从 1.0 提高到 3.0，支持更多模型。
-- **📝 重启说明**：插件更新后如遇报错，请重启 OpenWebUI 服务器以清除缓存的字节码。
+- **🤖 Agent Team**（新功能）：在单次会话中协调多个 OpenWebUI 自定义模型作为子 Agent 联合工作。通过标签（`AGENT_TEAM_TAG`）或模型 ID（`AGENT_TEAM_MODEL_IDS`）选择 Agent，指定领队（`AGENT_TEAM_LEADER`）——每个 Agent 自动继承主会话的全部工具能力（OpenWebUI Skills + MCP 服务器）。
+- **🎯 主动模式感知**：Agent 现在通过注入的 `[Active Session Mode]` 系统提示词指令（与官方 Copilot SDK agent-loop 文档对齐）明确感知当前会话模式（`autopilot` / `interactive` / `plan`）。Autopilot 驱动任务端到端完成；interactive 逐步等待用户；plan 在执行前需用户审批。
+- **⚡ 模式感知工作风格**：每种模式现在注入专属前导语——autopilot 鼓励全程不中断，interactive 强制逐步停顿，plan 要求在执行任何操作前获得批准。
+- **🔒 SDK 模式设置加固**：Resume 和 Create 两条会话路径均对 `session.rpc.mode.set()` 添加 `asyncio.wait_for(timeout=5.0)` 防卡死保护，失败时提供完整调试可见性。
+- **🧹 系统提示词全面清理**：移除硬编码 Copilot CLI 工具名及不适用约定；解决 SQL 模式冲突；SESSION_MODE 全局优先级统一为 user_valve > global valve > `autopilot`。
 
 ---
 

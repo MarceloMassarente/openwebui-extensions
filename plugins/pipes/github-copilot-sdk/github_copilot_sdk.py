@@ -5,7 +5,7 @@ author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 openwebui_id: ce96f7b4-12fc-4ac3-9a01-875713e69359
 description: A powerful Agent SDK integration for OpenWebUI. It deeply bridges GitHub Copilot SDK with OpenWebUI's ecosystem, enabling the Agent to autonomously perform intent recognition, web search, and context compaction. It seamlessly reuses your existing Tools, MCP servers, OpenAPI servers, and Skills for a professional, full-featured experience.
-version: 0.12.3
+version: 0.13.0
 requirements: github-copilot-sdk==0.2.2
 """
 
@@ -35,6 +35,8 @@ from fastapi.responses import HTMLResponse
 from datetime import datetime
 
 from copilot import CopilotClient, define_tool
+from copilot.generated.rpc import Mode, SessionModeSetParams
+
 
 # PermissionHandler moved from copilot to copilot.session in v0.2.x
 try:
@@ -1381,9 +1383,10 @@ SQL_AND_STATE_PATTERNS = (
     "These SQL databases (`session` and, when available, `session_store`) are tool-provided Copilot session stores, not the main OpenWebUI application database. Access them through the `sql` tool rather than by inventing your own application-database connection flow.\n"
     "**Session database (database: `session`, the default):** The per-session database persists across the session but is isolated from other sessions.\n"
     "In this environment, the session metadata directory is typically `COPILOTSDK_CONFIG_DIR/session-state/<chat_id>/`, and the SQLite file is usually stored there as `session.db`.\n"
-    "**Pre-existing tables (ready to use):**\n"
+    "**Default task-tracking tables:**\n"
     "- `todos`: id, title, description, status (pending/in_progress/done/blocked), created_at, updated_at\n"
     "- `todo_deps`: todo_id, depends_on (for dependency tracking)\n"
+    "These are the preferred SQL tables for task tracking in this environment. In many sessions they are already present; if they are missing and you genuinely need SQL-backed task tracking, create them with the documented schema below instead of inventing a different task table.\n"
     "The UI may inject a `<todo_status>...</todo_status>` summary into user messages as a convenience reminder derived from the same session state. Treat that reminder as helpful context, but prefer the `sql` tool's live tables as the source of truth when available.\n"
     "Create any tables you need. The database is yours to use for any purpose:\n"
     "- Load and query data (CSVs, API responses, file listings)\n"
@@ -1391,7 +1394,7 @@ SQL_AND_STATE_PATTERNS = (
     "- Store intermediate results for multi-step analysis\n"
     "- Any workflow where SQL queries would help\n"
     "Examples: `CREATE TABLE csv_data (...)`, `CREATE TABLE api_results (...)`, `CREATE TABLE files_to_process (...)`.\n"
-    "Use the `todos` and `todo_deps` tables to track work.\n"
+    "Use the `todos` and `todo_deps` tables to track work. Reserve custom tables such as `interactive_controls` for UI/control state rather than task tracking.\n"
     "Creating todos with good IDs and descriptions: Use descriptive kebab-case IDs (not `t1`, `t2`). Include enough detail that the todo can be executed without referring back to the plan.\n"
     "Example: `INSERT INTO todos (id, title, description) VALUES ('user-auth', 'Create user auth module', 'Implement JWT-based authentication in src/auth/ with login, logout, and token refresh endpoints. Use bcrypt for password hashing.');`\n"
     "Todo status workflow:\n"
@@ -1547,11 +1550,11 @@ BASE_GUIDELINES = (
     "- **Rich Python Environment**: You can natively import and use any installed OpenWebUI dependencies. You have access to a wealth of libraries (e.g., for data processing, utility functions). However, you **MUST NOT** install new packages in the global environment to avoid polluting the system. If you need additional dependencies, you MUST create a virtual environment (`venv`) within your designated workspace directory and install packages there.\n"
     "- **Tool Availability**: You may have access to various tools (OpenWebUI Built-ins, Custom Tools, OpenAPI Servers, or MCP Servers) depending on the user's current configuration. If tools are visible in your session metadata, use them proactively to enhance your task execution.\n"
     "- **Skills vs Tools — CRITICAL DISTINCTION**:\n"
-    "  - **Tools** (`bash`, `create_file`, `view_file`, custom functions, MCP tools, etc.) are **executable functions** you call directly. They take inputs, run code or API calls, and return results.\n"
+    "  - **Tools** (for example shell tools, file tools, custom functions, MCP tools, etc.) are **executable functions** you call directly. They take inputs, run code or API calls, and return results.\n"
     "  - **Skills** are **context-injected Markdown instructions** (from `SKILL.md` files in a skill directory). They are NOT callable functions and NOT shell commands. When the Copilot SDK detects intent, it reads the relevant `SKILL.md` and injects its content into your context automatically — you then follow those instructions using your standard tools.\n"
     "  - **Skill directory structure**: A skill lives in a subdirectory under the Skills Directory. **Only `SKILL.md` is required** — all other contents are optional resources that the skill may provide:\n"
     "    - `scripts/` — helper Python or shell scripts; invoke via `bash` / `python3` **only when SKILL.md instructs you to**.\n"
-    "    - `references/` — supplementary Markdown documents (detailed workflows, examples); read with `view_file` as directed.\n"
+    "    - `references/` — supplementary Markdown documents (detailed workflows, examples); read them with the session's file-reading tool as directed.\n"
     "    - `templates/` — file templates to copy or fill in as part of the skill workflow.\n"
     "    - Any other supporting files (data, configs, assets) — treat them as resources described in `SKILL.md`.\n"
     "  - **Rule**: Always start by reading `SKILL.md`. It is the authoritative entry point. Other files in the directory only matter if `SKILL.md` references them.\n"
@@ -1603,32 +1606,31 @@ BASE_GUIDELINES = (
     "        - **For PDF files**: You MUST output ONLY Markdown links from the tool output (preview + download). **CRITICAL: NEVER output iframe/html_embed for PDF.**\n"
     "        - **For HTML files**: Prefer **Rich UI mode** (`embed_type='richui'`) by default so the effect is shown directly in chat. Output ONLY [Preview]/[Download]; do NOT output HTML block because Rich UI will render automatically via emitter. The page's primary language must follow the user's latest message unless the user explicitly asks for another language. If the HTML may need more space, add a clickable 'Full Screen' button inside your HTML design. Prefer the declarative interaction contract for buttons/cards/nodes: immediate send = `data-openwebui-prompt`, prefill-only = `data-openwebui-prompt` + `data-openwebui-action=\\\"fill\\\"`, submit current input = `data-openwebui-action=\\\"submit\\\"`, and external links = `data-openwebui-link`. Use `window.OpenWebUIBridge.prompt/fill/submit/openLink` only when local JavaScript truly needs it. Use copy/select/template capabilities only for explicit advanced needs such as copy buttons or pick-then-act dashboards. Use **Artifacts mode** (`embed_type='artifacts'`) only when the user explicitly asks for artifacts; in that case, still output ONLY [Preview]/[Download], and do NOT output any iframe/html block because the protocol will automatically append the html code block via emitter.\n"
     '        - **Rich UI interaction examples**: `<button data-openwebui-prompt=\\"Explain the hotfix workflow step by step\\">Explain</button>`, `<button data-openwebui-prompt=\\"Draft a rollout checklist for this design\\" data-openwebui-action=\\"fill\\">Draft in input</button>`, `<button data-openwebui-action=\\"submit\\">Send current draft</button>`, `<a data-openwebui-link=\\"https://git-scm.com/docs/git-worktree\\">Official docs</a>`, and advanced optional patterns such as `<button data-openwebui-copy=\\"npm run build && npm test\\">Copy command</button>` or `<button data-openwebui-select=\\"role\\" data-openwebui-value=\\"reviewer\\">Reviewer</button><button data-openwebui-prompt-template=\\"Explain the responsibilities of {{role}}\\">Explain selected role</button>`. Prefer these declarative attributes when generating cards, tiles, SVG nodes, or dashboard controls because they survive templating better than custom JavaScript.\n'
-    "     - **URL Format**: You MUST use the **ABSOLUTE URLs** provided in the tool output, copied verbatim. NEVER modify, concatenate, or reconstruct them manually.\n"
+    "     - **URL Format**: You MUST use the exact preview/download URLs returned by the tool output, copied verbatim. They may be relative API paths or absolute URLs depending on the environment; never modify, concatenate, or reconstruct them manually.\n"
     "     - **Bypass RAG**: This protocol automatically handles S3 storage and bypasses RAG, ensuring 100% accurate data delivery.\n"
     "6. **TODO Visibility**: When TODO state changes, prefer the environment's embedded TODO widget and lightweight status surfaces. Do not repeat the full TODO list in the main answer unless the user explicitly asks for a textual TODO list or the text itself is the requested deliverable. When using SQL instead of `update_todo`, follow the environment's default workflow: create descriptive todo rows in `todos`, mark them `in_progress` before execution, mark them `done` after completion, and record blocking relationships in `todo_deps`.\n"
-    "6a. **Report Intent Usage**: If a `report_intent` tool exists, use it to broadcast your current intent without interrupting the main workflow. Call it in parallel with other independent searches, reads, or tool invocations. **STRICT REQUIREMENT**: The intent string MUST be written in the **SAME LANGUAGE** as the user's latest message.\n"
     "7. **Python Execution Standard**: For ANY task requiring Python logic (not just data analysis), you **MUST NOT** embed multi-line code directly in a shell command (e.g., using `python -c` or `<< 'EOF'`).\n"
     '   - **Exception**: Trivial one-liners (e.g., `python -c "print(1+1)"`) are permitted.\n'
     "   - **Protocol**: For everything else, you MUST:\n"
     "     1. **Create** a `.py` file in the workspace (e.g., `script.py`).\n"
     "     2. **Run** it using `python3 script.py`.\n"
     "   - **Reason**: This ensures code is debuggable, readable, and persistent.\n"
-    "8. **Adaptive Autonomy**: You are an expert engineer and may choose the working style that best fits the task.\n"
-    "   - **Planning-first when needed**: If the task is ambiguous, risky, architectural, multi-stage, or the user explicitly asks for a plan, first research the codebase, surface constraints, and present a structured plan.\n"
-    "   - **Direct execution when appropriate**: If the task is clear and you can complete it safely end-to-end, proceed immediately through analysis, implementation, and validation without asking for permission for routine steps.\n"
-    "   - **Switch styles proactively**: If you start executing and discover hidden complexity, pause to explain the situation and shift into a planning-style response. If you start with planning and later determine the work is straightforward, execute it directly.\n"
-    "   - **Plan persistence**: When you produce a concrete plan that should persist across the session, update `plan.md` in the session metadata area rather than creating a planning file inside the repository or workspace.\n"
-    "   - **General Goal**: Minimize friction, think independently, and deliver the best result with the least unnecessary back-and-forth.\n"
+    "8. **Session Mode — Follow the Active Mode**: Your working style is driven by the **configured session mode**, not by arbitrary self-determination. Adapt your approach to match the mode:\n"
+    "   - **`autopilot`**: Work autonomously through multiple steps without stopping after each action. Given an initial instruction, keep working continuously until the task is determined complete, a problem blocks progress, or the maximum continuation limit is reached. This is the most efficient mode for well-defined, clear tasks where the end goal is unambiguous. When the task is done, use the `task_complete` tool to signal completion.\n"
+    "   - **`interactive`**: The standard back-and-forth mode. After each action, wait for the user's next instruction before proceeding. Best for exploratory, vague, or high-risk tasks where you need ongoing guidance. The `task_complete` tool is also available here for marking done items.\n"
+    "   - **`plan`**: Always plan first before acting. For ambiguous, architectural, multi-stage, or high-impact tasks, research the codebase, surface constraints, and present a structured `plan.md` stored in the session metadata directory (`COPILOTSDK_CONFIG_DIR/session-state/<chat_id>/plan.md`). Wait for user approval — or explicitly accept the plan to switch into autopilot mode — before executing. The `task_complete` tool is also available here for marking done items.\n"
+    "   - **Mode overrides**: If the user explicitly requests a different style (e.g., 'just do it' in plan mode), their direct instruction overrides the configured mode.\n"
+    "   - **TODO tracking**: Task-completion and TODO-related tools (for example `task_complete` and any available todo-management tools) can be used freely in any mode — they are not restricted to plan mode.\n"
     "9. **Large Output Management**: If a tool execution output is truncated or saved to a temporary file (e.g., `/tmp/...`), DO NOT worry. The system will automatically move it to your workspace and notify you of the new filename. You can then read it directly.\n"
     "10. **Workspace Visibility Hint**: When the user likely wants to inspect workspace files (e.g., asks to view files/directories/current workspace), first provide a brief workspace status summary including the current isolated workspace path and a concise directory snapshot (such as top entries) before deeper operations.\n"
     "\n"
     "**Native Tool Usage Guidelines (If Available):**\n"
-    '- **bash**: Use `mode="sync"` with appropriate `initial_wait` (e.g. 60s, 120s) for long-running builds/tests, then use `read_bash` with the returned shellId to check progress. Use `mode="async"` for interactive tools (requiring `write_bash`). Use `detach: true` for persistent background servers/daemons, and stop them later using `kill <pid>` rather than pkill/killall. Always disable pagers (e.g., `--no-pager`).\n'
-    "- **edit**: You can batch multiple edits to the same file in a single response by calling the edit tool multiple times. Ensure you do this for renamed variables across multiple places or non-overlapping blocks to avoid reader/writer conflicts.\n"
-    "- **show_file vs view**: Only use `show_file` when the user explicitly asks to see a file visually in the UI (or `diff: true` for changes). It does NOT return file contents to your context. Use `view` when you need to read a file for your own understanding. Show focused, relevant snippets using `view_range`.\n"
+    "- **Shell tools**: If the environment exposes a `bash`-style tool with sync/async/background controls, choose the appropriate mode for the task, prefer non-interactive execution when possible, disable pagers, and stop long-lived processes with explicit `kill <pid>` rather than broad process-kill patterns.\n"
+    "- **File editing tools**: If the environment exposes a dedicated edit tool that supports batching, group related edits to the same file in one response when practical, especially for renames or non-overlapping blocks.\n"
+    "- **File reading vs presentation**: If the environment exposes both a presentation-only file viewer and a file-reading tool, use the presentation tool only when the user explicitly asks to see a file or diff; otherwise use the file-reading tool for your own reasoning and keep snippets focused.\n"
     "- **rg/grep/find**: Remember that the grep tool requires escaping literal braces (e.g. `interface\\{\\}`). Prefer glob matching (`**/*.js`) for file discovery.\n"
-    "- **Git Conventions**: When creating git commits, always include `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>` at the end of the commit message.\n"
-    "- **Safety & Hygiene**: Clean up temporary files at the end of a task. Use `view`/`edit` for existing files rather than `create` to avoid data loss. Never commit secrets, share sensitive data, or violate copyrights.\n"
+    "- **Git Conventions**: If the user explicitly asks you to create commits, follow the repository's existing conventions and include only the trailers or metadata that the repository or the user actually requires.\n"
+    "- **Safety & Hygiene**: Clean up temporary files at the end of a task. Prefer the session's existing file-reading/editing tools for files that already exist rather than replacing them with newly created copies. Never commit secrets, share sensitive data, or violate copyrights.\n"
     f"{SQL_AND_STATE_PATTERNS}"
     f"{NATIVE_BEHAVIOR_PATTERNS}"
     f"{SEARCH_AND_AGENT_PATTERNS}"
@@ -1665,14 +1667,57 @@ USER_RESTRICTIONS = (
 
 class Pipe:
     class Valves(BaseModel):
+        # === Required / Frequently Needed ===
         GH_TOKEN: str = Field(
             default="",
             description="GitHub Fine-grained Token (Requires 'Copilot Requests' permission)",
         )
-        COPILOTSDK_CONFIG_DIR: str = Field(
-            default="/app/backend/data/.copilot",
-            description="Persistent directory for Copilot SDK config and session state.",
+        BYOK_TYPE: Literal["openai", "anthropic"] = Field(
+            default="openai",
+            description="BYOK Provider Type: openai, anthropic",
         )
+        BYOK_BASE_URL: str = Field(
+            default="",
+            description="BYOK Base URL (e.g. https://api.openai.com/v1)",
+        )
+        BYOK_API_KEY: str = Field(
+            default="",
+            description="BYOK API Key (Global Setting)",
+        )
+
+        # === Session Mode (Applies to All Sessions) ===
+        SESSION_MODE: Literal["autopilot", "interactive", "plan"] = Field(
+            default="autopilot",
+            description="SDK session agent mode: 'autopilot' (autonomous multi-step execution), 'interactive' (step-by-step with confirmation), 'plan' (plan-first). Applied to all sessions.",
+        )
+
+        # === Agent Team (Optional Feature) ===
+        AGENT_TEAM_TAG: str = Field(
+            default="",
+            description="Filter agent team by tag name. Select a tag to see available models.",
+            json_schema_extra={
+                "input": {
+                    "type": "select",
+                    "options": "get_agent_team_tag_options",
+                }
+            },
+        )
+        AGENT_TEAM_LEADER: str = Field(
+            default="",
+            description="Select the leader model for agent team.",
+            json_schema_extra={
+                "input": {
+                    "type": "select",
+                    "options": "get_agent_team_leader_options",
+                }
+            },
+        )
+        AGENT_TEAM_MODEL_IDS: str = Field(
+            default="",
+            description="Select OpenWebUI custom models as agent team. First selected = active agent. Requires 2+ models. Invalid if AGENT_TEAM_TAG is set. Example: model-id-1,model-id-2,model-id-3",
+        )
+
+        # === Feature Toggles ===
         ENABLE_OPENWEBUI_TOOLS: bool = Field(
             default=True,
             description="Enable OpenWebUI Tools (includes defined Tools and Built-in Tools).",
@@ -1689,14 +1734,12 @@ class Pipe:
             default=True,
             description="Enable loading OpenWebUI model-attached skills into SDK skill directories.",
         )
-        OPENWEBUI_SKILLS_SHARED_DIR: str = Field(
-            default="/app/backend/data/cache/copilot-openwebui-skills",
-            description="Shared cache directory for OpenWebUI skills converted to SDK SKILL.md format.",
-        )
         DISABLED_SKILLS: str = Field(
             default="",
             description="Comma-separated skill names to disable in Copilot SDK session (e.g. docs-writer,webapp-testing).",
         )
+
+        # === AI Behavior ===
         REASONING_EFFORT: Literal["low", "medium", "high", "xhigh"] = Field(
             default="medium",
             description="Reasoning effort level (low, medium, high). Only affects standard Copilot models (not BYOK).",
@@ -1706,6 +1749,7 @@ class Pipe:
             description="Show model reasoning/thinking process",
         )
 
+        # === Runtime Behavior ===
         INFINITE_SESSION: bool = Field(
             default=True,
             description="Enable Infinite Sessions (automatic context compaction)",
@@ -1719,10 +1763,11 @@ class Pipe:
             description="Copilot CLI log level: none, error, warning, info, debug, all",
         )
         TIMEOUT: int = Field(
-            default=3600,
+            default=86400,
             description="Timeout for each stream chunk (seconds)",
         )
 
+        # === Filtering & Limits ===
         EXCLUDE_KEYWORDS: str = Field(
             default="",
             description="Exclude models containing these keywords (comma separated, e.g.: codex, haiku)",
@@ -1739,31 +1784,8 @@ class Pipe:
             default=0.95,
             description="Buffer exhaustion threshold (0.0-1.0)",
         )
-        CUSTOM_ENV_VARS: str = Field(
-            default="",
-            description='Custom environment variables (JSON format, e.g., {"VAR": "value"})',
-        )
-        OPENWEBUI_UPLOAD_PATH: str = Field(
-            default="/app/backend/data/uploads",
-            description="Path to OpenWebUI uploads directory (for file processing).",
-        )
-        MODEL_CACHE_TTL: int = Field(
-            default=3600,
-            description="Model list cache TTL in seconds. Set to 0 to disable cache (always fetch). Default: 3600 (1 hour).",
-        )
 
-        BYOK_TYPE: Literal["openai", "anthropic"] = Field(
-            default="openai",
-            description="BYOK Provider Type: openai, anthropic",
-        )
-        BYOK_BASE_URL: str = Field(
-            default="",
-            description="BYOK Base URL (e.g., https://api.openai.com/v1)",
-        )
-        BYOK_API_KEY: str = Field(
-            default="",
-            description="BYOK API Key (Global Setting)",
-        )
+        # === BYOK (Advanced) ===
         BYOK_BEARER_TOKEN: str = Field(
             default="",
             description="BYOK Bearer Token (Global, overrides API Key)",
@@ -1777,31 +1799,175 @@ class Pipe:
             description="BYOK Wire API: completions, responses",
         )
 
+        # === Directory & Cache (Rarely Changed) ===
+        COPILOTSDK_CONFIG_DIR: str = Field(
+            default="/app/backend/data/.copilot",
+            description="Persistent directory for Copilot SDK config and session state.",
+        )
+        OPENWEBUI_SKILLS_SHARED_DIR: str = Field(
+            default="/app/backend/data/cache/copilot-openwebui-skills",
+            description="Shared cache directory for OpenWebUI skills converted to SDK SKILL.md format.",
+        )
+        OPENWEBUI_UPLOAD_PATH: str = Field(
+            default="/app/backend/data/uploads",
+            description="Path to OpenWebUI uploads directory (for file processing).",
+        )
+        MODEL_CACHE_TTL: int = Field(
+            default=3600,
+            description="Model list cache TTL in seconds. Set to 0 to disable cache (always fetch). Default: 3600 (1 hour).",
+        )
+        CUSTOM_ENV_VARS: str = Field(
+            default="",
+            description='Custom environment variables (JSON format, e.g., {"VAR": "value"})',
+        )
+
+        @classmethod
+        def get_agent_team_tag_options(cls, __user__=None) -> list[dict]:
+            """Return available tags from custom models for filtering."""
+            try:
+                from open_webui.models.models import Models as OWModels
+
+                user_id = "unknown"
+                if isinstance(__user__, dict):
+                    user_id = __user__.get("id", "unknown")
+                elif isinstance(__user__, (list, tuple)) and __user__:
+                    user_id = (
+                        __user__[0].get("id", "unknown")
+                        if isinstance(__user__[0], dict)
+                        else "unknown"
+                    )
+                # search_models is synchronous in the installed open_webui package
+                result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+                tags = set()
+                for m in result.items:
+                    if hasattr(m, "meta") and m.meta:
+                        meta_obj = m.meta
+                        if hasattr(meta_obj, "model_dump"):
+                            meta = meta_obj.model_dump()
+                        elif isinstance(meta_obj, dict):
+                            meta = meta_obj
+                        else:
+                            meta = {}
+                        raw_tags = meta.get("tags", []) or []
+                        for tag in raw_tags:
+                            if isinstance(tag, dict):
+                                name = tag.get("name", "")
+                            else:
+                                name = str(tag) if tag else ""
+                            if name:
+                                tags.add(name)
+                return [{"value": t, "label": t} for t in sorted(tags) if t]
+            except Exception:
+                return []
+
+        @classmethod
+        def get_agent_team_leader_options(cls, __user__=None) -> list[dict]:
+            """Return all custom models for leader selection, with tag-model format."""
+            try:
+                from open_webui.models.models import Models as OWModels
+
+                user_id = "unknown"
+                if isinstance(__user__, dict):
+                    user_id = __user__.get("id", "unknown")
+                elif isinstance(__user__, (list, tuple)) and __user__:
+                    user_id = (
+                        __user__[0].get("id", "unknown")
+                        if isinstance(__user__[0], dict)
+                        else "unknown"
+                    )
+                # search_models is synchronous in the installed open_webui package
+                result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+                models = []
+                for m in result.items:
+                    if (
+                        hasattr(m, "base_model_id")
+                        and m.base_model_id
+                        and m.base_model_id.strip()
+                    ):
+                        model_name = getattr(m, "name", "") or m.id
+                        tag_names = []
+                        if hasattr(m, "meta") and m.meta:
+                            meta_obj = m.meta
+                            if hasattr(meta_obj, "model_dump"):
+                                meta = meta_obj.model_dump()
+                            elif isinstance(meta_obj, dict):
+                                meta = meta_obj
+                            else:
+                                meta = {}
+                            raw_tags = meta.get("tags", []) or []
+                            for tag in raw_tags:
+                                if isinstance(tag, dict):
+                                    name = tag.get("name", "")
+                                else:
+                                    name = str(tag) if tag else ""
+                                if name:
+                                    tag_names.append(name)
+                        # Format: tag1,tag2-modelname or just modelname
+                        if tag_names:
+                            label = f"{','.join(tag_names)}-{model_name}"
+                        else:
+                            # Skip models that have no tags
+                            continue
+                        models.append({"value": m.id, "label": label})
+                models.sort(key=lambda x: x["label"])
+                return models
+            except Exception:
+                return []
+
     class UserValves(BaseModel):
+        # === Required ===
         GH_TOKEN: str = Field(
             default="",
             description="Personal GitHub Fine-grained Token (overrides global setting)",
         )
-        REASONING_EFFORT: Literal["", "low", "medium", "high", "xhigh"] = Field(
+
+        # === BYOK (Essential) ===
+        BYOK_TYPE: Literal["", "openai", "anthropic"] = Field(
             default="",
-            description="Reasoning effort override. Only affects standard Copilot Models.",
+            description="BYOK Provider Type override.",
         )
-        SHOW_THINKING: bool = Field(
-            default=True,
-            description="Show model reasoning/thinking process",
-        )
-        DEBUG: bool = Field(
-            default=False,
-            description="Enable technical debug logs (connection info, etc.)",
-        )
-        MAX_MULTIPLIER: Optional[float] = Field(
-            default=None,
-            description="Maximum allowed billing multiplier override for standard Copilot models.",
-        )
-        EXCLUDE_KEYWORDS: str = Field(
+        BYOK_BASE_URL: str = Field(
             default="",
-            description="Exclude models containing these keywords (comma separated, user override).",
+            description="BYOK Base URL override.",
         )
+        BYOK_API_KEY: str = Field(
+            default="",
+            description="BYOK API Key (User override)",
+        )
+
+        # === Session Mode (Applies to All Sessions) ===
+        SESSION_MODE: Literal["autopilot", "interactive", "plan"] = Field(
+            default="autopilot",
+            description="SDK session agent mode (user override): 'autopilot', 'interactive', 'plan'.",
+        )
+
+        # === Agent Team (Optional Feature) ===
+        AGENT_TEAM_TAG: str = Field(
+            default="",
+            description="Filter agent team by tag name (user override).",
+            json_schema_extra={
+                "input": {
+                    "type": "select",
+                    "options": "get_agent_team_tag_options",
+                }
+            },
+        )
+        AGENT_TEAM_LEADER: str = Field(
+            default="",
+            description="Select the leader model for agent team.",
+            json_schema_extra={
+                "input": {
+                    "type": "select",
+                    "options": "get_agent_team_leader_options",
+                }
+            },
+        )
+        AGENT_TEAM_MODEL_IDS: str = Field(
+            default="",
+            description="Select agent team by model IDs (user override). Invalid if AGENT_TEAM_TAG is set. Example: model-id-1,model-id-2,model-id-3",
+        )
+
+        # === Feature Toggles ===
         ENABLE_OPENWEBUI_TOOLS: bool = Field(
             default=True,
             description="Enable OpenWebUI Tools (includes defined Tools and Built-in Tools).",
@@ -1823,19 +1989,33 @@ class Pipe:
             description="Comma-separated skill names to disable in Copilot SDK session (user override).",
         )
 
-        # BYOK User Overrides
-        BYOK_API_KEY: str = Field(
+        # === AI Behavior ===
+        REASONING_EFFORT: Literal["", "low", "medium", "high", "xhigh"] = Field(
             default="",
-            description="BYOK API Key (User override)",
+            description="Reasoning effort override. Only affects standard Copilot Models.",
         )
-        BYOK_TYPE: Literal["", "openai", "anthropic"] = Field(
+        SHOW_THINKING: bool = Field(
+            default=True,
+            description="Show model reasoning/thinking process",
+        )
+
+        # === Debug ===
+        DEBUG: bool = Field(
+            default=False,
+            description="Enable technical debug logs (connection info, etc.)",
+        )
+
+        # === Filtering & Limits ===
+        MAX_MULTIPLIER: Optional[float] = Field(
+            default=None,
+            description="Maximum allowed billing multiplier override for standard Copilot models.",
+        )
+        EXCLUDE_KEYWORDS: str = Field(
             default="",
-            description="BYOK Provider Type override.",
+            description="Exclude models containing these keywords (comma separated, user override).",
         )
-        BYOK_BASE_URL: str = Field(
-            default="",
-            description="BYOK Base URL override.",
-        )
+
+        # === BYOK (Advanced) ===
         BYOK_BEARER_TOKEN: str = Field(
             default="",
             description="BYOK Bearer Token override.",
@@ -1848,6 +2028,99 @@ class Pipe:
             default="",
             description="BYOK Wire API override.",
         )
+
+        @classmethod
+        def get_agent_team_tag_options(cls, __user__=None) -> list[dict]:
+            """Return available tags from custom models for filtering."""
+            try:
+                from open_webui.models.models import Models as OWModels
+
+                user_id = "unknown"
+                if isinstance(__user__, dict):
+                    user_id = __user__.get("id", "unknown")
+                elif isinstance(__user__, (list, tuple)) and __user__:
+                    user_id = (
+                        __user__[0].get("id", "unknown")
+                        if isinstance(__user__[0], dict)
+                        else "unknown"
+                    )
+                # search_models is synchronous in the installed open_webui package
+                result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+                tags = set()
+                for m in result.items:
+                    if hasattr(m, "meta") and m.meta:
+                        meta_obj = m.meta
+                        if hasattr(meta_obj, "model_dump"):
+                            meta = meta_obj.model_dump()
+                        elif isinstance(meta_obj, dict):
+                            meta = meta_obj
+                        else:
+                            meta = {}
+                        raw_tags = meta.get("tags", []) or []
+                        for tag in raw_tags:
+                            if isinstance(tag, dict):
+                                name = tag.get("name", "")
+                            else:
+                                name = str(tag) if tag else ""
+                            if name:
+                                tags.add(name)
+                return [{"value": t, "label": t} for t in sorted(tags) if t]
+            except Exception:
+                return []
+
+        @classmethod
+        def get_agent_team_leader_options(cls, __user__=None) -> list[dict]:
+            """Return all custom models for leader selection, with tag-model format."""
+            try:
+                from open_webui.models.models import Models as OWModels
+
+                user_id = "unknown"
+                if isinstance(__user__, dict):
+                    user_id = __user__.get("id", "unknown")
+                elif isinstance(__user__, (list, tuple)) and __user__:
+                    user_id = (
+                        __user__[0].get("id", "unknown")
+                        if isinstance(__user__[0], dict)
+                        else "unknown"
+                    )
+                # search_models is synchronous in the installed open_webui package
+                result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+                models = []
+                for m in result.items:
+                    if (
+                        hasattr(m, "base_model_id")
+                        and m.base_model_id
+                        and m.base_model_id.strip()
+                    ):
+                        model_name = getattr(m, "name", "") or m.id
+                        tag_names = []
+                        if hasattr(m, "meta") and m.meta:
+                            meta_obj = m.meta
+                            if hasattr(meta_obj, "model_dump"):
+                                meta = meta_obj.model_dump()
+                            elif isinstance(meta_obj, dict):
+                                meta = meta_obj
+                            else:
+                                meta = {}
+                            raw_tags = meta.get("tags", []) or []
+                            for tag in raw_tags:
+                                if isinstance(tag, dict):
+                                    name = tag.get("name", "")
+                                else:
+                                    name = str(tag) if tag else ""
+                                if name:
+                                    tag_names.append(name)
+                        # Format: tag1,tag2-modelname or just modelname
+                        if tag_names:
+                            label = f"{','.join(tag_names)}-{model_name}"
+                        else:
+                            # Skip models that have no tags
+                            continue
+                        models.append({"value": m.id, "label": label})
+                models.sort(key=lambda x: x["label"])
+                return models
+            except Exception:
+                return []
 
     _shared_clients: Dict[str, Any] = {}  # Map: token_hash -> CopilotClient
     _shared_client_lock = asyncio.Lock()  # Lock for thread-safe client lifecycle
@@ -5739,19 +6012,37 @@ class Pipe:
         except Exception as e:
             logger.warning(f"Failed to persist plan.md for chat '{chat_id}': {e}")
 
-    def _build_adaptive_workstyle_context(self, plan_path: str) -> str:
-        """Return task-adaptive planning and execution guidance, including plan persistence."""
+    def _build_adaptive_workstyle_context(
+        self, plan_path: str, session_mode: str = "autopilot"
+    ) -> str:
+        """Return task-adaptive planning and execution guidance, tuned to the active session mode."""
+        # Mode-specific preamble: align the agent's self-described working style with the
+        # active SDK mode so the Adaptive Workstyle section never contradicts [Active Session Mode].
+        if session_mode == "interactive":
+            mode_preamble = (
+                "You are in step-by-step interactive mode. After completing each action present the result clearly, then STOP and wait for the user's next instruction.\n"
+                "Do not chain independent steps without user acknowledgement — let the user drive the pace."
+            )
+        elif session_mode == "plan":
+            mode_preamble = (
+                "You are in plan-first mode. Research the problem thoroughly, surface assumptions and constraints, then present a structured plan BEFORE touching any code or files.\n"
+                "Do not execute implementation steps until the user explicitly approves the plan."
+            )
+        else:  # autopilot (default)
+            mode_preamble = (
+                "You are in autonomous autopilot mode. Drive every task to full completion end-to-end without stopping between steps.\n"
+                "Call `task_complete` only when every open item is resolved — nothing pending, no errors unaddressed, all verification steps passed."
+            )
         return (
             "\n[Adaptive Workstyle Context]\n"
-            "You are a high-autonomy engineering agent. Choose the workflow that best matches the task instead of waiting for an external mode switch.\n"
-            "Default bias: when the request is sufficiently clear and safe, prefer completing the work end-to-end instead of stopping at a proposal.\n"
+            f"{mode_preamble}\n"
             f"**Plan File**: `{plan_path}`. This file lives in the **session metadata directory**, not in the isolated workspace. Update it when you create a concrete plan worth persisting across turns.\n\n"
             "<rules>\n"
-            "- If the request is clear and low-risk, execute directly and finish the work end-to-end.\n"
+            "- If the request is clear and low-risk, execute directly (autopilot) or present result and wait (interactive/plan).\n"
             "- If the request is ambiguous, high-risk, architectural, or explicitly asks for a plan, switch into planning-first behavior before implementation.\n"
-            "- Use clarifying questions when research reveals ambiguity or competing approaches that materially affect the result.\n"
+            "- Use clarifying questions ONLY when research reveals ambiguity that materially affects the outcome and cannot be resolved by a reasonable default decision.\n"
             "- When you do create a plan, make it scannable, detailed, and executable by a later implementation turn or by yourself in a follow-up step.\n"
-            "- `plan.md` is a session-state artifact in the metadata area, not a project file in the workspace. Do not place planning markdown inside the repository unless the user explicitly asks for a repository file.\n"
+            "- `plan.md` is a session-state artifact in the metadata area, not a project file in the workspace. Do not place planning markdown inside the repository unless explicitly asked.\n"
             "</rules>\n\n"
             "<workflow>\n"
             "1. Assess: Decide whether this task is best handled by direct execution or planning-first analysis.\n"
@@ -6918,6 +7209,217 @@ class Pipe:
 
         return SubprocessConfig(**client_config)
 
+    # ==================== Agent Team Helpers ====================
+
+    async def _get_openwebui_models_by_tag(
+        self, tag: str, user_id: str = "unknown"
+    ) -> list:
+        """Fetch OpenWebUI custom models that carry the given tag."""
+        try:
+            from open_webui.models.models import Models as OWModels
+
+            # search_models is synchronous in the installed open_webui package
+            result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+            matched = []
+            for m in result.items:
+                if hasattr(m, "meta") and m.meta:
+                    meta_obj = m.meta
+                    if hasattr(meta_obj, "model_dump"):
+                        meta = meta_obj.model_dump()
+                    elif isinstance(meta_obj, dict):
+                        meta = meta_obj
+                    else:
+                        meta = {}
+                    raw_tags = meta.get("tags", []) or []
+                    tag_names = set()
+                    for t in raw_tags:
+                        if isinstance(t, dict):
+                            n = t.get("name", "")
+                        else:
+                            n = str(t) if t else ""
+                        if n:
+                            tag_names.add(n)
+                    if tag in tag_names:
+                        matched.append(m)
+            return matched
+        except Exception as e:
+            logger.warning(f"[AgentTeam] Failed to fetch models by tag '{tag}': {e}")
+            return []
+
+    async def _get_openwebui_model_by_id(self, model_id: str, user_id: str = "unknown"):
+        """Fetch a single OpenWebUI custom model by ID."""
+        try:
+            from open_webui.models.models import Models as OWModels
+
+            # search_models is synchronous in the installed open_webui package
+            result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+            for m in result.items:
+                if m.id == model_id:
+                    return m
+            return None
+        except Exception as e:
+            logger.warning(f"[AgentTeam] Failed to fetch model '{model_id}': {e}")
+            return None
+
+    def _build_custom_agent_from_model(
+        self,
+        model,
+        mcp_servers: Optional[dict] = None,
+        session_tools: Optional[list] = None,
+    ) -> Optional[dict]:
+        """
+        Convert an OpenWebUI custom model object into a CustomAgentConfig dict.
+
+        - session_tools: the pipe's resolved Tool list (already filtered by valve
+          settings such as ENABLE_OPENWEBUI_TOOLS).  When provided, the agent's
+          "tools" field is set to the exact same tool names so each agent has
+          *precisely* the same capability as the base session — no more, no less.
+          If session_tools is None/empty (no custom tools registered), "tools" is
+          omitted from the agent config and the CLI default applies (all tools).
+        - mcp_servers mirrors the pipe session's resolved MCP config.
+        """
+        try:
+            model_id = getattr(model, "id", None)
+            if not model_id:
+                return None
+            model_name = getattr(model, "name", "") or model_id
+
+            # Extract system prompt: params.system > meta.system_prompt
+            # Both params and meta may be Pydantic objects (ModelParams/ModelMeta).
+            system_prompt = ""
+            if hasattr(model, "params") and model.params:
+                params_obj = model.params
+                if hasattr(params_obj, "model_dump"):
+                    params = params_obj.model_dump()
+                elif isinstance(params_obj, dict):
+                    params = params_obj
+                else:
+                    params = {}
+                system_prompt = params.get("system", "") or ""
+            if not system_prompt and hasattr(model, "meta") and model.meta:
+                meta_obj = model.meta
+                if hasattr(meta_obj, "model_dump"):
+                    meta = meta_obj.model_dump()
+                elif isinstance(meta_obj, dict):
+                    meta = meta_obj
+                else:
+                    meta = {}
+                system_prompt = meta.get("system_prompt", "") or ""
+
+            # SDK agent name: alphanumeric + underscore/dash only
+            agent_name = re.sub(r"[^a-zA-Z0-9_-]", "_", model_id)
+            cfg: dict = {
+                "name": agent_name,
+                "display_name": model_name,
+                "prompt": system_prompt
+                or f"You are {model_name}, a helpful AI assistant.",
+                "infer": True,
+            }
+
+            # Mirror the session's exact tool list so each agent has the same
+            # capability as the base session (respects ENABLE_OPENWEBUI_TOOLS,
+            # ENABLE_OPENAPI_SERVER, etc.).  Tool objects expose a .name str.
+            # Omit the key entirely when no custom tools are registered — the CLI
+            # will apply its own default rather than sending an empty list.
+            if session_tools:
+                tool_names = [
+                    t.name for t in session_tools if hasattr(t, "name") and t.name
+                ]
+                if tool_names:
+                    cfg["tools"] = tool_names
+            # else: key absent → CLI default (all available tools)
+
+            # Inject the pipe's resolved MCP servers so each agent has the same
+            # server access as the default (no-agent-team) session path.
+            if mcp_servers:
+                cfg["mcp_servers"] = mcp_servers
+            return cfg
+        except Exception as e:
+            logger.warning(f"[AgentTeam] Failed to build agent config from model: {e}")
+            return None
+
+    async def _resolve_agent_team(
+        self,
+        user_valves,
+        user_id: str = "unknown",
+        session_tools: Optional[list] = None,
+        session_mcp_servers: Optional[dict] = None,
+    ) -> tuple:
+        """
+        Resolve Agent Team from valves (async — awaits OpenWebUI model queries).
+        Priority: user_valves TAG > valves TAG > user_valves MODEL_IDS > valves MODEL_IDS.
+
+        Each resolved agent is configured with:
+        - tools: the exact same tool names as the pipe's session_tools list so
+          each agent has precisely the same capability as the base session
+          (respects ENABLE_OPENWEBUI_TOOLS and other valve toggles).
+        - The same mcp_servers as the pipe session (respects ENABLE_MCP_SERVER valve).
+
+        Returns (custom_agents: list | None, agent_leader_name: str | None).
+        """
+        effective_tag = (getattr(user_valves, "AGENT_TEAM_TAG", "") or "").strip() or (
+            self.valves.AGENT_TEAM_TAG or ""
+        ).strip()
+        effective_model_ids = (
+            getattr(user_valves, "AGENT_TEAM_MODEL_IDS", "") or ""
+        ).strip() or (self.valves.AGENT_TEAM_MODEL_IDS or "").strip()
+        effective_leader = (
+            getattr(user_valves, "AGENT_TEAM_LEADER", "") or ""
+        ).strip() or (self.valves.AGENT_TEAM_LEADER or "").strip()
+
+        owui_models = []
+        if effective_tag:
+            owui_models = await self._get_openwebui_models_by_tag(
+                effective_tag, user_id=user_id
+            )
+            logger.debug(
+                f"[AgentTeam] TAG='{effective_tag}' matched {len(owui_models)} models."
+            )
+        elif effective_model_ids:
+            ids = [mid.strip() for mid in effective_model_ids.split(",") if mid.strip()]
+            for mid in ids:
+                m = await self._get_openwebui_model_by_id(mid, user_id=user_id)
+                if m:
+                    owui_models.append(m)
+            logger.debug(
+                f"[AgentTeam] MODEL_IDS matched {len(owui_models)}/{len(ids)} models."
+            )
+
+        if not owui_models:
+            return None, None
+
+        agents = []
+        for m in owui_models:
+            cfg = self._build_custom_agent_from_model(
+                m,
+                mcp_servers=session_mcp_servers,
+                session_tools=session_tools,
+            )
+            if cfg:
+                agents.append(cfg)
+
+        if not agents:
+            return None, None
+
+        # Determine leader
+        leader_name = None
+        if effective_leader:
+            desired = re.sub(r"[^a-zA-Z0-9_-]", "_", effective_leader)
+            for a in agents:
+                if a["name"] == desired:
+                    leader_name = desired
+                    break
+        if not leader_name:
+            leader_name = agents[0]["name"]
+
+        logger.debug(
+            f"[AgentTeam] Resolved {len(agents)} agent(s). Leader: '{leader_name}'. "
+            f"MCP servers: {list(session_mcp_servers.keys()) if session_mcp_servers else []}."
+        )
+        return agents, leader_name
+
+    # ============================================================
+
     def _build_final_system_message(
         self,
         system_prompt_content: Optional[str],
@@ -6925,6 +7427,9 @@ class Pipe:
         user_id: Optional[str],
         chat_id: Optional[str],
         manage_skills_intent: bool = False,
+        custom_agents: Optional[list] = None,
+        agent_leader: Optional[str] = None,
+        session_mode: str = "autopilot",
     ) -> str:
         """Build the final system prompt content used for both new and resumed sessions."""
         try:
@@ -6941,6 +7446,39 @@ class Pipe:
         system_parts = []
         if system_prompt_content:
             system_parts.append(system_prompt_content.strip())
+
+        if custom_agents:
+            member_labels = []
+            leader_label = agent_leader or ""
+            for agent in custom_agents:
+                if not isinstance(agent, dict):
+                    continue
+                agent_name = str(agent.get("name") or "").strip()
+                display_name = str(
+                    agent.get("display_name") or agent.get("displayName") or agent_name
+                ).strip()
+                if display_name:
+                    member_labels.append(display_name)
+                if agent_leader and agent_name == agent_leader:
+                    leader_label = display_name or agent_leader
+
+            _my_identity = leader_label or agent_leader or "team coordinator"
+            _members_str = (
+                ", ".join(member_labels)
+                if member_labels
+                else "configured custom agents"
+            )
+            team_context_lines = [
+                "[Agent Team Runtime Context — READ CAREFULLY]",
+                "- Agent Team is currently ENABLED for this conversation.",
+                f"- YOUR IDENTITY: You ARE the `{_my_identity}` agent. This is your name and role RIGHT NOW — not a mode you 'can switch to', not a capability, but your current identity.",
+                f"- Sub-agents available for delegation: {_members_str}",
+                f"- SELF-INTRODUCTION RULE: When the user asks 'who are you', 'what is your role', 'introduce yourself', or anything similar — your response MUST begin by identifying yourself as `{_my_identity}`. Example: 'I am {_my_identity}, the team leader for this session...' Do NOT say 'I can act as {_my_identity}' — you already ARE {_my_identity}.",
+                "- FORBIDDEN: Never introduce yourself as a generic AI assistant, ChatGPT, Copilot, or any unnamed model. You have a specific agent identity assigned above.",
+                "- Model Clarification: The underlying LLM is the Copilot SDK model configured for this chat. The agent name/role is a layer on top — both are true simultaneously.",
+                "- Team Collaboration Mandate: You MUST actively use the agent team structure to solve problems. For every non-trivial task, think: (1) Can this be decomposed into focused sub-tasks? (2) Which sub-agent's specialty fits each part? (3) Delegate via the team rather than attempting to produce the full answer solo. You are the coordinator — synthesize and present the final result after leveraging your sub-agents.",
+            ]
+            system_parts.append("\n".join(team_context_lines))
 
         if manage_skills_intent:
             system_parts.append(
@@ -6988,7 +7526,58 @@ class Pipe:
         system_parts.append(native_tools_context)
 
         system_parts.append(BASE_GUIDELINES)
-        system_parts.append(self._build_adaptive_workstyle_context(plan_path))
+
+        # ── Active session mode directive ──────────────────────────────────────
+        # This MUST appear after BASE_GUIDELINES (which defines the mode options)
+        # so the LLM immediately knows which mode is currently configured.
+        # Language is intentionally aligned with the Copilot SDK agent-loop docs:
+        # https://github.com/github/copilot-sdk/blob/main/docs/features/agent-loop.md
+        _mode_directives = {
+            "autopilot": (
+                "**ACTIVE SESSION MODE: `autopilot`** (SDK-enforced autonomous loop)\n"
+                "When autopilot mode is active at the SDK level, the Copilot CLI automatically sends a continuation "
+                "nudge if you stop without calling `task_complete`.\n\n"
+                "You MUST:\n"
+                "- Work continuously end-to-end without pausing for confirmation between steps.\n"
+                "- Call `task_complete` (with a concise summary) only when the task is **definitively done**: "
+                "every step resolved, errors fixed, verification passed.\n\n"
+                "You MUST NOT call `task_complete` prematurely — specifically:\n"
+                "- NOT if you have open questions: make a decision and keep working.\n"
+                "- NOT if you hit an error: try to resolve it.\n"
+                "- NOT if remaining steps exist: complete them first.\n\n"
+                "Never ask 'shall I proceed?' or 'would you like me to continue?' — just continue."
+            ),
+            "interactive": (
+                "**ACTIVE SESSION MODE: `interactive`** (step-by-step chat)\n"
+                "The CLI does NOT inject continuation nudges in this mode. You answer the user's request, then **stop and wait** for their next message.\n\n"
+                "You MUST:\n"
+                "- Complete the immediate request fully and present results clearly.\n"
+                "- After each logical action or deliverable, STOP and wait for the user's next instruction, "
+                "unless the user explicitly says to proceed or chain steps.\n"
+                "- Never chain multiple independent steps autonomously — let the user drive the pace.\n\n"
+                "You MAY still use `task_complete` to mark a discrete task done, but it is optional in this mode."
+            ),
+            "plan": (
+                "**ACTIVE SESSION MODE: `plan`** (plan-first, approval-gated execution)\n"
+                "You MUST research and plan BEFORE taking any concrete action. Surface constraints, ambiguities, and risks first.\n\n"
+                "You MUST:\n"
+                "- Produce a clear, structured plan and present it to the user before writing or modifying any file.\n"
+                "- Save the plan to the plan file path shown above.\n"
+                "- WAIT for explicit user approval (e.g. 'proceed', 'looks good', 'execute') before implementing, "
+                "unless the user explicitly instructs otherwise (e.g., 'just do it') — their direct instruction takes priority.\n\n"
+                "Once approved, switch execution style to **autopilot** to complete the approved plan end-to-end, "
+                "calling `task_complete` when done."
+            ),
+        }
+        _mode_hint = _mode_directives.get(
+            session_mode,
+            f"**ACTIVE SESSION MODE: `{session_mode}`**\nOperate according to the `{session_mode}` mode guidelines above.",
+        )
+        system_parts.append(f"\n[Active Session Mode]\n{_mode_hint}")
+
+        system_parts.append(
+            self._build_adaptive_workstyle_context(plan_path, session_mode=session_mode)
+        )
 
         if not self._is_version_at_least("0.8.0"):
             version_note = (
@@ -7011,9 +7600,9 @@ class Pipe:
             "- **DO NOT blindly clone**: Do not copy 100% of previous buttons if they aren't relevant.\n"
             "- **Predictive Retention**: If a previous button was unclicked but is logical next step, merge it into current view.\n"
             "- **Selective Recall (有选择地召回)**: You must be highly selective! Just because an item is in the DB does NOT mean it should be rendered. Evaluate the CURRENT state and render ONLY items with high probability of being clicked next to prevent clutter.\n"
-            "- **Pre-Initialized State Table**: An `interactive_controls` table has been created for you in the local `session.db` workspace. DO NOT use the `todos` table.\n"
+            "- **Pre-Initialized UI State Table**: An `interactive_controls` table has been created for you in the local `session.db` workspace for adaptive UI/control state.\n"
             "  - **Schema**: `id (TEXT PRIMARY KEY)`, `label (TEXT NOT NULL)`, `action (TEXT NOT NULL)`, `status (TEXT DEFAULT 'visible')`, `likelihood (REAL)`, `created_at`, `updated_at`.\n"
-            "  - **Usage**: You MUST use your `sql` tool to `SELECT`, `INSERT`, or `UPDATE` this table to deterministically model continuous items without relying solely on memory.\n"
+            "  - **Usage**: Use your `sql` tool to `SELECT`, `INSERT`, or `UPDATE` this table when you need persistent UI/control state for buttons, cards, or adaptive dashboards. Do NOT store TODO/task tracking here; keep task tracking in `todos` / `todo_deps` and use `interactive_controls` only for Rich UI state.\n"
             "- **Goal**: The latest output is always the single source of active operations."
         )
         system_parts.append(adaptive_console_note)
@@ -7038,6 +7627,9 @@ class Pipe:
         chat_tool_ids: Optional[list] = None,
         __event_call__=None,
         manage_skills_intent: bool = False,
+        custom_agents: Optional[list] = None,
+        agent_leader: Optional[str] = None,
+        session_mode: str = "autopilot",
     ):
         """Build SessionConfig for Copilot SDK."""
         from copilot.session import SessionConfig, InfiniteSessionConfig
@@ -7056,6 +7648,9 @@ class Pipe:
             user_id=user_id,
             chat_id=chat_id,
             manage_skills_intent=manage_skills_intent,
+            custom_agents=custom_agents,
+            agent_leader=agent_leader,
+            session_mode=session_mode,
         )
         resolved_cwd = self._get_workspace_dir(user_id=user_id, chat_id=chat_id)
 
@@ -7152,6 +7747,12 @@ class Pipe:
                     )
         except Exception as e:
             logger.debug(f"[Copilot] skill directory debug check failed: {e}")
+
+        # Inject agent team if configured
+        if custom_agents:
+            session_params["custom_agents"] = custom_agents
+        if agent_leader:
+            session_params["agent"] = agent_leader
 
         return session_params
 
@@ -7258,7 +7859,7 @@ class Pipe:
                             "additionalContext": (
                                 f"\n[SYSTEM AUTO-MANAGEMENT] The output was large and originally saved to {tmp_path}. "
                                 f"I have automatically moved it to your workspace as: `{os.path.basename(target_path)}`. "
-                                f"You should now use `read_file` or `grep` on this file to access the content."
+                                f"You should now use the session's file-reading or search tools on this file to access the content."
                             )
                         }
                     except Exception as e:
@@ -8052,10 +8653,22 @@ class Pipe:
             user_valves.DISABLED_SKILLS or self.valves.DISABLED_SKILLS
         )
 
+        # Resolve effective session mode (global, applies to ALL sessions).
+        # SESSION_MODE: user override > global > "autopilot".
+        effective_session_mode = (
+            (user_valves.SESSION_MODE or "").strip()
+            or (self.valves.SESSION_MODE or "").strip()
+            or "autopilot"
+        )
+
         # P4: Chat tool_ids whitelist — extract once, reuse for both OpenAPI and MCP
         chat_tool_ids = self._normalize_chat_tool_ids(
             __metadata__.get("tool_ids") if isinstance(__metadata__, dict) else None
         )
+
+        # Agent Team is resolved later, after custom_tools and mcp_servers are available
+        agent_team_agents: Optional[list] = None
+        agent_team_leader: Optional[str] = None
 
         user_ctx = await self._get_user_context(__user__, __event_call__, __request__)
         user_lang = user_ctx["user_language"]
@@ -8458,6 +9071,16 @@ class Pipe:
                     __event_call__,
                 )
 
+            # Resolve Agent Team now that custom_tools and mcp_servers are available.
+            # Each agent inherits the same tools/MCP as the pipe's default behavior,
+            # fully respecting ENABLE_OPENWEBUI_TOOLS, ENABLE_MCP_SERVER, etc.
+            agent_team_agents, agent_team_leader = await self._resolve_agent_team(
+                user_valves,
+                user_id=user_id,
+                session_tools=custom_tools,
+                session_mcp_servers=mcp_servers,
+            )
+
             # Create or Resume Session
             session = None
 
@@ -8550,6 +9173,9 @@ class Pipe:
                         user_id=user_id,
                         chat_id=chat_id,
                         manage_skills_intent=manage_skills_intent,
+                        custom_agents=agent_team_agents,
+                        agent_leader=agent_team_leader,
+                        session_mode=effective_session_mode,
                     )
 
                     resume_params["system_message"] = {
@@ -8572,6 +9198,12 @@ class Pipe:
                             __event_call__,
                             debug_enabled=effective_debug,
                         )
+
+                    # Inject Agent Team if configured
+                    if agent_team_agents:
+                        resume_params["custom_agents"] = agent_team_agents
+                    if agent_team_leader:
+                        resume_params["agent"] = agent_team_leader
 
                     # Debug: Log the full resume_params structure
                     await self._emit_debug_log(
@@ -8596,6 +9228,35 @@ class Pipe:
                         f"Successfully resumed session {chat_id} with model {real_model_id}",
                         __event_call__,
                     )
+
+                    # Set SDK agent mode (global session parameter, applies to all sessions).
+                    # The system prompt already carries the active-mode directive, so this
+                    # is an additional SDK-level hint.  A 5-second timeout prevents hangs.
+                    try:
+                        mode_enum = Mode(effective_session_mode)
+                        await asyncio.wait_for(
+                            session.rpc.mode.set(SessionModeSetParams(mode=mode_enum)),
+                            timeout=5.0,
+                        )
+                        logger.info(
+                            f"[Session] Mode set to '{effective_session_mode}' for resumed session {chat_id}."
+                        )
+                        await self._emit_debug_log(
+                            f"[Session] SDK mode set to '{effective_session_mode}' (resumed session).",
+                            __event_call__,
+                            debug_enabled=effective_debug,
+                        )
+                    except Exception as e:
+                        logger.warning(
+                            f"[Session] Failed to set SDK mode '{effective_session_mode}': {e}"
+                        )
+                        await self._emit_debug_log(
+                            f"[Session] ⚠️ SDK mode.set('{effective_session_mode}') failed (resumed): {e}. "
+                            f"System-prompt mode directive is still active.",
+                            __event_call__,
+                            debug_enabled=effective_debug,
+                        )
+
                     await self._abort_stale_resumed_turn_if_needed(
                         session,
                         __event_call__=__event_call__,
@@ -8625,10 +9286,13 @@ class Pipe:
                     manage_skills_intent=manage_skills_intent,
                     chat_tool_ids=chat_tool_ids,
                     __event_call__=__event_call__,
+                    custom_agents=agent_team_agents,
+                    agent_leader=agent_team_leader,
+                    session_mode=effective_session_mode,
                 )
 
                 await self._emit_debug_log(
-                    f"Injecting system prompt into new session (len: {len(final_system_msg)})",
+                    "Injecting system prompt into new session",
                     __event_call__,
                 )
 
@@ -8648,6 +9312,34 @@ class Pipe:
                     __event_call__,
                     debug_enabled=effective_debug,
                 )
+
+                # Set SDK agent mode (global session parameter, applies to all sessions).
+                # The system prompt already carries the active-mode directive, so this
+                # is an additional SDK-level hint.  A 5-second timeout prevents hangs.
+                try:
+                    mode_enum = Mode(effective_session_mode)
+                    await asyncio.wait_for(
+                        session.rpc.mode.set(SessionModeSetParams(mode=mode_enum)),
+                        timeout=5.0,
+                    )
+                    logger.info(
+                        f"[Session] Mode set to '{effective_session_mode}' for new session."
+                    )
+                    await self._emit_debug_log(
+                        f"[Session] SDK mode set to '{effective_session_mode}' (new session).",
+                        __event_call__,
+                        debug_enabled=effective_debug,
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"[Session] Failed to set SDK mode '{effective_session_mode}': {e}"
+                    )
+                    await self._emit_debug_log(
+                        f"[Session] ⚠️ SDK mode.set('{effective_session_mode}') failed (new session): {e}. "
+                        f"System-prompt mode directive is still active.",
+                        __event_call__,
+                        debug_enabled=effective_debug,
+                    )
 
                 # Show workspace info for new sessions
                 if self.valves.DEBUG:
