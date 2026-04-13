@@ -29,8 +29,8 @@ All agents share the same OpenWebUI Skills and MCP server tools; which actual mo
 flowchart TD
     User["👤 User<br/>OpenWebUI Chat"]
     Pipe["🤖 Copilot SDK Pipe<br/>(Leader)"]
-    Config["📋 Agent Team Config<br/>Leader · Agent 1 · ··· · Agent N"]
-    A1["📊 Agent 1<br/>Data Processing"]
+    Config["📋 Agent Team Config<br/>Agent 1 (Leader) · Agent 2 · ··· · Agent N"]
+    A1["📊 Agent 1 (Leader)<br/>Data Processing"]
     A2["📈 Agent 2<br/>Viz & Report"]
     Tools["🔧 Skills + Tools + MCP Servers<br/>(shared by all)"]
     Result["✅ Leader synthesizes → user"]
