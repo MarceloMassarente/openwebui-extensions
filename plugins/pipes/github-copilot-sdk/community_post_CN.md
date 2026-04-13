@@ -25,38 +25,25 @@
 
 所有 Agent 共享相同的 OpenWebUI Skills 和 MCP 服务器工具集；具体调用哪个模型由 Copilot SDK 根据系统提示词自行选择。
 
-```
-┌──────────────────────────────────────────────────┐
-│              User (OpenWebUI Chat)                  │
-└────────────────────┬─────────────────────────────┘
-                     │ "分析这份销售数据"
-                     ▼
-┌──────────────────────────────────────────────────┐
-│        GitHub Copilot SDK Pipe (Leader)            │
-│  Agent Team 配置（Valves / User Valves）           │
-│  ┌──────────────────────────────────────────┐    │
-│  │  OpenWebUI 模型 A → 系统提示词=统筹协调   │    │
-│  │  OpenWebUI 模型 B → 系统提示词=数据处理    │    │
-│  │  OpenWebUI 模型 C → 系统提示词=可视化报告  │    │
-│  └──────────────────────────────────────────┘    │
-└────┬──────────────────┬──────────────────────────┘
-     │  并行分发          │  并行分发
-     ▼                  ▼
-┌──────────────┐  ┌──────────────────┐
-│  Agent 1     │  │  Agent 2         │
-│  数据处理分析  │  │  可视化报告        │
-│  (并行执行)   │  │  (并行执行)        │
-└──────┬───────┘  └──────┬───────────┘
-       │                  │
-       └────────┬─────────┘
-                ▼
-  OpenWebUI Skills + MCP Servers（所有 Agent 共享）
-                │
-                ▼
-       File Read/Write, Bash, Python, etc.
-                │
-                ▼
-         Leader 汇总 → 返回用户
+```mermaid
+flowchart TD
+    User["👤 用户<br/>OpenWebUI Chat"]
+    Pipe["🤖 Copilot SDK Pipe<br/>(Leader)"]
+    Config["📋 Agent Team 配置<br/>Leader · Agent 1 · Agent 2 · ···"]
+    A1["📊 Agent 1<br/>数据处理分析"]
+    A2["📈 Agent 2<br/>可视化报告"]
+    Tools["🔧 Skills + Tools + MCP Servers<br/>(所有 Agent 共享)"]
+    Result["✅ Leader 汇总 → 返回用户"]
+
+    User -->|"分析这份销售数据"| Pipe
+    Pipe --> Config
+    Config -->|"并行分发"| A1
+    Config -->|"并行分发"| A2
+    Config -.->|"···"| Tools
+    A1 --> Tools
+    A2 --> Tools
+    Tools --> Result
+    Result --> User
 ```
 
 ---

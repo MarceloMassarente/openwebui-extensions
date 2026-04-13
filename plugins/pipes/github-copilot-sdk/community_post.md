@@ -25,38 +25,25 @@ When you say "analyze this sales data", the Leader recognizes this requires para
 
 All agents share the same OpenWebUI Skills and MCP server tools; which actual models are called is decided by the Copilot SDK based on the system prompts.
 
-```
-┌──────────────────────────────────────────────────┐
-│              User (OpenWebUI Chat)                  │
-└────────────────────┬─────────────────────────────┘
-                     │ "Analyze this sales data"
-                     ▼
-┌──────────────────────────────────────────────────┐
-│        GitHub Copilot SDK Pipe (Leader)             │
-│  Agent Team Config (Valves / User Valves)            │
-│  ┌──────────────────────────────────────────┐    │
-│  │  OpenWebUI Model A → SysPrompt=Coordinator│    │
-│  │  OpenWebUI Model B → SysPrompt=Data Proc │    │
-│  │  OpenWebUI Model C → SysPrompt=Viz Report│    │
-│  └──────────────────────────────────────────┘    │
-└────┬──────────────────┬──────────────────────────┘
-     │  Parallel dispatch   │  Parallel dispatch
-     ▼                     ▼
-┌──────────────┐     ┌──────────────────┐
-│  Agent 1     │     │  Agent 2         │
-│  Data Process│     │  Viz & Report    │
-│  (parallel)  │     │  (parallel)      │
-└──────┬───────┘     └──────┬───────────┘
-       │                     │
-       └─────────┬───────────┘
-                 ▼
-   Skills + Tools + MCP Servers (shared by all agents)
-                 │
-                 ▼
-       File Read/Write, Bash, Python, etc.
-                 │
-                 ▼
-         Leader synthesizes → back to user
+```mermaid
+flowchart TD
+    User["👤 User<br/>OpenWebUI Chat"]
+    Pipe["🤖 Copilot SDK Pipe<br/>(Leader)"]
+    Config["📋 Agent Team Config<br/>Leader · Agent 1 · Agent 2 · ···"]
+    A1["📊 Agent 1<br/>Data Processing"]
+    A2["📈 Agent 2<br/>Viz & Report"]
+    Tools["🔧 Skills + Tools + MCP Servers<br/>(shared by all)"]
+    Result["✅ Leader synthesizes → user"]
+
+    User -->|"Analyze this sales data"| Pipe
+    Pipe --> Config
+    Config -->|"parallel dispatch"| A1
+    Config -->|"parallel dispatch"| A2
+    Config -.->|"···"| Tools
+    A1 --> Tools
+    A2 --> Tools
+    Tools --> Result
+    Result --> User
 ```
 
 ---
