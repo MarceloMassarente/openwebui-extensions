@@ -1,6 +1,6 @@
 # GitHub Copilot SDK Pipe v0.13.0 — Agent Team 多智能体 + Autopilot/Plan 模式切换
 
-大家好 👋
+大家好！👋
 
 **v0.13.0** 是 GitHub Copilot SDK Pipe 自发布以来最重要的一次更新，带来了两项真正改变插件能做什么的核心能力。
 
