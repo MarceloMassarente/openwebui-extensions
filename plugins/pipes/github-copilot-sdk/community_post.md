@@ -11,15 +11,18 @@ I'm excited to share **v0.13.0** of the GitHub Copilot SDK Pipe — the biggest 
 For the first time, you can configure a **team of OpenWebUI custom models** to work together as sub-agents in a single Copilot SDK session.
 
 How it works:
-- **Select agents by tag** (`AGENT_TEAM_TAG`) — tag a set of models in OpenWebUI and the pipe auto-discovers them, or **specify model IDs directly** (`AGENT_TEAM_MODEL_IDS`)
-- **Designate a leader** (`AGENT_TEAM_LEADER`) — the leader agent coordinates the team
-- **Automatic tool inheritance** — every agent in the team gets the same OpenWebUI skills and MCP servers as the base session, so capability is consistent across the whole team
+- **Dynamic tag loading** (`AGENT_TEAM_TAG`) — the valve automatically lists all tags from your OpenWebUI custom models, so you pick from a dropdown instead of typing manually
+- **Specify model IDs directly** (`AGENT_TEAM_MODEL_IDS`) — or pick exact models
+- **Leader selection** (`AGENT_TEAM_LEADER`) — pick which agent coordinates the team
+- **Tool inheritance** — every agent gets the same OpenWebUI skills and MCP servers as the base session
 - Works at both global (Valves) and per-user (User Valves) level
+
+**Key design**: Each agent is defined by its OpenWebUI **system prompt** (`params.system` / `meta.system_prompt`) — the base model ID is never used. The Copilot SDK reads the system prompt and registers it as a sub-agent. No extra configuration needed beyond what you already have in OpenWebUI.
 
 For example: a data analysis team, configured in OpenWebUI as three custom models:
 - **Agent 1** (OpenWebUI Model A): system prompt = "You are the chief data analyst, coordinating the team's work"
 - **Agent 2** (OpenWebUI Model B): system prompt = "You specialize in data processing and statistical analysis, expert at handling large datasets with Python/pandas"
-- **Agent 2** (OpenWebUI Model C): system prompt = "You specialize in data visualization and report generation, skilled at creating charts and writing analysis conclusions"
+- **Agent 3** (OpenWebUI Model C): system prompt = "You specialize in data visualization and report generation, skilled at creating charts and writing analysis conclusions"
 
 When you say "analyze this sales data", Agent 1 recognizes this requires parallel multi-dimensional work and **dispatches data processing and visualization to Agent 2 and other agents simultaneously**. All agents work in parallel, and Agent 1 synthesizes their findings into a complete analysis report returned to you.
 

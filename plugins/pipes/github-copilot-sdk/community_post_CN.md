@@ -11,15 +11,18 @@
 现在可以将一组 **OpenWebUI 自定义模型**配置为子 Agent 团队，在单次 Copilot SDK 会话中协同工作。
 
 使用方式：
-- **按标签选择 Agent**（`AGENT_TEAM_TAG`）：在 OpenWebUI 中给一组模型打上标签，Pipe 自动发现；或者**直接指定模型 ID**（`AGENT_TEAM_MODEL_IDS`）
-- **指定领队**（`AGENT_TEAM_LEADER`）：领队 Agent 负责统筹协调
+- **动态标签加载**（`AGENT_TEAM_TAG`）：Valve 自动列出你所有 OpenWebUI 自定义模型的标签，下拉选择即可，无需手动输入
+- **直接指定模型 ID**（`AGENT_TEAM_MODEL_IDS`）：直接选择或输入具体模型
+- **指定领队**（`AGENT_TEAM_LEADER`）：选择由哪个 Agent 负责统筹协调
 - **工具能力自动继承**：每个 Agent 自动获得与主会话相同的 OpenWebUI Skills 和 MCP 服务器，整个团队能力一致
 - 支持全局（Valves）和按用户（User Valves）两级配置
+
+**核心设计**：每个 Agent 由其 OpenWebUI **系统提示词**（`params.system` / `meta.system_prompt`）定义——不依赖基础模型 ID。Copilot SDK 读取系统提示词并将其注册为子 Agent。只需在 OpenWebUI 中配置好模型，系统提示词自动生效，无需额外配置。
 
 比如：一个数据分析团队，在 OpenWebUI 中配置三个自定义模型：
 - **Agent 1**（OpenWebUI 模型 A）：系统提示词 = "你是一个首席数据分析师，统筹协调团队工作"
 - **Agent 2**（OpenWebUI 模型 B）：系统提示词 = "你专注于数据处理和统计分析，擅长用 Python/pandas 处理海量数据"
-- **Agent 2**（OpenWebUI 模型 C）：系统提示词 = "你专注于数据可视化和报告生成，擅长制作图表和撰写分析结论"
+- **Agent 3**（OpenWebUI 模型 C）：系统提示词 = "你专注于数据可视化和报告生成，擅长制作图表和撰写分析结论"
 
 用户说"分析这份销售数据"，Agent 1 识别出这是一个需要并行的多维度任务，将数据处理和可视化**同时**分发给 Agent 2 和其他 Agent 并行执行，最后汇总成一份完整的分析报告返回给用户。
 
