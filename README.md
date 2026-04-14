@@ -53,6 +53,9 @@ A collection of enhancements, plugins, and prompts for [open-webui](https://gith
 - **🔒 SDK Mode Set Hardened**: `session.rpc.mode.set()` on both resume and create paths uses `asyncio.wait_for(timeout=5.0)` with full debug visibility on failure.
 - **🧹 System Prompt Overhaul**: Removed hardcoded Copilot CLI artifacts, resolved SQL pattern contradiction, SESSION_MODE now resolves globally as user_valve > global valve > `autopilot`.
 
+![Agent Teams & Autopilot Mode](./plugins/pipes/github-copilot-sdk/agent_teams.png)
+> *The Agent Team architecture enables autonomous task scheduling with Parallel, Serial, and Solo execution modes, driven by the persistent Autopilot engine.*
+
 > [!TIP]
 > **💡 Pro Tip: Enhanced Visualization**
 > We highly recommend asking the Agent to install the [Visual Explainer](https://github.com/nicobailon/visual-explainer) skill during your conversation. It dramatically improves the aesthetics and interactivity of generated **HTML Artifacts**. Simply tell the AI:
