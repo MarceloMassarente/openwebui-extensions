@@ -28,27 +28,44 @@ When you say "analyze this sales data", Agent 1 coordinates the work: it may **d
 
 All agents share the same OpenWebUI Skills and MCP server tools; which actual models are called is decided by the Copilot SDK based on the system prompts.
 
-```mermaid
-flowchart TD
-    User["👤 User<br/>OpenWebUI Chat"]
-    Pipe["🤖 Copilot SDK Pipe"]
-    Config["📋 Agent Team Config<br/>Agent 1 (Leader) · Agent 2 · ··· · Agent N"]
-    A1["📊 Agent 1 (Leader)<br/>Chief Coordinator"]
-    A2["📈 Agent 2<br/>Data Processing"]
-    A3["📉 Agent 3<br/>Viz & Report"]
-    Tools["🔧 Skills + Tools + MCP Servers<br/>(shared by all)"]
-    Result["✅ Agent 1 synthesizes → user"]
-
-    User -->|"Analyze this sales data"| Pipe
-    Pipe --> Config
-    Config -->|"dispatch"| A1
-    Config -->|"dispatch"| A2
-    Config -->|"dispatch"| A3
-    A1 --> Tools
-    A2 --> Tools
-    A3 -.-> Tools
-    Tools --> Result
-    Result --> User
+```
+    User
+      │
+      ▼
+  ┌───────────────┐
+  │  🤖 Copilot   │
+  │  SDK Pipe     │
+  └───────┬───────┘
+          │
+          ▼
+  ┌─────────────────────┐
+  │ 📋 Agent Team Config│
+  │ Agent 1 (Leader)    │
+  │ Agent 2 ··· · Agent N │
+  └───────┬─────────────┘
+          │
+          ▼
+  ┌─────────────────────┐
+  │ 📊 Agent 1 (Leader) │◄── may work on sub-tasks
+  │ Chief Coordinator    │
+  └───────┬─────────────┘
+          │ dispatch (as needed)
+          ▼
+  ┌─────────────────────┐     ┌─────────────────────┐
+  │ 📈 Agent 2          │     │ 📉 Agent 3          │
+  │ Data Processing     │     │ Viz & Report        │
+  └─────────────────────┘     └─────────────────────┘
+          │                           │
+          └─────────┬─────────────────┘
+                    ▼
+  ┌─────────────────────────────────┐
+  │ 🔧 Skills + Tools + MCP Servers │  (shared by all agents)
+  └───────────────┬─────────────────┘
+                  ▼
+  ┌─────────────────────────────┐
+  │ ✅ Agent 1 synthesizes &   │
+  │    finalizes → User         │
+  └─────────────────────────────┘
 ```
 
 ---

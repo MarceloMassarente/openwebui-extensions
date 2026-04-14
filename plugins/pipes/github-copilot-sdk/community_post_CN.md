@@ -28,27 +28,42 @@
 
 所有 Agent 共享相同的 OpenWebUI Skills 和 MCP 服务器工具集；具体调用哪个模型由 Copilot SDK 根据系统提示词自行选择。
 
-```mermaid
-flowchart TD
-    User["👤 用户<br/>OpenWebUI Chat"]
-    Pipe["🤖 Copilot SDK Pipe"]
-    Config["📋 Agent Team 配置<br/>Agent 1 (Leader) · Agent 2 · ··· · Agent N"]
-    A1["📊 Agent 1 (Leader)<br/>首席统筹协调"]
-    A2["📈 Agent 2<br/>数据处理分析"]
-    A3["📉 Agent 3<br/>可视化报告"]
-    Tools["🔧 Skills + Tools + MCP Servers<br/>(所有 Agent 共享)"]
-    Result["✅ Agent 1 汇总 → 返回用户"]
-
-    User -->|"分析这份销售数据"| Pipe
-    Pipe --> Config
-    Config -->|"分发"| A1
-    Config -->|"分发"| A2
-    Config -->|"分发"| A3
-    A1 --> Tools
-    A2 --> Tools
-    A3 -.-> Tools
-    Tools --> Result
-    Result --> User
+```
+    用户
+      │
+      ▼
+  ┌───────────────┐
+  │  🤖 Copilot   │
+  │  SDK Pipe     │
+  └───────┬───────┘
+          │
+          ▼
+  ┌─────────────────────────┐
+  │ 📋 Agent Team 配置      │
+  │ Agent 1 (Leader)        │
+  │ Agent 2 ··· · Agent N  │
+  └───────┬─────────────────┘
+          ▼
+  ┌─────────────────────────┐
+  │ 📊 Agent 1 (Leader)     │◄── 也可能自己承担部分工作
+  │ 首席统筹协调             │
+  └───────┬─────────────────┘
+          │ 按需分发
+          ▼
+  ┌─────────────────────────┐     ┌─────────────────────────┐
+  │ 📈 Agent 2             │     │ 📉 Agent 3             │
+  │ 数据处理分析             │     │ 可视化报告              │
+  └─────────────────────────┘     └─────────────────────────┘
+          │                               │
+          └───────────────┬───────────────┘
+                          ▼
+  ┌─────────────────────────────────────┐
+  │ 🔧 Skills + Tools + MCP Servers     │  （所有 Agent 共享）
+  └───────────────┬─────────────────────┘
+                  ▼
+  ┌─────────────────────────────────────┐
+  │ ✅ Agent 1 汇总结果并收尾 → 返回用户 │
+  └─────────────────────────────────────┘
 ```
 
 ---

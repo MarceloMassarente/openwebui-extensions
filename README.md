@@ -49,10 +49,10 @@ A collection of enhancements, plugins, and prompts for [open-webui](https://gith
 
 #### 🚀 Key Leap (v0.13.0)
 
+- **🤖 Agent Team**: Configure a team of OpenWebUI custom models as sub-agents within one Copilot SDK session. Each agent is defined by its OpenWebUI model tag, system prompt, and model description — the base model ID is never used. Assign a leader, dispatch tasks as needed (parallel or serial), and the leader synthesizes results for the final answer.
 - **🎯 Active Session Mode Awareness**: The Agent now knows which session mode is active (`autopilot` / `interactive` / `plan`) via an injected `[Active Session Mode]` directive, aligned with the official Copilot SDK agent-loop docs. Autopilot drives tasks to full completion; interactive stops between steps; plan gates execution behind your approval.
 - **⚡ Mode-Aware Workstyle**: Each session mode injects its own behavioral preamble so the Agent automatically adapts between end-to-end completion and step-by-step pausing.
 - **🔒 SDK Mode Set Hardened**: `session.rpc.mode.set()` on both resume and create paths uses `asyncio.wait_for(timeout=5.0)` with full debug visibility on failure.
-- **🐛 Agent Team Crash Fixed**: Fixed the 3-tuple vs 2-tuple unpacking error that crashed every session with agent team enabled.
 - **🧹 System Prompt Overhaul**: Removed hardcoded Copilot CLI artifacts, resolved SQL pattern contradiction, SESSION_MODE now resolves globally as user_valve > global valve > `autopilot`.
 
 > [!TIP]
