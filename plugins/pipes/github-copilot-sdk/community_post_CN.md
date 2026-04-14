@@ -17,7 +17,7 @@
 - **工具能力自动继承**：每个 Agent 自动获得与主会话相同的 OpenWebUI Skills 和 MCP 服务器，整个团队能力一致
 - 支持全局（Valves）和按用户（User Valves）两级配置
 
-**核心设计**：每个 Agent 由其 OpenWebUI **系统提示词**（`meta.system_prompt`）定义——不依赖基础模型 ID。Copilot SDK 读取系统提示词并将其注册为子 Agent。只需在 OpenWebUI 中配置好模型，系统提示词自动生效，无需额外配置。
+**核心设计**：每个 Agent 由其 OpenWebUI **系统提示词和模型描述**（`meta.system_prompt`）定义——不依赖基础模型 ID。Copilot SDK 同时读取系统提示词和模型描述来注册每个子 Agent。只需在 OpenWebUI 中配置好模型，两者自动生效，无需额外配置。
 
 比如：一个数据分析团队，在 OpenWebUI 中配置三个自定义模型：
 - **Agent 1**（OpenWebUI 模型 A）：系统提示词 = "你是一个首席数据分析师，统筹协调团队工作"
