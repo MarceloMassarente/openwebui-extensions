@@ -19,10 +19,10 @@ How it works:
 
 **Key design**: Each agent is defined by its OpenWebUI **system prompt, model description, and model tag** — the base model ID is never used. The Copilot SDK reads the tag, system prompt, and model description to register each sub-agent. No extra configuration needed beyond what you already have in OpenWebUI.
 
-For example: a data analysis team, configured in OpenWebUI as three custom models:
-- **Agent 1** (OpenWebUI Model A): system prompt = "You are the chief data analyst, coordinating the team's work"
-- **Agent 2** (OpenWebUI Model B): system prompt = "You specialize in data processing and statistical analysis, expert at handling large datasets with Python/pandas"
-- **Agent 3** (OpenWebUI Model C): system prompt = "You specialize in data visualization and report generation, skilled at creating charts and writing analysis conclusions"
+For example: a data analysis team, configured in OpenWebUI as three custom models sharing the same tag `data-agent`:
+- **Agent 1** (tag: `data-agent`, Model A): description = "Chief data analyst who coordinates the team's work"; system prompt = "You are the chief data analyst, coordinating the team's work"
+- **Agent 2** (tag: `data-agent`, Model B): description = "Data processing and statistical analysis expert, skilled at handling large datasets with Python/pandas"; system prompt = "You specialize in data processing and statistical analysis, expert at handling large datasets with Python/pandas"
+- **Agent 3** (tag: `data-agent`, Model C): description = "Data visualization and report generation specialist, expert at creating charts and writing analysis conclusions"; system prompt = "You specialize in data visualization and report generation, skilled at creating charts and writing analysis conclusions"
 
 When you say "analyze this sales data", Agent 1 recognizes this requires parallel multi-dimensional work and **dispatches data processing and visualization to Agent 2 and other agents simultaneously**. All agents work in parallel, and Agent 1 synthesizes their findings into a complete analysis report returned to you.
 
