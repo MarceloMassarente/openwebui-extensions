@@ -12,8 +12,8 @@ For the first time, you can configure a **team of OpenWebUI custom models** to w
 
 How it works:
 - **Dynamic tag loading** (`AGENT_TEAM_TAG`) — the valve automatically lists all tags from your OpenWebUI custom models, so you pick from a dropdown instead of typing manually
-- **Specify model IDs directly** (`AGENT_TEAM_MODEL_IDS`) — or pick exact models
 - **Leader selection** (`AGENT_TEAM_LEADER`) — pick which agent coordinates the team
+- **Model ID fallback** (`AGENT_TEAM_MODEL_IDS`) — if you skip the tag approach, manually enter a comma-separated list of custom model IDs instead
 - **Tool inheritance** — every agent gets the same OpenWebUI skills and MCP servers as the base session
 - Works at both global (Valves) and per-user (User Valves) level
 

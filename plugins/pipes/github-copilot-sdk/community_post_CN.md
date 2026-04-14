@@ -12,8 +12,8 @@
 
 使用方式：
 - **动态标签加载**（`AGENT_TEAM_TAG`）：Valve 自动列出你所有 OpenWebUI 自定义模型的标签，下拉选择即可，无需手动输入
-- **直接指定模型 ID**（`AGENT_TEAM_MODEL_IDS`）：直接选择或输入具体模型
 - **指定领队**（`AGENT_TEAM_LEADER`）：选择由哪个 Agent 负责统筹协调
+- **模型 ID 备选方案**（`AGENT_TEAM_MODEL_IDS`）：如果不使用标签模式，可手动输入逗号分隔的自定义模型 ID 清单
 - **工具能力自动继承**：每个 Agent 自动获得与主会话相同的 OpenWebUI Skills 和 MCP 服务器，整个团队能力一致
 - 支持全局（Valves）和按用户（User Valves）两级配置
 
