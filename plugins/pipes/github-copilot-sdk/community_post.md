@@ -17,7 +17,7 @@ How it works:
 - **Tool inheritance** — every agent gets the same OpenWebUI skills and MCP servers as the base session
 - Works at both global (Valves) and per-user (User Valves) level
 
-**Key design**: Each agent is defined by its OpenWebUI **system prompt and model description** — the base model ID is never used. The Copilot SDK reads both the system prompt and the model description to register each sub-agent. No extra configuration needed beyond what you already have in OpenWebUI.
+**Key design**: Each agent is defined by its OpenWebUI **system prompt, model description, and model tag** — the base model ID is never used. The Copilot SDK reads the tag, system prompt, and model description to register each sub-agent. No extra configuration needed beyond what you already have in OpenWebUI.
 
 For example: a data analysis team, configured in OpenWebUI as three custom models:
 - **Agent 1** (OpenWebUI Model A): system prompt = "You are the chief data analyst, coordinating the team's work"
