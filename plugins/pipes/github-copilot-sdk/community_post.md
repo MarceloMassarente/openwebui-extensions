@@ -41,9 +41,9 @@ flowchart TD
 
     User -->|"Analyze this sales data"| Pipe
     Pipe --> Config
-    Config -->|"parallel dispatch"| A1
-    Config -->|"parallel dispatch"| A2
-    Config -->|"parallel dispatch"| A3
+    Config -->|"dispatch"| A1
+    Config -->|"dispatch"| A2
+    Config -->|"dispatch"| A3
     A1 --> Tools
     A2 --> Tools
     A3 -.-> Tools

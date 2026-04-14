@@ -41,9 +41,9 @@ flowchart TD
 
     User -->|"分析这份销售数据"| Pipe
     Pipe --> Config
-    Config -->|"并行分发"| A1
-    Config -->|"并行分发"| A2
-    Config -->|"并行分发"| A3
+    Config -->|"分发"| A1
+    Config -->|"分发"| A2
+    Config -->|"分发"| A3
     A1 --> Tools
     A2 --> Tools
     A3 -.-> Tools
