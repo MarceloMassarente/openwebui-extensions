@@ -35,6 +35,7 @@ flowchart TD
     Config["📋 Agent Team 配置<br/>Agent 1 (Leader) · Agent 2 · ··· · Agent N"]
     A1["📊 Agent 1 (Leader)<br/>数据处理分析"]
     A2["📈 Agent 2<br/>可视化报告"]
+    A3["📉 Agent 3<br/>..."]
     Tools["🔧 Skills + Tools + MCP Servers<br/>(所有 Agent 共享)"]
     Result["✅ Agent 1 汇总 → 返回用户"]
 
@@ -42,9 +43,10 @@ flowchart TD
     Pipe --> Config
     Config -->|"并行分发"| A1
     Config -->|"并行分发"| A2
-    Config -.->|"···"| Tools
+    Config -->|"并行分发"| A3
     A1 --> Tools
     A2 --> Tools
+    A3 -.-> Tools
     Tools --> Result
     Result --> User
 ```

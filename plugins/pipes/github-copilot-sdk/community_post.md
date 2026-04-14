@@ -35,6 +35,7 @@ flowchart TD
     Config["📋 Agent Team Config<br/>Agent 1 (Leader) · Agent 2 · ··· · Agent N"]
     A1["📊 Agent 1 (Leader)<br/>Data Processing"]
     A2["📈 Agent 2<br/>Viz & Report"]
+    A3["📉 Agent 3<br/>..."]
     Tools["🔧 Skills + Tools + MCP Servers<br/>(shared by all)"]
     Result["✅ Agent 1 synthesizes → user"]
 
@@ -42,9 +43,10 @@ flowchart TD
     Pipe --> Config
     Config -->|"parallel dispatch"| A1
     Config -->|"parallel dispatch"| A2
-    Config -.->|"···"| Tools
+    Config -->|"parallel dispatch"| A3
     A1 --> Tools
     A2 --> Tools
+    A3 -.-> Tools
     Tools --> Result
     Result --> User
 ```
