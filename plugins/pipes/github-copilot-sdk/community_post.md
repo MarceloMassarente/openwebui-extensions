@@ -24,7 +24,7 @@ For example: a data analysis team, configured in OpenWebUI as three custom model
 - **Agent 2** (tag: `data-agent`, Model B): description = "Data processing and statistical analysis expert, skilled at handling large datasets with Python/pandas"; system prompt = "You specialize in data processing and statistical analysis, expert at handling large datasets with Python/pandas"
 - **Agent 3** (tag: `data-agent`, Model C): description = "Data visualization and report generation specialist, expert at creating charts and writing analysis conclusions"; system prompt = "You specialize in data visualization and report generation, skilled at creating charts and writing analysis conclusions"
 
-When you say "analyze this sales data", Agent 1 recognizes this requires parallel multi-dimensional work and **dispatches data processing and visualization to Agent 2 and other agents simultaneously**. All agents work in parallel, and Agent 1 synthesizes their findings into a complete analysis report returned to you.
+When you say "analyze this sales data", Agent 1 recognizes this requires multi-dimensional work and **dispatches tasks to Agent 2 and Agent 3 as needed** — this can be parallel, serial, or a mix, entirely at Agent 1's discretion. Agent 1 synthesizes their findings into a complete analysis report returned to you.
 
 All agents share the same OpenWebUI Skills and MCP server tools; which actual models are called is decided by the Copilot SDK based on the system prompts.
 
@@ -66,14 +66,7 @@ The default is `autopilot`, which is what most people want: describe a task, let
 
 ---
 
-## 🔧 Other Fixes
-
-- **System Prompt Overhaul**: Removed hardcoded Copilot CLI tool names and inapplicable conventions; resolved a SQL pattern contradiction between task tracking (`todos`) and Rich UI state (`interactive_controls`)
-- **SESSION_MODE Priority**: Now resolved once globally as user_valve → global valve → `"autopilot"` — clean and consistent
-
----
-
-## 📥 Install / Update
+##  Install / Update
 
 > If you have the OpenWebUI Community version installed, remove it first, then install from this repo.
 
