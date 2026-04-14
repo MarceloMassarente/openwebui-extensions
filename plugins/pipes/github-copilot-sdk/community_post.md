@@ -1,6 +1,6 @@
 # GitHub Copilot SDK Pipe v0.13.0 — Agent Team + Autopilot/Plan Mode Switching
 
-Hey there, OpenWebUI community! 👋
+Hi everyone! 👋
 
 I'm excited to share **v0.13.0** of the GitHub Copilot SDK Pipe — the biggest release since the plugin launched, with two capabilities that meaningfully change what it can do.
 
@@ -35,7 +35,7 @@ flowchart TD
     Config["📋 Agent Team Config<br/>Agent 1 (Leader) · Agent 2 · ··· · Agent N"]
     A1["📊 Agent 1 (Leader)<br/>Chief Coordinator"]
     A2["📈 Agent 2<br/>Data Processing"]
-    A3["📉 Agent 3<br/>..."]
+    A3["📉 Agent 3<br/>Viz & Report"]
     Tools["🔧 Skills + Tools + MCP Servers<br/>(shared by all)"]
     Result["✅ Agent 1 synthesizes → user"]
 
