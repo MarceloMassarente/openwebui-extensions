@@ -1,6 +1,6 @@
 # GitHub Copilot SDK Pipe v0.13.0 — Agent Team + Autopilot/Plan Mode Switching
 
-Hey OpenWebUI community! 👋
+Hey there, OpenWebUI community! 👋
 
 I'm excited to share **v0.13.0** of the GitHub Copilot SDK Pipe — the biggest release since the plugin launched, with two capabilities that meaningfully change what it can do.
 
