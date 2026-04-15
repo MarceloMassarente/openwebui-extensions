@@ -10,7 +10,7 @@
 
 ## 使用 Batch Install Plugins 安装
 
-如果你已经安装了 [Batch Install Plugins from GitHub](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/tools/batch-install-plugins)，可以用下面这句来安装或更新当前插件：
+如果你已经安装了 [Batch Install Plugins from GitHub](https://openwebui.com/posts/batch_install_plugins_install_popular_plugins_in_s_c9fd6e80) ，可以用下面这句来安装或更新当前插件：
 
 ```text
 从 Fu-Jie/openwebui-extensions 安装插件
@@ -27,7 +27,7 @@
 💾 **持久化存储** - 将映射关系保存到 JSON 文件，便于会话恢复和数据分析  
 🛡️ **原子性操作** - 使用临时文件写入防止数据损坏  
 ⚙️ **灵活配置** - 通过 Valves 参数启用/禁用追踪功能  
-🔍 **智能上下文提取** - 从多个数据源（body、metadata、__metadata__）安全提取 ID
+🔍 **智能上下文提取** - 从多个数据源（body、metadata、**metadata**）安全提取 ID
 
 ## 使用方法
 

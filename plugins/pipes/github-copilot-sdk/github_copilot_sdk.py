@@ -9,34 +9,33 @@ version: 0.13.0
 requirements: github-copilot-sdk==0.2.2
 """
 
+import asyncio
+import base64
+import hashlib
+import html as html_lib
+import json
+import logging
 import os
 import re
-import json
-import html as html_lib
-import sqlite3
-import base64
-import tempfile
-import asyncio
-import logging
 import shutil
-import hashlib
-import time
+import sqlite3
 import subprocess
 import tarfile
-import zipfile
+import tempfile
+import time
 import urllib.parse
 import urllib.request
-import aiohttp
-from pathlib import Path
-from typing import Optional, Union, AsyncGenerator, List, Any, Dict, Literal, Tuple
-from types import SimpleNamespace
-from pydantic import BaseModel, Field, create_model
-from fastapi.responses import HTMLResponse
+import zipfile
 from datetime import datetime
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, Tuple, Union
 
+import aiohttp
 from copilot import CopilotClient, define_tool
 from copilot.generated.rpc import Mode, SessionModeSetParams
-
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel, Field, create_model
 
 # PermissionHandler moved from copilot to copilot.session in v0.2.x
 try:
@@ -45,17 +44,19 @@ except ImportError:
     PermissionHandler = None
 
 # Import Tool Server Connections and Tool System from OpenWebUI Config
+import mimetypes
+import uuid
+
 from open_webui.config import (
     PERSISTENT_CONFIG_REGISTRY,
     TOOL_SERVER_CONNECTIONS,
 )
-from open_webui.utils.tools import get_tools as get_openwebui_tools, get_builtin_tools
+from open_webui.models.files import FileForm, Files
 from open_webui.models.tools import Tools
 from open_webui.models.users import Users
-from open_webui.models.files import Files, FileForm
 from open_webui.storage.provider import Storage
-import mimetypes
-import uuid
+from open_webui.utils.tools import get_builtin_tools
+from open_webui.utils.tools import get_tools as get_openwebui_tools
 
 if os.path.exists("/app/backend/data"):
     CHAT_MAPPING_FILE = Path(
@@ -354,7 +355,7 @@ function measureHeight() {
     }
 
     var previousHeight = body.style.height;
-    
+
     // 2. Clear explicit height to let the browser compute natural layout
     body.style.height = 'auto';
 
@@ -2130,9 +2131,9 @@ class Pipe:
     _last_model_cache_time: float = 0  # Timestamp
     _env_setup_done = False  # Track if env setup has been completed
     _last_update_check = 0  # Timestamp of last CLI update check
-    _discovery_cache: Dict[str, Dict[str, Any]] = (
-        {}
-    )  # Map config_hash -> {"time": float, "models": list}
+    _discovery_cache: Dict[
+        str, Dict[str, Any]
+    ] = {}  # Map config_hash -> {"time": float, "models": list}
 
     def _is_version_at_least(self, target: str) -> bool:
         """Check if OpenWebUI version is at least the target version."""
@@ -2192,11 +2193,11 @@ class Pipe:
         raw_lang = raw_lang.split(",")[0].split(";")[0].strip().replace("_", "-")
         raw_lang = re.sub(r"[^A-Za-z0-9-]", "", raw_lang)
         if not raw_lang:
-            return self._resolve_language(user_language)
+            return self._resolve_language(user_language or "")
 
         parts = [part for part in raw_lang.split("-") if part]
         if not parts:
-            return self._resolve_language(user_language)
+            return self._resolve_language(user_language or "")
 
         normalized_parts = []
         for index, part in enumerate(parts):
@@ -3357,14 +3358,14 @@ class Pipe:
     # then register them in _initialize_custom_tools() -> all_tools dict.
     async def _initialize_custom_tools(
         self,
-        body: dict = None,
+        body: Optional[dict] = None,
         __user__=None,
         user_lang: str = "en-US",
         __event_emitter__=None,
         __event_call__=None,
         __request__=None,
         __metadata__=None,
-        pending_embeds: List[dict] = None,
+        pending_embeds: Optional[List[dict]] = None,
         __messages__: Optional[list] = None,
         __files__: Optional[list] = None,
         __task__: Optional[str] = None,
@@ -3412,7 +3413,7 @@ class Pipe:
         # 3. If all OpenWebUI tool types are disabled, skip loading and return early
         if not enable_tools and not enable_openapi:
             logger.info(
-                f"[Perf] _initialize_custom_tools (fast return): {(time.perf_counter() - t_start)*1000:.2f}ms"
+                f"[Perf] _initialize_custom_tools (fast return): {(time.perf_counter() - t_start) * 1000:.2f}ms"
             )
             return final_tools
 
@@ -3460,7 +3461,7 @@ class Pipe:
 
         t_total = time.perf_counter() - t_start
         logger.info(
-            f"[Perf] _initialize_custom_tools total: {t_total*1000:.2f}ms (Base tools: {(t_base_tools_done-t_start)*1000:.2f}ms, Dyn Load: {(t_dyn_tools_done-t_dyn_tools_start)*1000:.2f}ms)"
+            f"[Perf] _initialize_custom_tools total: {t_total * 1000:.2f}ms (Base tools: {(t_base_tools_done - t_start) * 1000:.2f}ms, Dyn Load: {(t_dyn_tools_done - t_dyn_tools_start) * 1000:.2f}ms)"
         )
 
         return final_tools
@@ -3499,7 +3500,7 @@ class Pipe:
                 force=force,
             )
 
-        return define_tool(
+        return define_tool(  # type: ignore[call-overload]
             name="render_todo_widget",
             description="Render the current session TODO list as a compact embedded widget. Only refreshes when the TODO snapshot changed unless force=true. Do not restate the widget contents in the final answer unless the user explicitly asks for a textual TODO list.",
             params_type=RenderTodoWidgetParams,
@@ -3511,7 +3512,7 @@ class Pipe:
         chat_id,
         __request__=None,
         __event_emitter__=None,
-        pending_embeds: List[dict] = None,
+        pending_embeds: Optional[List[dict]] = None,
     ):
         """
         Create a tool to publish files from the workspace to a downloadable URL.
@@ -3658,8 +3659,8 @@ class Pipe:
 
                 # 3. Handle Storage & File ID
                 # We check if file already exists in OpenWebUI DB to avoid duplicates
+                safe_filename = target_path.name
                 try:
-                    safe_filename = target_path.name
                     # deterministic ID based on user + workspace path + filename
                     file_key = f"{user_id}:{workspace_dir}:{safe_filename}"
                     file_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, file_key))
@@ -3888,7 +3889,7 @@ class Pipe:
                 logger.error(f"Publish error: {e}")
                 return {"error": str(e), "filename": filename}
 
-        return define_tool(
+        return define_tool(  # type: ignore[call-overload]
             name="publish_file_from_workspace",
             description="Converts a file created in your local workspace into a downloadable URL. Use this tool AFTER writing a file to the current directory.",
             params_type=PublishFileParams,
@@ -4289,7 +4290,7 @@ class Pipe:
             except Exception as e:
                 return {"error": str(e)}
 
-        return define_tool(
+        return define_tool(  # type: ignore[call-overload]
             name="manage_skills",
             description="Manage skills deterministically: install/list/create/edit/delete/show. Supports creating skill content from current context.",
             params_type=ManageSkillsParams,
@@ -4493,6 +4494,10 @@ class Pipe:
                         __event_call__,
                     )
 
+                if tool_callable is None:
+                    raise RuntimeError(
+                        f"Tool {sanitized_tool_name} has no callable registered"
+                    )
                 result = await tool_callable(**payload)
 
                 if self.valves.DEBUG:
@@ -4682,7 +4687,7 @@ class Pipe:
         )
 
         # Core Fix: Explicitly pass params_type and name
-        return define_tool(
+        return define_tool(  # type: ignore[call-overload]
             name=sanitized_tool_name,
             description=tool_description,
             params_type=ParamsModel,
@@ -4714,7 +4719,10 @@ class Pipe:
         return []
 
     def _build_openwebui_request(
-        self, user: dict = None, token: str = None, body: dict = None
+        self,
+        user: Optional[dict] = None,
+        token: Optional[str] = None,
+        body: Optional[dict] = None,
     ):
         """Build a more complete request-like object with dynamically loaded OpenWebUI configs."""
         # Dynamically build config from the official registry
@@ -4839,7 +4847,7 @@ class Pipe:
 
     async def _load_openwebui_tools(
         self,
-        body: dict = None,
+        body: Optional[dict] = None,
         __user__=None,
         __request__=None,
         __event_emitter__=None,
@@ -5266,11 +5274,14 @@ class Pipe:
 
                 t_get_opw_start = time.perf_counter()
                 tools_dict = await get_openwebui_tools(
-                    tool_request, tool_ids, user, extra_params
+                    tool_request,  # type: ignore[arg-type]
+                    tool_ids,
+                    user,
+                    extra_params,
                 )
                 t_get_opw_done = time.perf_counter()
                 logger.info(
-                    f"[Perf] get_openwebui_tools ({len(tool_ids)} IDs): {(t_get_opw_done-t_get_opw_start)*1000:.2f}ms"
+                    f"[Perf] get_openwebui_tools ({len(tool_ids)} IDs): {(t_get_opw_done - t_get_opw_start) * 1000:.2f}ms"
                 )
 
                 if self.valves.DEBUG:
@@ -5369,7 +5380,7 @@ class Pipe:
                     "code_interpreter": code_interpreter_enabled,
                 }
                 builtin_tools = get_builtin_tools(
-                    tool_request,
+                    tool_request,  # type: ignore[arg-type]
                     extra_params,
                     features=all_features,
                     model=model_dict,  # model.meta.builtinTools controls which categories are active
@@ -6623,12 +6634,7 @@ class Pipe:
             if any(c in desc_line for c in ":#"):
                 desc_line = f'"{desc_line}"'
         return (
-            f"---\n"
-            f"name: {name}\n"
-            f"description: {desc_line}\n"
-            f"---\n\n"
-            f"# {name}\n\n"
-            f"{body}\n"
+            f"---\nname: {name}\ndescription: {desc_line}\n---\n\n# {name}\n\n{body}\n"
         )
 
     def _sync_openwebui_skills(self, resolved_cwd: str, user_id: str) -> str:
@@ -6653,7 +6659,7 @@ class Pipe:
         shared_dir = Path(self._get_shared_skills_dir(resolved_cwd))
 
         try:
-            from open_webui.models.skills import Skills, SkillForm, SkillMeta
+            from open_webui.models.skills import SkillForm, SkillMeta, Skills
 
             sync_stats = {
                 "db_to_file_updates": 0,
@@ -6886,7 +6892,7 @@ class Pipe:
     def _resolve_session_skill_config(
         self,
         resolved_cwd: str,
-        user_id: str,
+        user_id: Optional[str],
         enable_openwebui_skills: bool,
         disabled_skills: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
@@ -6895,7 +6901,7 @@ class Pipe:
         # Unified shared directory — always included.
         # When enable_openwebui_skills is True, run bidirectional sync first so
         # OpenWebUI page skills and directory skills are kept in sync.
-        if enable_openwebui_skills:
+        if enable_openwebui_skills and user_id:
             shared_dir = self._sync_openwebui_skills(resolved_cwd, user_id)
         else:
             shared_dir = self._get_shared_skills_dir(resolved_cwd)
@@ -6962,7 +6968,7 @@ class Pipe:
             system_prompt_content = body.get("system_prompt")
             system_prompt_source = "body_explicit_system_prompt"
             await self._emit_debug_log(
-                f"Extracted system prompt from explicit body field (length: {len(system_prompt_content)})",
+                f"Extracted system prompt from explicit body field (length: {len(system_prompt_content or '')})",
                 __event_call__,
                 debug_enabled=debug_enabled,
             )
@@ -6978,7 +6984,7 @@ class Pipe:
                         system_prompt_content = meta_params.get("system")
                         system_prompt_source = "metadata.model.params"
                         await self._emit_debug_log(
-                            f"Extracted system prompt from metadata.model.params (length: {len(system_prompt_content)})",
+                            f"Extracted system prompt from metadata.model.params (length: {len(system_prompt_content or '')})",
                             __event_call__,
                             debug_enabled=debug_enabled,
                         )
@@ -7071,7 +7077,9 @@ class Pipe:
 
         return system_prompt_content, system_prompt_source
 
-    def _get_workspace_dir(self, user_id: str = None, chat_id: str = None) -> str:
+    def _get_workspace_dir(
+        self, user_id: Optional[str] = None, chat_id: Optional[str] = None
+    ) -> str:
         """Get the effective workspace directory with user and chat isolation."""
         # Fixed base directory for OpenWebUI container
         if os.path.exists("/app/backend/data"):
@@ -7136,7 +7144,10 @@ class Pipe:
             logger.warning(f"[Session Tracking] Failed to persist mapping: {e}")
 
     def _build_client_config(
-        self, user_id: str = None, chat_id: str = None, token: str = None
+        self,
+        user_id: Optional[str] = None,
+        chat_id: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         """Build CopilotClient config from valves and request body."""
         from copilot import SubprocessConfig
@@ -7620,7 +7631,7 @@ class Pipe:
         reasoning_effort: str = "medium",
         is_reas_model: bool = False,
         is_admin: bool = False,
-        user_id: str = None,
+        user_id: Optional[str] = None,
         enable_mcp: bool = True,
         enable_openwebui_skills: bool = True,
         disabled_skills: Optional[List[str]] = None,
@@ -7632,7 +7643,7 @@ class Pipe:
         session_mode: str = "autopilot",
     ):
         """Build SessionConfig for Copilot SDK."""
-        from copilot.session import SessionConfig, InfiniteSessionConfig
+        from copilot.session import InfiniteSessionConfig, SessionConfig
 
         infinite_session_config = None
         if self.valves.INFINITE_SESSION:
@@ -7876,7 +7887,7 @@ class Pipe:
 
     def _get_chat_context(
         self,
-        body: dict,
+        body: Optional[dict],
         __metadata__: Optional[dict] = None,
         __event_call__=None,
         debug_enabled: bool = False,
@@ -7938,7 +7949,9 @@ class Pipe:
             "message_id": str(message_id or "").strip(),
         }
 
-    async def _fetch_byok_models(self, uv: "Pipe.UserValves" = None) -> List[dict]:
+    async def _fetch_byok_models(
+        self, uv: Optional["Pipe.UserValves"] = None
+    ) -> List[dict]:
         """Fetch BYOK models from configured provider."""
         model_list = []
 
@@ -7997,11 +8010,11 @@ class Pipe:
                                     break
                                 else:
                                     await self._emit_debug_log(
-                                        f"BYOK: Failed to fetch models from {url} (Attempt {attempt+1}/3). Status: {resp.status}"
+                                        f"BYOK: Failed to fetch models from {url} (Attempt {attempt + 1}/3). Status: {resp.status}"
                                     )
                         except Exception as e:
                             await self._emit_debug_log(
-                                f"BYOK: Model fetch error (Attempt {attempt+1}/3): {e}"
+                                f"BYOK: Model fetch error (Attempt {attempt + 1}/3): {e}"
                             )
 
                         if attempt < 2:
@@ -8132,8 +8145,8 @@ class Pipe:
             bill = (
                 m.get("billing") if isinstance(m, dict) else getattr(m, "billing", {})
             )
-            if hasattr(bill, "to_dict"):
-                bill = bill.to_dict()
+            if bill is not None and hasattr(bill, "to_dict"):
+                bill = bill.to_dict()  # type: ignore[union-attr]
             mult = float(bill.get("multiplier", 1.0)) if isinstance(bill, dict) else 1.0
 
             # 3. Clean ID and build display name
@@ -8189,8 +8202,12 @@ class Pipe:
             return_exceptions=True,
         )
 
-        standard_results = results[0] if not isinstance(results[0], Exception) else []
-        byok_results = results[1] if not isinstance(results[1], Exception) else []
+        standard_results: List[dict] = (
+            results[0] if not isinstance(results[0], Exception) else []
+        )  # type: ignore[assignment]
+        byok_results: List[dict] = (
+            results[1] if not isinstance(results[1], Exception) else []
+        )  # type: ignore[assignment]
 
         # Merge all discovered models and sort by source (copilot=0, byok=1), then provider, then multiplier
         # Ensure explicit group: copilot models always before byok models
@@ -8283,7 +8300,9 @@ class Pipe:
             self.__class__._shared_clients[token_hash] = new_client
             return new_client
 
-    async def _fetch_standard_models(self, token: str, __user__: dict) -> List[dict]:
+    async def _fetch_standard_models(
+        self, token: str, __user__: Optional[dict]
+    ) -> List[dict]:
         """Fetch models using the shared persistent client pool."""
         if not token:
             return []
@@ -8424,7 +8443,7 @@ class Pipe:
         self,
         __event_call__=None,
         debug_enabled: bool = False,
-        token: str = None,
+        token: Optional[str] = None,
         enable_mcp: bool = True,
     ):
         """Setup environment variables and resolve the deterministic Copilot CLI path."""
@@ -9418,7 +9437,12 @@ class Pipe:
                         attachments=send_payload.get("attachments"),
                         mode=send_payload.get("mode"),
                     )
-                    return response.data.content if response else "Empty response."
+                    _resp_content = response.data.content if response else None
+                    return (
+                        str(_resp_content)
+                        if _resp_content is not None
+                        else "Empty response."
+                    )
                 finally:
                     # Cleanup: destroy session if no chat_id (temporary session)
                     if not chat_id:
@@ -9452,7 +9476,7 @@ class Pipe:
         session,
         send_payload,
         chat_id: str,
-        user_id: str = None,
+        user_id: Optional[str] = None,
         init_message: str = "",
         __event_call__=None,
         __event_emitter__=None,
@@ -9460,7 +9484,7 @@ class Pipe:
         show_thinking: bool = True,
         debug_enabled: bool = False,
         user_lang: str = "en-US",
-        pending_embeds: List[dict] = None,
+        pending_embeds: Optional[List[dict]] = None,
         request_start_ts: float = 0.0,
     ) -> AsyncGenerator:
         """
@@ -9946,10 +9970,11 @@ class Pipe:
                 # Try to get result content
                 result_content = ""
                 result_type = "success"
+                result_obj: Any = None
                 try:
                     result_obj = safe_get_data_attr(event, "result")
                     if hasattr(result_obj, "content"):
-                        result_content = result_obj.content
+                        result_content = getattr(result_obj, "content", "")
                     elif isinstance(result_obj, dict):
                         result_content = result_obj.get("content", "")
                         result_type = result_obj.get("result_type", "success")
@@ -10004,7 +10029,7 @@ class Pipe:
                         elif isinstance(result_obj, dict) and result_obj.get("content"):
                             todo_text = result_obj["content"]
                         elif hasattr(result_obj, "content"):
-                            todo_text = result_obj.content
+                            todo_text = getattr(result_obj, "content", "")
 
                         # 3. Fallback: If content is just a status message, try to recover from arguments
                         if (
@@ -10421,7 +10446,7 @@ class Pipe:
         try:
             if debug_enabled and __event_emitter__:
                 # Emit debug info as UI status rather than reasoning block
-                async def _emit_status(key: str, desc: str = None, **kwargs):
+                async def _emit_status(key: str, desc: Optional[str] = None, **kwargs):
                     try:
                         final_desc = (
                             desc

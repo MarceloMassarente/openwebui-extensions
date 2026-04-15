@@ -10,7 +10,7 @@ An Open WebUI plugin powered by the AntV Infographic engine. It transforms long 
 
 ## Install with Batch Install Plugins
 
-If you already use [Batch Install Plugins from GitHub](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/tools/batch-install-plugins), you can install or update this plugin with:
+If you already use [Batch Install Plugins from GitHub](https://openwebui.com/posts/batch_install_plugins_install_popular_plugins_in_s_c9fd6e80) , you can install or update this plugin with:
 
 ```text
 Install plugin from Fu-Jie/openwebui-extensions
