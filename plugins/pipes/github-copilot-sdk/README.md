@@ -6,13 +6,7 @@
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 
-This is a powerful **GitHub Copilot SDK** Pipe for **OpenWebUI** that provides a unified **Agentic experience**. It goes beyond simple model access by enabling autonomous **Intent Recognition**, **Web Search**, and **Context Compaction**. It seamlessly reuses your existing **Tools, MCP servers, OpenAPI servers, and Skills** from OpenWebUI to create a truly integrated ecosystem.
-
-- **🧠 Autonomous Intent Recognition**: The Agent independently analyzes user goals to determine the most effective path forward.
-- **🌐 Smart Web Search**: Built-in capability to trigger web searches autonomously based on task requirements.
-- **♾️ Infinite Session (Context Compaction)**: Automatically manages long-running conversations by compacting context (summarization + TODO persistence) to maintain project focus.
-- **🧩 Ecosystem Injection**: Directly reads and leverages your configured **OpenWebUI Tools, MCPs, OpenAPI Servers, and Skills**.
-- **🎨 Interactive Delivery**: Native support for **HTML Artifacts** and **RichUI** components for real-time visualization and reporting.
+This is a **GitHub Copilot SDK** Pipe for **OpenWebUI** with **Agent Team** coordination, **Session Modes** (`autopilot`/`interactive`/`plan`), autonomous **Web Search**, **Context Compaction**, and reuse of your OpenWebUI **Tools, MCP servers, and Skills**.
 
 > [!IMPORTANT]
 > **Essential Companion**
@@ -104,7 +98,7 @@ Configure credentials (choose one or both):
 | `GH_TOKEN` | GitHub Copilot token (see [Get Token](#get-token) below) |
 | `BYOK_API_KEY` | OpenAI or Anthropic key |
 | `BYOK_TYPE` | BYOK type: `openai` or `anthropic` |
-| `BYOK_BASE_URL` | BYOK API endpoint (required when using BYOK)<br>e.g. `https://api.openai.com/v1` (OpenAI, has /v1)<br>e.g. `https://api.anthropic.com` (Anthropic, no version suffix)<br>Other providers may have different suffixes — check your vendor's documentation. |
+| `BYOK_BASE_URL` | BYOK API endpoint (required when using BYOK), e.g. `https://api.openai.com/v1` (OpenAI) or `https://api.anthropic.com` (Anthropic). Other providers may differ — check vendor docs. |
 
 > 💡 **Both at once**: You can configure both `GH_TOKEN` and `BYOK_API_KEY` — the model list will show models from both.
 

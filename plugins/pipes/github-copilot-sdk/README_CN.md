@@ -6,12 +6,7 @@
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 
-这是一个将 **GitHub Copilot SDK** 深度集成到 **OpenWebUI** 中的强大 Agent SDK 管道。它不仅实现了 SDK 的核心功能，还支持 **智能意图识别**、**自主网页搜索** 与 **自动上下文压缩**，并能够无缝读取 OpenWebUI 已有的配置进行智能注入：
-
-- **🧠 智能意图识别**：Agent 能自主分析用户任务的深层意图，决定最有效的处理路径。
-- **🌐 自主网页搜索**：具备独立的网页搜索触发判断力，无需用户手动干预。
-- **♾️ 自动压缩上下文**：支持 Infinite Session，自动对长对话进行上下文压缩与摘要，确保长期任务跟进。
-- **🧩 深度生态复用**：直接复用您在 OpenWebUI 中配置的 **工具 (Tools)**、**MCP**、**OpenAPI Server** 和 **技能 (Skills)**。
+这是一个将 **GitHub Copilot SDK** 集成到 **OpenWebUI** 的 Agent SDK 管道，支持 **Agent Team** 多智能体协作、**Session Mode**（`autopilot`/`interactive`/`plan`）、**网页搜索**、**上下文压缩**，并复用 OpenWebUI 的 **Tools、MCP 服务器和 Skills**。
 
 > [!IMPORTANT]
 > **核心伴侣组件**
@@ -100,7 +95,7 @@
 | `GH_TOKEN` | GitHub Copilot Token（见下方 [获取 Token](#获取-token)） |
 | `BYOK_API_KEY` | OpenAI 或 Anthropic Key |
 | `BYOK_TYPE` | BYOK 类型：`openai` 或 `anthropic` |
-| `BYOK_BASE_URL` | BYOK API 端点（使用 BYOK 时必须设置）<br>例：`https://api.openai.com/v1`（OpenAI，有 /v1）<br>例：`https://api.anthropic.com`（Anthropic，无版本后缀）<br>其他供应商可能有不同后缀，请查阅供应商文档。 |
+| `BYOK_BASE_URL` | BYOK API 端点（使用 BYOK 时必须设置），如 `https://api.openai.com/v1`（OpenAI）或 `https://api.anthropic.com`（Anthropic）。其他供应商可能不同，请查阅供应商文档。 |
 
 > 💡 **同时配置**：可以同时配置 `GH_TOKEN` 和 `BYOK_API_KEY`，模型列表会同时显示两组模型。
 
