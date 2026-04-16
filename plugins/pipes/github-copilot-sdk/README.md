@@ -1,4 +1,4 @@
-# GitHub Copilot SDK Pipe for OpenWebUI
+# GitHub Copilot Agent Pipe for OpenWebUI
 
 | By [Fu-Jie](https://github.com/Fu-Jie) · v0.13.0 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
@@ -76,11 +76,14 @@ Just describe what you want. No need to mention tools or internal parameters.
 | Capability | What it means for you |
 | :--- | :--- |
 | 🤖 **Agentic AI** | The Agent autonomously plans the path to your goal |
+| 👥 **Agent Team** | Coordinate multiple sub-agents within one session — assign a leader, share tools |
+| 🔄 **Session Mode** | Choose `autopilot` (autonomous), `interactive` (step-by-step confirm), or `plan` (plan-first) |
+| 🛠️ **Built-in Tools** | File system, Git, bash, publish-to-workspace, directory-based skills — all installed in Docker data dir and persist across sessions |
 | 🌐 **Web Search** | Triggers searches when your question needs up-to-date info |
 | ♾️ **Infinite Sessions** | Weeks-long projects with automatic context compaction |
-| 🧩 **Tools & MCP Bridge** | Your OpenWebUI Tools and MCP servers are automatically available |
+| 🧩 **Tools & MCP Bridge** | Your OpenWebUI instance's own Tools and MCP servers are automatically available and persist across sessions |
 | 🎨 **RichUI / Artifacts** | Interactive dashboards and pages rendered directly in chat |
-| 🛡️ **Workspace Isolation** | Each session runs in its own sandbox for privacy |
+| 🛡️ **Workspace Isolation** | Each session runs with privacy isolation where possible |
 
 ---
 

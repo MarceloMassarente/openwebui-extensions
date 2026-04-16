@@ -1,4 +1,4 @@
-# GitHub Copilot Official SDK Pipe
+# GitHub Copilot Agent SDK Pipe
 
 | 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.13.0 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
@@ -72,11 +72,14 @@
 | 能力 | 对你意味着什么 |
 | :--- | :--- |
 | 🤖 **Agentic AI** | Agent 自主规划达成目标的路径 |
+| 👥 **Agent Team** | 在一个会话中协调多个子 Agent — 指定领导者、共享工具 |
+| 🔄 **Session Mode** | 选择 `autopilot`（自主执行）、`interactive`（逐步确认）或 `plan`（计划优先） |
+| 🛠️ **内置工具** | 文件系统、Git、bash、发布产物到工作区、基于目录的技能管理等核心工具，安装在 Docker 数据目录中，跨会话持久化 |
 | 🌐 **网页搜索** | 当问题需要最新信息时自动触发搜索 |
 | ♾️ **无限会话** | 数周长的项目也能自动压缩上下文保持跟踪 |
 | 🧩 **Tools & MCP 桥接** | OpenWebUI 的 Tools 和 MCP 服务器自动可用 |
 | 🎨 **RichUI / Artifacts** | 交互式看板和页面直接渲染在聊天里 |
-| 🛡️ **工作区隔离** | 每个会话在独立沙箱中运行保护隐私 |
+| 🛡️ **工作区隔离** | 每个会话尽可能在独立环境中运行以保护隐私 |
 
 ---
 
