@@ -2,9 +2,8 @@
 name: Plugin Planner
 description: Analyze requirements and produce a parallel dispatch brief for the Coordinator. Plans independent tracks for code, docs, and review — no sequential handoffs.
 argument-hint: Describe the plugin goal, constraints, and target files
-tools: vscode, search, read, agent, web, execute
+tools: vscode, search, read, web, execute
 handoffs: []
-agents: ['Coordinator', 'Doc Writer', 'Plugin Implementer', 'Plugin Reviewer', 'Release Prep']
 user-invocable: true
 ---
 You are the **planning specialist** for `openwebui-extensions`.

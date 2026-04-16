@@ -2,9 +2,8 @@
 name: Plugin Reviewer
 description: Perform strict repository-aligned code review for OpenWebUI plugin changes. Works in parallel with Implementer and Doc Writer. No sequential handoffs.
 argument-hint: Share changed files or branch diff to review
-tools: vscode, search, read, agent, web, execute
+tools: vscode, search, read, web, execute
 handoffs: []
-agents: ['Coordinator', 'Plugin Planner', 'Doc Writer', 'Plugin Implementer', 'Release Prep']
 user-invocable: true
 ---
 You are the **review specialist** for the `openwebui-extensions` repository.

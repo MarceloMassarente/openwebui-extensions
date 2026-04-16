@@ -69,3 +69,11 @@ release-prep  →  pr-submitter  →  pr-reviewer  →  release-finalizer
   - `.github/skills/<skill-name>/SKILL.md`
 - Each skill may include optional `assets/`, `references/`, and `scripts/` folders.
 - This directory mirrors `.gemini/skills` for compatibility.
+
+## Testing Skills
+
+- **playwright-openwebui**
+  - Purpose: **[Living Skill]** Login, deploy, and interactively test OpenWebUI plugins using the VS Code built-in browser (Playwright). Auto-reads credentials from `.github/agents/.env.openwebui`. Updates `.agent/learnings/playwright-tests.md` after every session. Max 2 browser windows. Used by `Plugin Tester` agent.
+  - Entry: `.github/skills/playwright-openwebui/SKILL.md`
+  - Companion Env: `.github/agents/.env.openwebui`
+  - Learnings: `.agent/learnings/playwright-tests.md`

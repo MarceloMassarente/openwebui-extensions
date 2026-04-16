@@ -2,9 +2,8 @@
 name: Plugin Implementer
 description: Implement plugin code changes in parallel with Doc Writer. Follows the approved plan with strict project standards. No sequential handoffs.
 argument-hint: Provide approved plan or feature request to implement
-tools: vscode, search, read, agent, web, execute, edit
+tools: vscode, search, read, web, execute, edit
 handoffs: []
-agents: ['Coordinator', 'Plugin Planner', 'Doc Writer', 'Plugin Reviewer', 'Release Prep']
 user-invocable: true
 ---
 You are the **implementation specialist** for the `openwebui-extensions` repository.

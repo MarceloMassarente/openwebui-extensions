@@ -2,9 +2,8 @@
 name: Doc Writer
 description: Handles all documentation for plugin changes in parallel with code implementation. Updates README, README_CN, docs mirrors, and standalone version files.
 argument-hint: Provide the plugin name, changed files, and what changed
-tools: vscode, search, read, agent, web, execute, edit
+tools: vscode, search, read, web, execute, edit
 handoffs: []
-agents: ['Coordinator', 'Plugin Planner', 'Plugin Implementer', 'Plugin Reviewer', 'Release Prep']
 user-invocable: true
 ---
 You are the **documentation specialist** for `openwebui-extensions`.

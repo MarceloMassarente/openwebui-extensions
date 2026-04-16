@@ -143,3 +143,5 @@ logs/
 # Add any specific ignores for OpenWebUI plugins if needed
 .git-worktrees/
 plugins/filters/auth_model_info/
+.env.openwebui
+/.github/agents/.env.openwebui

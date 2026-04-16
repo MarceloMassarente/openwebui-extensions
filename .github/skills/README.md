@@ -28,6 +28,13 @@ This folder contains reusable Agent Skills for GitHub Copilot / VS Code custom a
   - Purpose: Scaffold OpenWebUI plugin boilerplate with repository standards.
   - Entry: `plugin-scaffolder/SKILL.md`
 
+## Testing Skills
+
+- **playwright-openwebui**
+  - Purpose: Living browser-testing skill for OpenWebUI plugins. Uses the VS Code built-in browser tools, auto-reads `.github/agents/.env.openwebui`, and records selector/timing learnings after each session.
+  - Entry: `playwright-openwebui/SKILL.md`
+  - Companion Agent: `.github/agents/plugin-tester.agent.md`
+
 - **version-bumper**
   - Purpose: Assist with semantic version bumping workflows.
   - Entry: `version-bumper/SKILL.md`
