@@ -27,39 +27,30 @@ Use this order for plugin READMEs:
 
 ## README Header
 
-Do not use the old pipe-separated metadata line.
+Use this exact header format (copied directly — same for EN and CN):
 
-Use a compact two-part header:
+English:
+```markdown
+| By [Fu-Jie](https://github.com/Fu-Jie) · vX.Y.Z | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| :--- | ---: |
 
-1. A full-width two-column line with author/version on the left and the star link on the right
-2. A single-row live badge table with no visible text header
+| ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+```
 
-English example:
+Chinese:
+```markdown
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · vX.Y.Z | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| :--- | ---: |
 
-`| By [Fu-Jie](https://github.com/Fu-Jie) · vx.y.z | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |`
-
-`| :--- | ---: |`
-
-`| ![followers](...) | ![points](...) | ![top](...) | ![contributions](...) | ![downloads](...) | ![saves](...) | ![views](...) |`
-
-`| :---: | :---: | :---: | :---: | :---: | :---: | :---: |`
-
-Chinese example:
-
-`| 作者：[Fu-Jie](https://github.com/Fu-Jie) · vx.y.z | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |`
-
-`| :--- | ---: |`
-
-`| ![followers](...) | ![points](...) | ![top](...) | ![contributions](...) | ![downloads](...) | ![saves](...) | ![views](...) |`
-
-`| :---: | :---: | :---: | :---: | :---: | :---: | :---: |`
+| ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+```
 
 Guidelines:
-
 - Keep the author link pointing to `https://github.com/Fu-Jie`
 - Keep the star link pointing to the repository root
 - Put the version on the left-side author line as plain text (`vx.y.z`), not as a badge
-- Use live badges for followers, points, plugin contribution count, total plugin downloads, total plugin saves, and total plugin views
 - Keep the `Top` badge compact and use the project standard wording (`Top <1%`)
 - Do not add a visible label header row above the badges
 
@@ -88,3 +79,34 @@ Use the `doc-mirror-sync` skill when the task includes mirroring plugin READMEs 
 
 - Keep detailed changelog history in GitHub release history or dedicated docs
 - In README files, keep `What's New` focused on the latest version only
+
+## One-Sentence Description
+
+- One sentence only. No bullet-point lists in the opening description.
+- If the plugin supports Agent Team or Session Modes, mention them here — this is the first thing users read.
+- Example: `This is a **GitHub Copilot SDK** Pipe for **OpenWebUI** with **Agent Team** coordination, **Session Modes** (`autopilot`/`interactive`/`plan`), autonomous **Web Search**, **Context Compaction**, and reuse of your OpenWebUI **Tools, MCP servers, and Skills**.**
+
+## Key Capabilities
+
+- Keep to ~8-9 items maximum. One-line descriptions.
+- Order by importance: Agentic AI → Agent Team → Session Mode → Built-in Tools → Web Search → Infinite Sessions → Tools/MCP Bridge → RichUI → Workspace Isolation.
+- If a tool or installation persists (e.g., in Docker data dir), mention it — users care about whether their setup survives restarts.
+- Use accurate naming: say "privacy isolation where possible" instead of "sandbox"; say "bypass RAG parsing" instead of "data analysis".
+
+## How to Use
+
+- 2-4 representative examples. Keep it short. Don't use generic examples like "Fix the failing tests".
+
+## Configuration (Valves) —分级展示
+
+- **Always keep** the Configuration section in README.
+- If valves > ~10: show only essential/required parameters in README; link to full documentation with absolute GitHub URL.
+- Example link format: `Full parameter list: https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/{type}/{name}/TUTORIAL.md`
+- Do NOT use `<br>` in table cells — Markdown tables don't render it consistently. Use commas or semicolons to separate items within a single cell.
+
+## Design Principles
+
+- **Scannability first**: Keep README short enough that users can reach the Star button without excessive scrolling. If content grows beyond ~120 lines, extract details to a separate TUTORIAL doc.
+- **Session Mode / Agent Team prominence**: If the plugin supports these, mention them in both the one-line description and Key Capabilities — they are headline features.
+- **Persistence context**: Mention when tools or installations persist across sessions/restarts. Users need to know their setup survives Docker restarts.
+- **Accurate capability naming**: Avoid vague terms. Be specific about what each capability actually does.

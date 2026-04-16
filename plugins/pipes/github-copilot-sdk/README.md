@@ -10,7 +10,7 @@ This is a **GitHub Copilot SDK** Pipe for **OpenWebUI** with **Agent Team** coor
 
 > [!IMPORTANT]
 > **Essential Companion**
-> To unlock file handling and data analysis capabilities, you must install the [GitHub Copilot SDK Files Filter](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6).
+> To let Copilot directly process uploaded files instead of OpenWebUI's default RAG parsing, you must install the [GitHub Copilot SDK Files Filter](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6).
 
 > [!TIP]
 > **No Subscription Required for BYOK**
@@ -52,7 +52,7 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 2. **Configure a credential**: `GH_TOKEN` (GitHub Copilot) **or** `BYOK_API_KEY` (OpenAI/Anthropic)
 3. **Start chatting** — select this Pipe's model and ask naturally
 
-> Companion Files Filter is required for the Agent to receive raw uploaded files. Install from [here](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6).
+> Companion Files Filter lets Copilot directly process uploaded files instead of OpenWebUI's default RAG parsing. Install from [here](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6).
 
 ## 🧭 How to Use
 
@@ -83,7 +83,7 @@ Just describe what you want. No need to mention tools or internal parameters.
 
 ## 🧩 Companion Files Filter
 
-Required for the Agent to receive raw uploaded files (Excel, CSV, images) instead of RAG-processed text.
+Lets Copilot directly process uploaded files (Excel, CSV, images) instead of OpenWebUI's default RAG parsing.
 
 Install: [GitHub Copilot SDK Files Filter](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6)
 
@@ -120,5 +120,5 @@ If this plugin has been useful, a **Star** on [OpenWebUI Extensions](https://git
 
 ## Troubleshooting
 
-- **Agent ignores uploaded files?** → Install the Files Filter (see above)
+- **Agent ignores uploaded files?** → Install the Files Filter so Copilot can process them directly (see above)
 - **Errors after update?** → Restart your OpenWebUI server to clear cached bytecode

@@ -10,7 +10,7 @@
 
 > [!IMPORTANT]
 > **核心伴侣组件**
-> 如需启用文件处理与数据分析能力，请务必安装 [GitHub Copilot SDK Files Filter](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6)。
+> 如需让 Copilot 直接处理上传文件（绕过 OpenWebUI 默认的 RAG 文件解析），请安装 [GitHub Copilot SDK Files Filter](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6)。
 
 > [!TIP]
 > **BYOK 模式无需订阅**
@@ -49,7 +49,7 @@
 2. **配置凭证**：`GH_TOKEN`（GitHub Copilot）或 `BYOK_API_KEY`（OpenAI/Anthropic）
 3. **开始对话** — 选择本 Pipe 的模型，正常提需求即可
 
-> 如需处理上传文件，请安装 Companion Files Filter：[点击安装](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6)
+> Files Filter 让 Copilot 直接处理上传文件（绕过 OpenWebUI 默认的 RAG 解析）。安装：[点击安装](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6)
 
 ## 🧭 日常怎么用
 
@@ -80,7 +80,7 @@
 
 ## 🧩 Companion Files Filter
 
-安装此插件后，Agent 才能接收原始上传文件（Excel、CSV、图片），否则文件会被 RAG 处理。
+让 Copilot 直接处理上传文件（Excel、CSV、图片），绕过 OpenWebUI 默认的 RAG 解析。
 
 安装：[GitHub Copilot SDK Files Filter](https://openwebui.com/posts/403a62ee-a596-45e7-be65-fab9cc249dd6)
 
@@ -117,5 +117,5 @@
 
 ## 故障排除
 
-- **Agent 忽略上传的文件？** → 安装 Files Filter（见上方）
+- **Agent 忽略上传的文件？** → 安装 Files Filter 让 Copilot 直接处理（见上方）
 - **更新后报错？** → 重启 OpenWebUI 服务器清除缓存

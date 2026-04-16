@@ -33,32 +33,45 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 
 ## What's New
 
-<!-- Keep only the latest 1-3 versions here. Remove this section for the initial release. -->
+<!-- Keep only the latest version here. Remove this section for the initial release. -->
 
 ### v1.0.0
 
 - **Initial Release**: Released the first version of the plugin.
-- **[Feature Name]**: [Brief description of the feature].
 
-## Key Features
+## ✨ Key Capabilities
 
-- **[Feature 1]**: [Description of feature 1].
-- **[Feature 2]**: [Description of feature 2].
-- **[Feature 3]**: [Description of feature 3].
+<!-- Use a table. Keep to ~8-9 items. One-line descriptions. -->
 
-## How to Use
+| Capability | What it means for you |
+| :--- | :--- |
+| 🤖 **[Feature]** | [One-line description] |
+| 🛠️ **[Feature]** | [One-line description, mention persistence if relevant] |
+| 🎨 **[Feature]** | [One-line description] |
 
-1. **Install**: Add the plugin to your OpenWebUI instance from the marketplace, or use the Batch Install prompt above.
-2. **Configure**: Adjust settings in the Valves menu if needed.
-3. **Use**: Describe how to trigger or run the plugin.
-4. **Result**: Describe what users should expect to see.
+## 🧭 How to Use
 
-## Configuration (Valves)
+<!-- 2-4 representative examples. Keep it short. -->
 
-| Valve | Default | Description |
-| --- | --- | --- |
-| `VALVE_NAME` | `Default Value` | Description of what this setting does. |
-| `ANOTHER_VALVE` | `True` | Another setting description. |
+| What you ask | What happens |
+| :--- | :--- |
+| `[Example 1]` | [What the agent does] |
+| `[Example 2]` | [What the agent does] |
+
+## ⚙️ Configuration (Valves)
+
+<!-- Show only essential/required parameters here. If valves > ~10, link to full documentation. -->
+
+| Valve | What to set |
+| :--- | :--- |
+| `REQUIRED_VALVE` | [Description of what to set] |
+| `ANOTHER_ESSENTIAL` | [Description] |
+
+> 💡 Full parameter list: <https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/{type}/{name}/TUTORIAL.md>
+
+## 🤝 Support
+
+If this plugin has been useful, a star on [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions) is a big motivation for me. Thank you for the support.
 
 ## Troubleshooting
 
@@ -66,10 +79,6 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 - **Debug Logs**: Enable the debug valve if available and check the browser console (F12) or backend logs.
 - **Official version conflict**: If installation fails because the same plugin already exists from the official marketplace, remove the old version first and try again.
 - **Submit an Issue**: If the problem continues, report it here: [OpenWebUI Extensions Issues](https://github.com/Fu-Jie/openwebui-extensions/issues)
-
-## Support
-
-If this plugin has been useful, a star on [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions) is a big motivation for me. Thank you for the support.
 
 ## Changelog
 
