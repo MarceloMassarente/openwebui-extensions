@@ -8,7 +8,7 @@ Action plugins allow you to define custom functionalities that can be triggered 
 
 | Plugin Name             | Description                                                                                    | Version | Documentation                                                                 |
 | :---------------------- | :--------------------------------------------------------------------------------------------- | :------ | :---------------------------------------------------------------------------- |
-| **Smart Mind Map**      | Intelligently analyzes text content and generates interactive mind maps                        | 0.7.2   | [English](./smart-mind-map/README.md) / [中文](./smart-mind-map/README_CN.md) |
+| **Smart Mind Map**      | Intelligently analyzes text content and generates interactive mind maps                        | 1.0.1   | [English](./smart-mind-map/README.md) / [中文](./smart-mind-map/README_CN.md) |
 | **Flash Card (闪记卡)** | Quickly generates beautiful learning memory cards, perfect for studying and quick memorization | 0.2.0   | [English](./knowledge-card/README.md) / [中文](./knowledge-card/README_CN.md) |
 
 ## 🎯 What are Action Plugins?

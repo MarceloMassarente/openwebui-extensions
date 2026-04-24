@@ -25,6 +25,29 @@ from pydantic import BaseModel, Field
 from open_webui.utils.chat import generate_chat_completion
 from open_webui.models.users import Users
 
+# ── OpenWebUI version detection for async DB compatibility ──────────
+try:
+    from open_webui.env import VERSION as _owui_version
+except ImportError:
+    _owui_version = "0.0.0"
+
+
+def _owui_version_ge(threshold: str) -> bool:
+    try:
+        v = [int(x) for x in _owui_version.split(".")[:3]]
+        t = [int(x) for x in threshold.split(".")[:3]]
+        return v >= t
+    except (ValueError, TypeError):
+        return False
+
+
+async def _call_db(method, *args, **kwargs):
+    if _owui_version_ge("0.9.0"):
+        return await method(*args, **kwargs)
+    else:
+        return method(*args, **kwargs)
+
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -1622,7 +1645,7 @@ class Tools:
                 "temperature": 0.5,
                 "stream": False,
             }
-            user_obj = Users.get_user_by_id(user_ctx["user_id"])
+            user_obj = await _call_db(Users.get_user_by_id, user_ctx["user_id"])
             response = await generate_chat_completion(__request__, payload, user_obj)
             assistant_content = response["choices"][0]["message"]["content"]
             markdown_syntax = _extract_markdown_syntax(assistant_content)

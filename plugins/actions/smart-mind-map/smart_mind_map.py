@@ -3,7 +3,7 @@ title: Smart Mind Map
 author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
-version: 1.0.0
+version: 1.0.1
 openwebui_id: 3094c59a-b4dd-4e0c-9449-15e2dd547dc4
 icon_url: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiLz48cmVjdCB4PSIyIiB5PSIxNiIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiLz48cmVjdCB4PSI5IiB5PSIyIiB3aWR0aD0iNiIgaGVpZ2h0PSI2IiByeD0iMSIvPjxwYXRoIGQ9Ik01IDE2di0zYTEgMSAwIDAgMSAxLTFoMTJhMSAxIDAgMCAxIDEgMXYzIi8+PHBhdGggZD0iTTEyIDEyVjgiLz48L3N2Zz4=
 description: Intelligently analyzes text content and generates interactive mind maps to help users structure and visualize knowledge.
@@ -29,6 +29,22 @@ try:
     from open_webui.env import VERSION as open_webui_version
 except ImportError:
     open_webui_version = "0.0.0"
+
+
+def _owui_version_ge(threshold: str) -> bool:
+    try:
+        v = [int(x) for x in open_webui_version.split(".")[:3]]
+        t = [int(x) for x in threshold.split(".")[:3]]
+        return v >= t
+    except (ValueError, TypeError):
+        return False
+
+
+async def _call_db(method, *args, **kwargs):
+    if _owui_version_ge("0.9.0"):
+        return await method(*args, **kwargs)
+    else:
+        return method(*args, **kwargs)
 
 
 logging.basicConfig(
@@ -2437,7 +2453,7 @@ class Action:
         __metadata__: Optional[dict] = None,
         __request__: Optional[Request] = None,
     ) -> Optional[dict]:
-        logger.info("Action: Smart Mind Map (v1.0.0) started")
+        logger.info("Action: Smart Mind Map (v1.0.1) started")
         user_ctx = await self._get_user_context(__user__, __event_call__, __request__)
         user_language = user_ctx["user_language"]
         user_name = user_ctx["user_name"]
@@ -2566,7 +2582,7 @@ class Action:
                 "temperature": 0.5,
                 "stream": False,
             }
-            user_obj = Users.get_user_by_id(user_id)
+            user_obj = await _call_db(Users.get_user_by_id, user_id)
             if not user_obj:
                 raise ValueError(f"Unable to get user object, user ID: {user_id}")
 
@@ -2711,7 +2727,7 @@ class Action:
                     ),
                     "success",
                 )
-                logger.info("Action: Smart Mind Map (v1.0.0) completed in image mode")
+                logger.info("Action: Smart Mind Map (v1.0.1) completed in image mode")
                 return body
 
             # HTML mode
@@ -2794,7 +2810,7 @@ class Action:
                     ),
                     "success",
                 )
-                logger.info("Action: Smart Mind Map (v1.0.0) completed in Direct Mode")
+                logger.info("Action: Smart Mind Map (v1.0.1) completed in Direct Mode")
 
                 return (
                     final_html_direct,
@@ -2822,7 +2838,7 @@ class Action:
                     "success",
                 )
                 logger.info(
-                    "Action: Smart Mind Map (v1.0.0) completed in Legacy HTML mode"
+                    "Action: Smart Mind Map (v1.0.1) completed in Legacy HTML mode"
                 )
 
         except Exception as e:

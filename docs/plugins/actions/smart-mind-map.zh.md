@@ -2,7 +2,7 @@
 
 思维导图是一个强大的 OpenWebUI 动作插件，能够智能分析长篇文本内容，自动生成交互式思维导图，帮助用户结构化和可视化知识。
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.0.0 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.0.1 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -23,15 +23,13 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## v1.0.0 最新更新
+## v1.0.1 最新更新
 
-### 嵌入式直出与 UI 细节全线重构
+### OpenWebUI 0.9.x 兼容性修复
 
-- **原生多语言界面 (Native i18n)**：插件界面（按钮、设置说明、状态提示）现在会根据您浏览器的语言设置自动适配系统语言。
-- **原生态嵌入模式 (Direct Embed)**：针对 Open WebUI 0.8.0+ 的前端架构支持了纯正的内容内联（Inline）直出模式，不再受气泡和 Markdown 隔离，真正撑满屏幕宽度。
-- **自动响应边界 (Auto-Sizing)**：突破以前高度僵死的问题。思维导图现在可以根据您的当前屏幕大小弹性伸缩（动态 `clamp()` 高度），彻底消灭丑陋的局部滚动条与白边。
-- **极简专业 UI (Compact UI)**：推倒重做了头部的菜单栏，统一使用了一套干净、单行的极简全透明微拟物 Toolbar 设计，为导图画布省下极大的垂直空间。
-- **模式配置自由**：为了照顾阅读流连贯的习惯，新增了 `ENABLE_DIRECT_EMBED_MODE` 配置开关。您必须在设置中显式开启才能体验宽广内联全屏模式。
+- **版本感知的数据库访问**：用户查询现在可以同时兼容 OpenWebUI 的同步与异步数据库运行时。
+- **运行时安全回退**：Action 会在运行时自动选择正确的数据库调用方式，避免 0.9+ 升级时出现失败。
+- **无视觉回归**：思维导图渲染、直出模式、PNG 导出、主题切换与多语言行为保持不变。
 
 ## 核心特性 🔑
 
