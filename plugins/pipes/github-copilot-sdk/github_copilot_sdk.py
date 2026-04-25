@@ -5,7 +5,7 @@ author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 openwebui_id: ce96f7b4-12fc-4ac3-9a01-875713e69359
 description: A powerful Agent SDK integration for OpenWebUI. It deeply bridges GitHub Copilot SDK with OpenWebUI's ecosystem, enabling the Agent to autonomously perform intent recognition, web search, and context compaction. It seamlessly reuses your existing Tools, MCP servers, OpenAPI servers, and Skills for a professional, full-featured experience.
-version: 0.13.0
+version: 0.13.1
 requirements: github-copilot-sdk==0.2.2
 """
 
@@ -13,6 +13,7 @@ import asyncio
 import base64
 import hashlib
 import html as html_lib
+import inspect
 import json
 import logging
 import os
@@ -23,6 +24,7 @@ import subprocess
 import tarfile
 import tempfile
 import time
+import threading
 import urllib.parse
 import urllib.request
 import zipfile
@@ -75,6 +77,94 @@ except ImportError:
 
 # Setup logger
 logger = logging.getLogger(__name__)
+
+
+async def _resolve_awaitable_compat(value: Any) -> Any:
+    if inspect.isawaitable(value):
+        return await value
+    return value
+
+
+async def _call_openwebui_compat(
+    func: Any,
+    *args: Any,
+    prefer_thread_for_sync: bool = False,
+    **kwargs: Any,
+) -> Any:
+    if prefer_thread_for_sync and not inspect.iscoroutinefunction(func):
+        result = await asyncio.to_thread(func, *args, **kwargs)
+    else:
+        result = func(*args, **kwargs)
+    return await _resolve_awaitable_compat(result)
+
+
+def _resolve_awaitable_sync(value: Any) -> Any:
+    if not inspect.isawaitable(value):
+        return value
+
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(value)
+
+    result_box: Dict[str, Any] = {}
+    error_box: Dict[str, BaseException] = {}
+
+    def _runner() -> None:
+        try:
+            result_box["value"] = asyncio.run(value)
+        except BaseException as exc:
+            error_box["error"] = exc
+
+    thread = threading.Thread(target=_runner, daemon=True)
+    thread.start()
+    thread.join()
+
+    if "error" in error_box:
+        raise error_box["error"]
+
+    return result_box.get("value")
+
+
+def _call_openwebui_sync_compat(func: Any, *args: Any, **kwargs: Any) -> Any:
+    return _resolve_awaitable_sync(func(*args, **kwargs))
+
+
+def _extract_search_result_items(result: Any) -> List[Any]:
+    if result is None:
+        return []
+
+    if isinstance(result, list):
+        return result
+
+    if isinstance(result, tuple):
+        return list(result)
+
+    if isinstance(result, dict):
+        items = result.get("items")
+    else:
+        items = getattr(result, "items", None)
+
+    if callable(items):
+        try:
+            items = items()
+        except TypeError:
+            items = None
+
+    if items is None:
+        return []
+
+    if isinstance(items, list):
+        return items
+
+    if isinstance(items, tuple):
+        return list(items)
+
+    try:
+        return list(items)
+    except TypeError:
+        return []
+
 
 RICHUI_BRIDGE_MARKER = 'data-openwebui-richui-bridge="1"'
 RICHUI_BRIDGE_STYLE = """
@@ -1837,10 +1927,14 @@ class Pipe:
                         if isinstance(__user__[0], dict)
                         else "unknown"
                     )
-                # search_models is synchronous in the installed open_webui package
-                result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+                result = _call_openwebui_sync_compat(
+                    OWModels.search_models,
+                    user_id=user_id,
+                    filter={},
+                    limit=200,
+                )
                 tags = set()
-                for m in result.items:
+                for m in _extract_search_result_items(result):
                     if hasattr(m, "meta") and m.meta:
                         meta_obj = m.meta
                         if hasattr(meta_obj, "model_dump"):
@@ -1876,10 +1970,14 @@ class Pipe:
                         if isinstance(__user__[0], dict)
                         else "unknown"
                     )
-                # search_models is synchronous in the installed open_webui package
-                result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+                result = _call_openwebui_sync_compat(
+                    OWModels.search_models,
+                    user_id=user_id,
+                    filter={},
+                    limit=200,
+                )
                 models = []
-                for m in result.items:
+                for m in _extract_search_result_items(result):
                     if (
                         hasattr(m, "base_model_id")
                         and m.base_model_id
@@ -2045,10 +2143,14 @@ class Pipe:
                         if isinstance(__user__[0], dict)
                         else "unknown"
                     )
-                # search_models is synchronous in the installed open_webui package
-                result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+                result = _call_openwebui_sync_compat(
+                    OWModels.search_models,
+                    user_id=user_id,
+                    filter={},
+                    limit=200,
+                )
                 tags = set()
-                for m in result.items:
+                for m in _extract_search_result_items(result):
                     if hasattr(m, "meta") and m.meta:
                         meta_obj = m.meta
                         if hasattr(meta_obj, "model_dump"):
@@ -2084,10 +2186,14 @@ class Pipe:
                         if isinstance(__user__[0], dict)
                         else "unknown"
                     )
-                # search_models is synchronous in the installed open_webui package
-                result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+                result = _call_openwebui_sync_compat(
+                    OWModels.search_models,
+                    user_id=user_id,
+                    filter={},
+                    limit=200,
+                )
                 models = []
-                for m in result.items:
+                for m in _extract_search_result_items(result):
                     if (
                         hasattr(m, "base_model_id")
                         and m.base_model_id
@@ -2131,9 +2237,9 @@ class Pipe:
     _last_model_cache_time: float = 0  # Timestamp
     _env_setup_done = False  # Track if env setup has been completed
     _last_update_check = 0  # Timestamp of last CLI update check
-    _discovery_cache: Dict[
-        str, Dict[str, Any]
-    ] = {}  # Map config_hash -> {"time": float, "models": list}
+    _discovery_cache: Dict[str, Dict[str, Any]] = (
+        {}
+    )  # Map config_hash -> {"time": float, "models": list}
 
     def _is_version_at_least(self, target: str) -> bool:
         """Check if OpenWebUI version is at least the target version."""
@@ -3667,7 +3773,11 @@ class Pipe:
                 except Exception as e:
                     file_id = str(uuid.uuid4())
 
-                existing_file = await asyncio.to_thread(Files.get_file_by_id, file_id)
+                existing_file = await _call_openwebui_compat(
+                    Files.get_file_by_id,
+                    file_id,
+                    prefer_thread_for_sync=True,
+                )
                 if not existing_file:
 
                     def _upload_via_storage():
@@ -3723,7 +3833,12 @@ class Pipe:
                             "skip_rag": True,
                         },
                     )
-                    await asyncio.to_thread(Files.insert_new_file, user_id, file_form)
+                    await _call_openwebui_compat(
+                        Files.insert_new_file,
+                        user_id,
+                        file_form,
+                        prefer_thread_for_sync=True,
+                    )
 
                 # 5. Result Construction
                 raw_id = str(file_id).split("/")[-1]
@@ -4693,7 +4808,7 @@ class Pipe:
             params_type=ParamsModel,
         )(_tool)
 
-    def _read_tool_server_connections(self) -> list:
+    async def _read_tool_server_connections(self) -> list:
         """
         Read tool server connections directly from the database to avoid stale
         in-memory state in multi-worker deployments.
@@ -4702,7 +4817,14 @@ class Pipe:
         try:
             from open_webui.config import get_config
 
-            config_data = get_config()
+            config_data = await _call_openwebui_compat(
+                get_config,
+                prefer_thread_for_sync=True,
+            )
+            if hasattr(config_data, "model_dump"):
+                config_data = config_data.model_dump()
+            elif hasattr(config_data, "dict"):
+                config_data = config_data.dict()
             connections = config_data.get("tool_server", {}).get("connections", None)
             if connections is not None:
                 return connections if isinstance(connections, list) else []
@@ -4718,7 +4840,7 @@ class Pipe:
             return TOOL_SERVER_CONNECTIONS.value
         return []
 
-    def _build_openwebui_request(
+    async def _build_openwebui_request(
         self,
         user: Optional[dict] = None,
         token: Optional[str] = None,
@@ -4737,7 +4859,7 @@ class Pipe:
 
         # Critical Fix: Explicitly sync TOOL_SERVER_CONNECTIONS to ensure OpenAPI tools work
         # Read directly from DB to avoid stale in-memory state in multi-worker deployments
-        fresh_connections = self._read_tool_server_connections()
+        fresh_connections = await self._read_tool_server_connections()
         config.TOOL_SERVER_CONNECTIONS = fresh_connections
 
         # Try to populate real models to avoid "Model not found" in generate_chat_completion
@@ -4747,7 +4869,10 @@ class Pipe:
         try:
             from open_webui.models.models import Models as _Models
 
-            all_models = _Models.get_all_models()
+            all_models = await _call_openwebui_compat(
+                _Models.get_all_models,
+                prefer_thread_for_sync=True,
+            )
             for m in all_models:
                 model_payload = None
                 if isinstance(m, dict):
@@ -4919,7 +5044,7 @@ class Pipe:
 
         # --- PROBE LOG ---
         if __event_call__:
-            conn_list = self._read_tool_server_connections()
+            conn_list = await self._read_tool_server_connections()
             conn_summary = []
             for i, s in enumerate(conn_list):
                 if isinstance(s, dict):
@@ -4936,20 +5061,29 @@ class Pipe:
             )
         # -----------------
 
-        user = Users.get_user_by_id(user_id)
+        user = await _call_openwebui_compat(
+            Users.get_user_by_id,
+            user_id,
+            prefer_thread_for_sync=True,
+        )
         if not user:
             return []
 
         tool_ids = []
         # 1. Get User defined tools (Python scripts)
         if enable_tools:
-            tool_items = Tools.get_tools_by_user_id(user_id, permission="read")
+            tool_items = await _call_openwebui_compat(
+                Tools.get_tools_by_user_id,
+                user_id,
+                permission="read",
+                prefer_thread_for_sync=True,
+            )
             if tool_items:
                 tool_ids.extend([tool.id for tool in tool_items])
 
         # 2. Get OpenAPI Tool Server tools
         if enable_openapi:
-            raw_connections = self._read_tool_server_connections()
+            raw_connections = await self._read_tool_server_connections()
 
             # Handle Pydantic model vs List vs Dict
             connections = []
@@ -5115,7 +5249,7 @@ class Pipe:
             request_body["metadata"] = body_meta
 
         # Build request with context if available
-        request = self._build_openwebui_request(
+        request = await self._build_openwebui_request(
             user_data, token=token, body=request_body
         )
         tool_request = __request__ if __request__ is not None else request
@@ -5149,7 +5283,11 @@ class Pipe:
             try:
                 from open_webui.models.models import Models as _Models
 
-                model_record = _Models.get_model_by_id(model_id)
+                model_record = await _call_openwebui_compat(
+                    _Models.get_model_by_id,
+                    model_id,
+                    prefer_thread_for_sync=True,
+                )
                 resolved_base_id = None
 
                 if model_record:
@@ -5273,11 +5411,13 @@ class Pipe:
                 import time
 
                 t_get_opw_start = time.perf_counter()
-                tools_dict = await get_openwebui_tools(
+                tools_dict = await _call_openwebui_compat(
+                    get_openwebui_tools,
                     tool_request,  # type: ignore[arg-type]
                     tool_ids,
                     user,
                     extra_params,
+                    prefer_thread_for_sync=True,
                 )
                 t_get_opw_done = time.perf_counter()
                 logger.info(
@@ -5337,7 +5477,11 @@ class Pipe:
                     try:
                         from open_webui.models.models import Models as _Models
 
-                        model_record = _Models.get_model_by_id(model_id)
+                        model_record = await _call_openwebui_compat(
+                            _Models.get_model_by_id,
+                            model_id,
+                            prefer_thread_for_sync=True,
+                        )
                         if model_record:
                             model_dict = {"info": model_record.model_dump()}
                     except Exception:
@@ -5379,11 +5523,13 @@ class Pipe:
                     "image_generation": True,
                     "code_interpreter": code_interpreter_enabled,
                 }
-                builtin_tools = get_builtin_tools(
+                builtin_tools = await _call_openwebui_compat(
+                    get_builtin_tools,
                     tool_request,  # type: ignore[arg-type]
                     extra_params,
                     features=all_features,
                     model=model_dict,  # model.meta.builtinTools controls which categories are active
+                    prefer_thread_for_sync=True,
                 )
                 if builtin_tools:
                     tools_dict.update(builtin_tools)
@@ -5402,7 +5548,7 @@ class Pipe:
         server_metadata_cache = {}
 
         # Pre-build server metadata cache from DB-fresh tool server connections
-        for server in self._read_tool_server_connections():
+        for server in await self._read_tool_server_connections():
             server_id = server.get("id") or server.get("info", {}).get("id")
             if server_id:
                 info = server.get("info", {})
@@ -5436,7 +5582,11 @@ class Pipe:
                 # User-defined Python script tool
                 if tool_id and tool_id not in tool_metadata_cache:
                     try:
-                        tool_model = Tools.get_tool_by_id(tool_id)
+                        tool_model = await _call_openwebui_compat(
+                            Tools.get_tool_by_id,
+                            tool_id,
+                            prefer_thread_for_sync=True,
+                        )
                         if tool_model:
                             tool_metadata_cache[tool_id] = {
                                 "name": tool_model.name,
@@ -5487,7 +5637,7 @@ class Pipe:
 
         return converted_tools
 
-    def _parse_mcp_servers(
+    async def _parse_mcp_servers(
         self,
         __event_call__=None,
         enable_mcp: bool = True,
@@ -5504,7 +5654,7 @@ class Pipe:
         selected_custom_tool_ids = self._extract_selected_custom_tool_ids(chat_tool_ids)
 
         # Read MCP servers directly from DB to avoid stale in-memory cache
-        connections = self._read_tool_server_connections()
+        connections = await self._read_tool_server_connections()
 
         if __event_call__:
             mcp_summary = []
@@ -7003,7 +7153,11 @@ class Pipe:
                     debug_enabled=debug_enabled,
                 )
                 for mid in model_ids_to_try:
-                    model_record = Models.get_model_by_id(mid)
+                    model_record = await _call_openwebui_compat(
+                        Models.get_model_by_id,
+                        mid,
+                        prefer_thread_for_sync=True,
+                    )
                     if model_record:
                         await self._emit_debug_log(
                             f"Checking Model DB for: {mid} (Record found: {model_record.id if hasattr(model_record, 'id') else 'Yes'})",
@@ -7229,10 +7383,15 @@ class Pipe:
         try:
             from open_webui.models.models import Models as OWModels
 
-            # search_models is synchronous in the installed open_webui package
-            result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
+            result = await _call_openwebui_compat(
+                OWModels.search_models,
+                user_id=user_id,
+                filter={},
+                limit=200,
+                prefer_thread_for_sync=True,
+            )
             matched = []
-            for m in result.items:
+            for m in _extract_search_result_items(result):
                 if hasattr(m, "meta") and m.meta:
                     meta_obj = m.meta
                     if hasattr(meta_obj, "model_dump"):
@@ -7262,9 +7421,14 @@ class Pipe:
         try:
             from open_webui.models.models import Models as OWModels
 
-            # search_models is synchronous in the installed open_webui package
-            result = OWModels.search_models(user_id=user_id, filter={}, limit=200)
-            for m in result.items:
+            result = await _call_openwebui_compat(
+                OWModels.search_models,
+                user_id=user_id,
+                filter={},
+                limit=200,
+                prefer_thread_for_sync=True,
+            )
+            for m in _extract_search_result_items(result):
                 if m.id == model_id:
                     return m
             return None
@@ -7671,8 +7835,10 @@ class Pipe:
             "content": final_system_msg,
         }
 
-        mcp_servers = self._parse_mcp_servers(
-            __event_call__, enable_mcp=enable_mcp, chat_tool_ids=chat_tool_ids
+        mcp_servers = _resolve_awaitable_sync(
+            self._parse_mcp_servers(
+                __event_call__, enable_mcp=enable_mcp, chat_tool_ids=chat_tool_ids
+            )
         )
 
         # Prepare session config parameters
@@ -9064,7 +9230,7 @@ class Pipe:
 
             # Check MCP Servers
             t_before_mcp = time.monotonic()
-            mcp_servers = self._parse_mcp_servers(
+            mcp_servers = await self._parse_mcp_servers(
                 __event_call__, enable_mcp=effective_mcp, chat_tool_ids=chat_tool_ids
             )
             t_after_mcp = time.monotonic()

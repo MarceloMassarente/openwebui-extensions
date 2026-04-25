@@ -38,20 +38,19 @@ A collection of enhancements, plugins, and prompts for [open-webui](https://gith
 
 ## 🌟 Star Features
 
-### 1. [GitHub Copilot Official SDK Pipe](https://openwebui.com/posts/github_copilot_official_sdk_pipe_ce96f7b4) ![v0.13.0](https://img.shields.io/badge/v0.13.0-blue?style=flat-square) ![active-dev](https://img.shields.io/badge/active--dev-orange?style=flat-square) ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_dl.json&style=flat-square) ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_vw.json&style=flat-square)
+### 1. [GitHub Copilot Official SDK Pipe](https://openwebui.com/posts/github_copilot_official_sdk_pipe_ce96f7b4) ![v0.13.1](https://img.shields.io/badge/v0.13.1-blue?style=flat-square) ![active-dev](https://img.shields.io/badge/active--dev-orange?style=flat-square) ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_dl.json&style=flat-square) ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_post_aef940e01073e811a311c3a443d9c149_vw.json&style=flat-square)
 
 **The ultimate autonomous Agent integration for OpenWebUI.** Deeply bridging GitHub Copilot SDK with your OpenWebUI ecosystem. It enables the Agent to autonomously perform **intent recognition**, **web search**, and **context compaction** while reusing your existing tools, skills, and configurations for a professional, full-featured experience.
 
 > [!TIP]
 > **No GitHub Copilot subscription required!** Supports **BYOK (Bring Your Own Key)** mode using your own OpenAI/Anthropic API keys.
 
-#### 🚀 Key Leap (v0.13.0)
+#### 🚀 Key Leap (v0.13.1)
 
-- **🤖 Agent Team**: Configure a team of OpenWebUI custom models as sub-agents within one Copilot SDK session. Each agent is defined by its OpenWebUI model tag, system prompt, and model description — the base model ID is never used. Assign a leader, dispatch tasks as needed (parallel or serial), and the leader synthesizes results for the final answer.
-- **🎯 Active Session Mode Awareness**: The Agent now knows which session mode is active (`autopilot` / `interactive` / `plan`) via an injected `[Active Session Mode]` directive, aligned with the official Copilot SDK agent-loop docs. Autopilot drives tasks to full completion; interactive stops between steps; plan gates execution behind your approval.
-- **⚡ Mode-Aware Workstyle**: Each session mode injects its own behavioral preamble so the Agent automatically adapts between end-to-end completion and step-by-step pausing.
-- **🔒 SDK Mode Set Hardened**: `session.rpc.mode.set()` on both resume and create paths uses `asyncio.wait_for(timeout=5.0)` with full debug visibility on failure.
-- **🧹 System Prompt Overhaul**: Removed hardcoded Copilot CLI artifacts, resolved SQL pattern contradiction, SESSION_MODE now resolves globally as user_valve > global valve > `autopilot`.
+- **🔌 OpenWebUI 0.9.x Dual Compatibility** (Critical): All OpenWebUI model/config/tool APIs now transparently support both sync (pre-0.9) and async (0.9.x) interfaces. No version branching required; the plugin auto-detects and adapts.
+- **🚀 Internal Methods Promoted to Async**: `_read_tool_server_connections`, `_build_openwebui_request`, and `_parse_mcp_servers` are now `async def`, eliminating thread-offload patterns that break under 0.9.x.
+- **🛡️ Sync-Safe Valve Options**: `Valves` and `UserValves` option providers (sync classmethods) now use a compatibility wrapper so `search_models` calls remain safe in both sync and async contexts.
+- **🐛 File Publish Path Fixed**: `publish_file_from_workspace` now uses a typed compatibility layer instead of raw `asyncio.to_thread`, resolving silent crashes when `Files` methods became coroutines in 0.9.x.
 
 ![Agent Teams & Autopilot Mode](./plugins/pipes/github-copilot-sdk/agent_teams.png)
 > *The Agent Team architecture enables autonomous task scheduling with Parallel, Serial, and Solo execution modes, driven by the persistent Autopilot engine.*
@@ -135,7 +134,7 @@ Located in the `plugins/` directory, containing Python-based enhancements:
 
 ### Pipes
 
-- **GitHub Copilot SDK** (`github-copilot-sdk`): Official GitHub Copilot SDK integration (v0.13.0). Supports dynamic models (GPT-4o, Claude 3.7, o1), multi-turn conversation, and high-performance process pooling.
+- **GitHub Copilot SDK** (`github-copilot-sdk`): Official GitHub Copilot SDK integration (v0.13.1). Supports OpenWebUI 0.9.x compatibility, dynamic models (GPT-4o, Claude 3.7, o1), multi-turn conversation, and high-performance process pooling.
 
 ### Pipelines
 

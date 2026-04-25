@@ -15,7 +15,7 @@ Pipes allow you to:
 
 ## Available Pipe Plugins
 
-- [GitHub Copilot SDK](github-copilot-sdk.md) (v0.13.0) - Official GitHub Copilot SDK integration. Features **Workspace Isolation**, **Zero-config OpenWebUI Tool Bridge**, **BYOK** support, and **dynamic MCP discovery**. **NEW in v0.13.0: Active Session Mode awareness — Agent now knows its mode via injected directive; SDK mode.set() hardened with timeout; system prompt overhaul**. [View Deep Dive](github-copilot-sdk-deep-dive.md) | [**View Advanced Tutorial**](github-copilot-sdk-tutorial.md) | [**View Detailed Usage Guide**](github-copilot-sdk-usage-guide.md).
+- [GitHub Copilot SDK](github-copilot-sdk.md) (v0.13.1) - Official GitHub Copilot SDK integration. Features **Workspace Isolation**, **Zero-config OpenWebUI Tool Bridge**, **BYOK** support, and **dynamic MCP discovery**. **v0.13.1: OpenWebUI 0.9.x compatibility — all model/config/tool APIs auto-detect sync vs async; internal methods promoted to async; Valve option providers made sync-safe**. [View Deep Dive](github-copilot-sdk-deep-dive.md) | [**View Advanced Tutorial**](github-copilot-sdk-tutorial.md) | [**View Detailed Usage Guide**](github-copilot-sdk-usage-guide.md).
 - **[Case Study: GitHub 100 Star Growth Analysis](star-prediction-example.md)** - Learn how to use the GitHub Copilot SDK Pipe with Minimax 2.1 to automatically analyze CSV data and generate project growth reports.
 - **[Case Study: High-Quality Video to GIF Conversion](video-processing-example.md)** - See how the model uses system-level FFmpeg to accelerate, scale, and optimize colors for screen recordings.
 
