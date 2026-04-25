@@ -1,6 +1,6 @@
 # 📊 导出为 Excel
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.3.6 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.3.8 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,19 +21,9 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## 🔥 最新更新 v0.3.6
+## 🔥 v0.3.8 更新内容
 
-- **OpenWebUI 风格主题**：现代深灰表头（#1f2937）与浅灰斑马纹，提升可读性。
-- **斑马纹效果**：隔行变色（#ffffff / #f3f4f6），方便视觉扫描。
-- **智能数据类型转换**：自动将列转换为数字或日期类型，无法转换时保持字符串。
-- **全单元格粗体/斜体**：支持全单元格 Markdown 粗体与斜体格式。
-- **部分 Markdown 清理**：移除部分 Markdown 格式符号，输出更整洁。
-- **导出范围**：新增 `EXPORT_SCOPE`，可选择导出最后一条或所有消息。
-- **智能 Sheet 命名**：按 Markdown 标题、AI 标题或消息索引命名。
-- **多表格支持**：优化了多表格处理能力。
-- **智能文件名生成**：支持对话标题 / AI 总结 / Markdown 标题命名。
-- **配置选项**：新增 `TITLE_SOURCE` 控制文件名策略。
-- **AI 标题生成**：新增 `MODEL_ID`，支持 AI 标题生成与进度提示。
+- ⚡ **Open WebUI 0.9.x 兼容性**：新增运行时版本检测和异步数据库调用适配器，针对 `Users.get_user_by_id` 和 `Chats.get_chat_by_id` 进行适配 — 确保与 Open WebUI 0.9.x 无缝兼容。
 
 ## ✨ 核心特性
 

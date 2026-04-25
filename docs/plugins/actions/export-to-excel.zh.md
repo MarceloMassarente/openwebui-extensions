@@ -1,21 +1,13 @@
 # Export to Excel（导出到 Excel）
 
 <span class="category-badge action">Action</span>
-<span class="version-badge">v0.3.7</span>
+<span class="version-badge">v0.3.8</span>
 
 将聊天记录导出为 Excel 表格，便于分析、归档和分享。
 
 
-### v0.3.6 更新内容
-- **OpenWebUI 风格主题**：现代深灰表头，搭配浅灰斑马纹，提升可读性。
-- **斑马纹效果**：隔行变色，方便视觉扫描。
-- **智能数据类型转换**：自动将列转换为数字或日期类型。
-- **全单元格粗体/斜体**：支持 Markdown 粗体/斜体格式。
-- **部分 Markdown 清理**：移除部分 Markdown 符号，输出更整洁。
-- **导出范围**：可选择导出"最后一条消息"或"所有消息"。
-- **智能 Sheet 命名**：根据 Markdown 标题或消息索引命名 Sheet。
-- **智能文件名生成**：支持对话标题、AI 总结或 Markdown 标题生成文件名。
-- **AI 标题生成**：支持指定模型 (`MODEL_ID`) 生成标题，并提供生成进度通知。
+### v0.3.8 更新内容
+- ⚡ **Open WebUI 0.9.x 兼容性**：新增运行时版本检测和异步数据库调用适配器，针对 `Users.get_user_by_id` 和 `Chats.get_chat_by_id` 进行适配 — 确保与 Open WebUI 0.9.x 无缝兼容。
 
 ---
 

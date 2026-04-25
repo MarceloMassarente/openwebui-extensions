@@ -3,7 +3,7 @@ title: Export to Excel
 author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
-version: 0.3.7
+version: 0.3.8
 openwebui_id: 244b8f9d-7459-47d6-84d3-c7ae8e3ec710
 icon_url: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xNSAySDZhMiAyIDAgMCAwLTIgMnYxNmEyIDIgMCAwIDAgMiAyaDEyYTIgMiAwIDAgMCAyLTJWN1oiLz48cGF0aCBkPSJNMTQgMnY0YTIgMiAwIDAgMCAyIDJoNCIvPjxwYXRoIGQ9Ik04IDEzaDIiLz48cGF0aCBkPSJNMTQgMTNoMiIvPjxwYXRoIGQ9Ik04IDE3aDIiLz48cGF0aCBkPSJNMTQgMTdoMiIvPjwvc3ZnPg==
 description: Extracts tables from chat messages and exports them to Excel (.xlsx) files with smart formatting.
@@ -22,6 +22,29 @@ from open_webui.models.users import Users
 from open_webui.utils.chat import generate_chat_completion
 from pydantic import BaseModel, Field
 from typing import Literal
+
+# ── OpenWebUI version detection for async DB compatibility ──────────
+try:
+    from open_webui.env import VERSION as _owui_version
+except ImportError:
+    _owui_version = "0.0.0"
+
+
+def _owui_version_ge(threshold: str) -> bool:
+    try:
+        v = [int(x) for x in _owui_version.split(".")[:3]]
+        t = [int(x) for x in threshold.split(".")[:3]]
+        return v >= t
+    except (ValueError, TypeError):
+        return False
+
+
+async def _call_db(method, *args, **kwargs):
+    if _owui_version_ge("0.9.0"):
+        return await method(*args, **kwargs)
+    else:
+        return method(*args, **kwargs)
+
 
 app = FastAPI()
 
@@ -409,7 +432,7 @@ class Action:
             return ""
 
         try:
-            user_obj = Users.get_user_by_id(user_id)
+            user_obj = await _call_db(Users.get_user_by_id, user_id)
             # Use configured MODEL_ID or fallback to current chat model
             model = (
                 self.valves.MODEL_ID.strip()
@@ -554,13 +577,14 @@ class Action:
         if not chat_id:
             return ""
 
-        def _load_chat():
-            if user_id:
-                return Chats.get_chat_by_id_and_user_id(id=chat_id, user_id=user_id)
-            return Chats.get_chat_by_id(chat_id)
-
         try:
-            chat = await asyncio.to_thread(_load_chat)
+            chat = None
+            if user_id:
+                chat = await _call_db(
+                    Chats.get_chat_by_id_and_user_id, id=chat_id, user_id=user_id
+                )
+            if not chat:
+                chat = await _call_db(Chats.get_chat_by_id, chat_id)
         except Exception as exc:
             print(f"Failed to load chat {chat_id}: {exc}")
             return ""
