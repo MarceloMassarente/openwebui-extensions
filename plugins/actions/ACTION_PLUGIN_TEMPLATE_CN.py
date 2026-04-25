@@ -22,6 +22,29 @@ import pytz
 from open_webui.utils.chat import generate_chat_completion
 from open_webui.models.users import Users
 
+# ── OpenWebUI 版本检测（异步 DB 兼容） ──────────
+try:
+    from open_webui.env import VERSION as _owui_version
+except ImportError:
+    _owui_version = "0.0.0"
+
+
+def _owui_version_ge(threshold: str) -> bool:
+    try:
+        v = [int(x) for x in _owui_version.split(".")[:3]]
+        t = [int(x) for x in threshold.split(".")[:3]]
+        return v >= t
+    except (ValueError, TypeError):
+        return False
+
+
+async def _call_db(method, *args, **kwargs):
+    if _owui_version_ge("0.9.0"):
+        return await method(*args, **kwargs)
+    else:
+        return method(*args, **kwargs)
+
+
 # 设置日志
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -357,7 +380,7 @@ class Action:
                 # 注意: 这里没有硬编码的回退，依赖于系统/用户上下文
 
             # 6. 调用 LLM
-            user_obj = Users.get_user_by_id(user_context["user_id"])
+            user_obj = await _call_db(Users.get_user_by_id, user_context["user_id"])
 
             payload = {
                 "model": target_model,
