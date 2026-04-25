@@ -5,7 +5,7 @@ author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 description: Reduces token consumption in long conversations while maintaining coherence through intelligent summarization and message compression.
-version: 1.6.0
+version: 1.6.1
 openwebui_id: b1655bc8-6de9-4cad-8cb5-a6f7829a02ce
 license: MIT
 
@@ -421,6 +421,48 @@ owui_Base = getattr(owui_db, "Base", None) if owui_db is not None else None
 if owui_Base is None:
     owui_Base = declarative_base()
 
+# ── OpenWebUI version detection for async DB compatibility ──────────
+try:
+    from open_webui.env import VERSION as _owui_version
+except ImportError:
+    _owui_version = "0.0.0"
+
+
+def _owui_version_ge(threshold: str) -> bool:
+    """Return True if open_webui_version >= threshold (e.g. '0.9.0')."""
+    try:
+        v = [int(x) for x in _owui_version.split(".")[:3]]
+        t = [int(x) for x in threshold.split(".")[:3]]
+        return v >= t
+    except (ValueError, TypeError):
+        return False
+
+
+async def _call_db(method, *args, **kwargs):
+    """
+    Call an OpenWebUI DB model method with version-aware async handling.
+    - OpenWebUI >= 0.9.0: DB methods are async, so we await them.
+    - OpenWebUI <  0.9.0: DB methods are sync, so we call them directly.
+    """
+    if _owui_version_ge("0.9.0"):
+        return await method(*args, **kwargs)
+    else:
+        return method(*args, **kwargs)
+
+
+def _call_db_sync(method, *args, **kwargs):
+    """
+    Call an OpenWebUI DB model method with version-aware async handling (for sync contexts).
+    - OpenWebUI <  0.9.0: DB methods are sync, call directly.
+    - OpenWebUI >= 0.9.0: DB methods are async, run in a separate thread with its own event loop.
+    """
+    if not _owui_version_ge("0.9.0"):
+        return method(*args, **kwargs)
+    import concurrent.futures
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(asyncio.run, method(*args, **kwargs)).result()
+
 
 class ChatSummary(owui_Base):
     """Chat Summary Storage Table"""
@@ -669,10 +711,7 @@ def _estimate_text_tokens(text: str) -> int:
         codeish = newlines > 0 or punctuation * 6 > char_count
         if codeish:
             estimate = (
-                char_count * 0.20
-                + spaces * 0.10
-                + newlines * 0.18
-                + punctuation * 0.08
+                char_count * 0.20 + spaces * 0.10 + newlines * 0.18 + punctuation * 0.08
             )
         else:
             estimate = char_count * 0.17 + spaces * 0.24 + punctuation * 0.05
@@ -989,13 +1028,13 @@ class Filter:
         sortable_messages.sort(key=lambda item: (item[0], item[1]))
         return [message for _, _, message in sortable_messages]
 
-    def _load_full_chat_messages(self, chat_id: str) -> List[Dict[str, Any]]:
+    async def _load_full_chat_messages(self, chat_id: str) -> List[Dict[str, Any]]:
         """Load the full persisted chat history for summary decisions when available."""
         if not chat_id or Chats is None:
             return []
 
         try:
-            chat_record = Chats.get_chat_by_id(chat_id)
+            chat_record = await _call_db(Chats.get_chat_by_id, chat_id)
         except Exception as exc:
             logger.warning(f"[Chat Load] Failed to fetch chat {chat_id}: {exc}")
             return []
@@ -1294,18 +1333,18 @@ class Filter:
         """
         if not messages:
             return 0
-            
+
         non_system_count = 0
         target_index = 0
-        
+
         for i, msg in enumerate(messages):
             if msg.get("role") != "system":
                 non_system_count += 1
-            
+
             target_index = i + 1
             if non_system_count >= self.valves.keep_first:
                 break
-                
+
         return target_index
 
     def _align_tail_start_to_atomic_boundary(
@@ -1431,8 +1470,34 @@ class Filter:
         return self._model_thresholds_cache
 
     @contextlib.contextmanager
-    def _db_session(self):
-        """Yield a database session using Open WebUI helpers with graceful fallbacks."""
+    @contextlib.asynccontextmanager
+    async def _async_db_session(self):
+        """
+        Yield an async-capable database session.
+
+        - OpenWebUI >= 0.9.0: uses ``get_async_db_context`` (AsyncSession).
+        - OpenWebUI <  0.9.0: wraps the sync ``_db_session`` via ``asyncio.to_thread``.
+        """
+        db_module = self._owui_db
+        async_ctx = getattr(db_module, "get_async_db_context", None)
+        if callable(async_ctx):
+            async with async_ctx() as session:
+                yield session
+                return
+        async_db = getattr(db_module, "get_async_db", None)
+        if callable(async_db):
+            async with async_db() as session:
+                yield session
+                return
+
+        # Fallback: wrap sync session in a thread for < 0.9.0
+        # (sync pool is safe to use in < 0.9.0 since there's no competing async pool)
+        with self._sync_db_session() as session:
+            yield session
+
+    @contextlib.contextmanager
+    def _sync_db_session(self):
+        """Yield a SYNC database session — reserved for startup/initialization only."""
         db_module = self._owui_db
         db_context = None
         if db_module is not None:
@@ -1612,9 +1677,7 @@ class Filter:
             or self._clean_model_id(body.get("model"))
             or "gpt-4o-mini"
         )
-        summary_model_max_context = self._get_summary_model_context_limit(
-            summary_model
-        )
+        summary_model_max_context = self._get_summary_model_context_limit(summary_model)
 
         base_messages = body.get("messages", [])
         base_message_tokens = self._estimate_messages_tokens(base_messages)
@@ -1635,9 +1698,7 @@ class Filter:
             if not ref_chat_id:
                 continue
 
-            summary_record = await asyncio.to_thread(
-                self._load_summary_record, ref_chat_id
-            )
+            summary_record = await self._load_summary_record(ref_chat_id)
 
             if summary_record and summary_record.summary:
                 remaining_direct_budget = max(
@@ -1657,11 +1718,9 @@ class Filter:
                     await self._log(
                         f"[Inlet] ✅ Found existing summary for referenced chat '{ref_chat_title}' ({len(summary_record.summary)} chars)",
                         event_call=__event_call__,
-                )
+                    )
             else:
-                chat_messages = await asyncio.to_thread(
-                    self._load_full_chat_messages, ref_chat_id
-                )
+                chat_messages = await self._load_full_chat_messages(ref_chat_id)
                 if not chat_messages:
                     if __event_call__:
                         await self._log(
@@ -1780,13 +1839,20 @@ class Filter:
                             "chat_id": ref_chat_id,
                             "title": ref_chat_title,
                             "summary": summary,
-                            "type": "generated_summary" if generated_with_llm else "direct_fallback",
+                            "type": (
+                                "generated_summary"
+                                if generated_with_llm
+                                else "direct_fallback"
+                            ),
                         }
                     )
 
-                    if generated_with_llm and covers_full_history and covered_message_count > 0:
-                        await asyncio.to_thread(
-                            self._save_summary,
+                    if (
+                        generated_with_llm
+                        and covers_full_history
+                        and covered_message_count > 0
+                    ):
+                        await self._save_summary(
                             ref_chat_id,
                             summary,
                             covered_message_count,
@@ -1838,12 +1904,8 @@ class Filter:
             return []
 
         generated_summaries = []
-        summary_model = (
-            self._clean_model_id(self.valves.summary_model) or "gpt-4o-mini"
-        )
-        summary_model_max_context = self._get_summary_model_context_limit(
-            summary_model
-        )
+        summary_model = self._clean_model_id(self.valves.summary_model) or "gpt-4o-mini"
+        summary_model_max_context = self._get_summary_model_context_limit(summary_model)
 
         for referenced_chat in referenced_chats:
             if not isinstance(referenced_chat, dict):
@@ -1855,17 +1917,16 @@ class Filter:
                 continue
 
             summary_input_text = referenced_chat.get("conversation_text", "")
-            covers_full_history = bool(
-                referenced_chat.get("covers_full_history", True)
-            )
+            covers_full_history = bool(referenced_chat.get("covers_full_history", True))
             covered_message_count = int(
                 referenced_chat.get("covered_message_count", 0) or 0
             )
 
-            if not isinstance(summary_input_text, str) or not summary_input_text.strip():
-                chat_messages = await asyncio.to_thread(
-                    self._load_full_chat_messages, ref_chat_id
-                )
+            if (
+                not isinstance(summary_input_text, str)
+                or not summary_input_text.strip()
+            ):
+                chat_messages = await self._load_full_chat_messages(ref_chat_id)
                 if not chat_messages:
                     continue
                 summary_input_text = self._format_messages_for_summary(chat_messages)
@@ -1877,9 +1938,7 @@ class Filter:
                 summary_model_max_context > 0
                 and estimated_tokens > summary_model_max_context
             ):
-                chat_messages = await asyncio.to_thread(
-                    self._load_full_chat_messages, ref_chat_id
-                )
+                chat_messages = await self._load_full_chat_messages(ref_chat_id)
                 if chat_messages:
                     summary_input_text = self._truncate_messages_for_summary(
                         chat_messages, summary_model_max_context
@@ -1913,8 +1972,7 @@ class Filter:
             )
 
             if covers_full_history and covered_message_count > 0:
-                await asyncio.to_thread(
-                    self._save_summary,
+                await self._save_summary(
                     ref_chat_id,
                     summary,
                     covered_message_count,
@@ -1922,62 +1980,113 @@ class Filter:
 
         return generated_summaries
 
-    def _save_summary(self, chat_id: str, summary: str, compressed_count: int):
-        """Saves the summary to the database."""
+    async def _save_summary(self, chat_id: str, summary: str, compressed_count: int):
+        """Saves the summary to the database (async, compatible with 0.9.0 async sessions)."""
         try:
-            with self._db_session() as session:
-                # Find existing record
-                existing = session.query(ChatSummary).filter_by(chat_id=chat_id).first()
+            async with self._async_db_session() as session:
+                # Detect session type by checking for 'execute' (async) vs 'query' (sync) capabilities
+                if hasattr(session, "execute"):
+                    # SQLAlchemy 2.0 async style (AsyncSession)
+                    from sqlalchemy import select
 
-                if existing:
-                    # [Optimization] Optimistic lock check: update only if progress moves forward
-                    if compressed_count <= existing.compressed_message_count:
-                        if self.valves.debug_mode:
-                            logger.info(
-                                f"[Storage] Skipping update: New progress ({compressed_count}) is not greater than existing progress ({existing.compressed_message_count})"
-                            )
-                        return
+                    result = await session.execute(
+                        select(ChatSummary).filter_by(chat_id=chat_id)
+                    )
+                    existing = result.scalars().first()
 
-                    # Update existing record
-                    existing.summary = summary
-                    existing.compressed_message_count = compressed_count
-                    existing.updated_at = datetime.now(timezone.utc)
+                    if existing:
+                        # Optimistic lock: skip if progress hasn't advanced
+                        if compressed_count <= existing.compressed_message_count:
+                            if self.valves.debug_mode:
+                                logger.info(
+                                    f"[Storage] Skipping update: New progress ({compressed_count}) "
+                                    f"<= existing ({existing.compressed_message_count})"
+                                )
+                            return
+                        existing.summary = summary
+                        existing.compressed_message_count = compressed_count
+                        existing.updated_at = datetime.now(timezone.utc)
+                    else:
+                        new_summary = ChatSummary(
+                            chat_id=chat_id,
+                            summary=summary,
+                            compressed_message_count=compressed_count,
+                        )
+                        session.add(new_summary)
+
+                    await session.commit()
+
+                    if self.valves.debug_mode:
+                        action = "Updated" if existing else "Created"
+                        logger.info(
+                            f"[Storage] Summary has been {action.lower()} in the database (Chat ID: {chat_id})"
+                        )
                 else:
-                    # Create new record
-                    new_summary = ChatSummary(
-                        chat_id=chat_id,
-                        summary=summary,
-                        compressed_message_count=compressed_count,
+                    # < 0.9.0: sync session (Session)
+                    existing = (
+                        session.query(ChatSummary).filter_by(chat_id=chat_id).first()
                     )
-                    session.add(new_summary)
 
-                session.commit()
+                    if existing:
+                        if compressed_count <= existing.compressed_message_count:
+                            if self.valves.debug_mode:
+                                logger.info(
+                                    f"[Storage] Skipping update: New progress ({compressed_count}) "
+                                    f"<= existing ({existing.compressed_message_count})"
+                                )
+                            return
+                        existing.summary = summary
+                        existing.compressed_message_count = compressed_count
+                        existing.updated_at = datetime.now(timezone.utc)
+                    else:
+                        new_summary = ChatSummary(
+                            chat_id=chat_id,
+                            summary=summary,
+                            compressed_message_count=compressed_count,
+                        )
+                        session.add(new_summary)
 
-                if self.valves.debug_mode:
-                    action = "Updated" if existing else "Created"
-                    logger.info(
-                        f"[Storage] Summary has been {action.lower()} in the database (Chat ID: {chat_id})"
-                    )
+                    session.commit()
+
+                    if self.valves.debug_mode:
+                        action = "Updated" if existing else "Created"
+                        logger.info(
+                            f"[Storage] Summary has been {action.lower()} in the database (Chat ID: {chat_id})"
+                        )
 
         except Exception as e:
             logger.error(f"[Storage] ❌ Database save failed: {str(e)}")
 
-    def _load_summary_record(self, chat_id: str) -> Optional[ChatSummary]:
-        """Loads the summary record object from the database."""
+    async def _load_summary_record(self, chat_id: str) -> Optional[ChatSummary]:
+        """Loads the summary record object from the database (async, compatible with 0.9.0)."""
         try:
-            with self._db_session() as session:
-                record = session.query(ChatSummary).filter_by(chat_id=chat_id).first()
-                if record:
-                    # Detach the object from the session so it can be used after session close
-                    session.expunge(record)
-                    return record
+            async with self._async_db_session() as session:
+                # Detect session type by checking for 'execute' (async) vs 'query' (sync) capabilities
+                if hasattr(session, "execute"):
+                    # SQLAlchemy 2.0 async style
+                    from sqlalchemy import select
+
+                    result = await session.execute(
+                        select(ChatSummary).filter_by(chat_id=chat_id)
+                    )
+                    record = result.scalars().first()
+                    if record:
+                        return record
+                else:
+                    # < 0.9.0: sync session (Session)
+                    record = (
+                        session.query(ChatSummary).filter_by(chat_id=chat_id).first()
+                    )
+                    if record:
+                        session.expunge(record)
+                        return record
         except Exception as e:
             logger.error(f"[Load] ❌ Database read failed: {str(e)}")
         return None
 
-    def _load_summary(self, chat_id: str, body: dict) -> Optional[str]:
-        """Loads the summary text from the database (Compatible with old interface)."""
-        record = self._load_summary_record(chat_id)
+    async def _load_summary(self, chat_id: str, body: dict) -> Optional[str]:
+        """Loads the summary text from the database (async, compatible with 0.9.0)."""
+        record = await self._load_summary_record(chat_id)
         if record:
             if self.valves.debug_mode:
                 logger.info(f"[Load] Loaded summary from database (Chat ID: {chat_id})")
@@ -2070,7 +2179,7 @@ class Filter:
 
         # 2. Try to find base_model_id for custom models
         try:
-            model_obj = Models.get_model_by_id(model_id)
+            model_obj = _call_db_sync(Models.get_model_by_id, model_id)
             if model_obj:
                 # Check for base_model_id (custom model)
                 base_model_id = getattr(model_obj, "base_model_id", None)
@@ -2419,7 +2528,8 @@ class Filter:
             f"tool_calls@: {assistant_tool_calls[:6] or '-'}",
             f"tool_msgs@: {tool_indices[:6] or '-'}",
             f"keys: body={body_keys} | metadata={metadata_keys} | params={params_keys}",
-            "sample: " + self._format_debug_message_sample(snapshot.get("message_shape", [])),
+            "sample: "
+            + self._format_debug_message_sample(snapshot.get("message_shape", [])),
         ]
         return "\n".join(lines)
 
@@ -2449,8 +2559,10 @@ class Filter:
                 f"marker: summary_index={summary_index if summary_index is not None else 'none'}"
                 f" | base_progress={base_progress if base_progress is not None else 0}"
             ),
-            "head: " + self._format_debug_message_sample(snapshot.get("head_sample", [])),
-            "tail: " + self._format_debug_message_sample(snapshot.get("tail_sample", [])),
+            "head: "
+            + self._format_debug_message_sample(snapshot.get("head_sample", [])),
+            "tail: "
+            + self._format_debug_message_sample(snapshot.get("tail_sample", [])),
         ]
         return "\n".join(lines)
 
@@ -2474,7 +2586,9 @@ class Filter:
         )
         detail_samples = stats.get("detail_block_samples", [])
         detail_sample_text = (
-            ", ".join(str(sample) for sample in detail_samples[:5]) if detail_samples else "-"
+            ", ".join(str(sample) for sample in detail_samples[:5])
+            if detail_samples
+            else "-"
         )
 
         lines = [
@@ -2541,7 +2655,10 @@ class Filter:
                             msg.get("content", "")
                         )
 
-                        if expanded_has_tool_structure or expanded_chars > original_chars:
+                        if (
+                            expanded_has_tool_structure
+                            or expanded_chars > original_chars
+                        ):
                             unfolded.extend(expanded)
                             continue
                 except ImportError:
@@ -2722,9 +2839,7 @@ class Filter:
             else:
                 logger.error(f"Failed to process log to frontend: ValueError: {ve}")
         except Exception as e:
-            logger.error(
-                f"Failed to process log to frontend: {type(e).__name__}: {e}"
-            )
+            logger.error(f"Failed to process log to frontend: {type(e).__name__}: {e}")
 
     async def _log(self, message: str, log_type: str = "info", event_call=None):
         """Unified logging to both backend (print) and frontend (console.log)"""
@@ -2771,12 +2886,15 @@ class Filter:
         )
         if is_copilot:
             return True
-        
+
         # Fallback for filters or responses (e.g., Outlet) which may clear the metadata payload
         model_id = body.get("model", "")
         if isinstance(model_id, str):
             c = model_id.lower()
-            if "github_copilot_sdk_pipe" in c or "github_copilot_official_sdk_pipe" in c:
+            if (
+                "github_copilot_sdk_pipe" in c
+                or "github_copilot_official_sdk_pipe" in c
+            ):
                 return True
         return False
 
@@ -2900,8 +3018,8 @@ class Filter:
                     )
 
                 # Clean model ID if needed (though get_model_by_id usually expects the full ID)
-                # Run in thread to avoid blocking event loop on slow DB queries
-                model_obj = await asyncio.to_thread(Models.get_model_by_id, model_id)
+                # Version-aware DB call (async on >=0.9.0, sync on <0.9.0)
+                model_obj = await _call_db(Models.get_model_by_id, model_id)
 
                 if model_obj:
                     if self.valves.show_debug_log and __event_call__:
@@ -3068,7 +3186,7 @@ class Filter:
         )
 
         # Load summary record
-        summary_record = await asyncio.to_thread(self._load_summary_record, chat_id)
+        summary_record = await self._load_summary_record(chat_id)
 
         # Calculate effective_keep_first to ensure all system messages are protected
         effective_keep_first = self._get_effective_keep_first(messages)
@@ -3099,11 +3217,13 @@ class Filter:
             )
 
             # --- Extract Preserved System Messages from the Gap ---
-            # Any system message in the gap (messages[effective_keep_first:start_index]) 
+            # Any system message in the gap (messages[effective_keep_first:start_index])
             # must be preserved according to policy.
             gap_messages = messages[effective_keep_first:start_index]
             preserved_system_messages = [
-                msg for msg in gap_messages if isinstance(msg, dict) and msg.get("role") == "system"
+                msg
+                for msg in gap_messages
+                if isinstance(msg, dict) and msg.get("role") == "system"
             ]
 
             # 3. Summary message (Inserted as Assistant message)
@@ -3151,7 +3271,8 @@ class Filter:
                                 "has_tool_details_block": isinstance(
                                     m.get("content", ""), str
                                 )
-                                and '<details type="tool_calls"' in m.get("content", ""),
+                                and '<details type="tool_calls"'
+                                in m.get("content", ""),
                                 "is_summary": self._is_summary_message(m),
                             }
                             for i, m in enumerate(tail_messages[:8])
@@ -3164,7 +3285,12 @@ class Filter:
             # --- Preflight Check & Budgeting (Simplified) ---
 
             # Assemble candidate messages (for output)
-            candidate_messages = head_messages + [summary_msg] + preserved_system_messages + tail_messages
+            candidate_messages = (
+                head_messages
+                + [summary_msg]
+                + preserved_system_messages
+                + tail_messages
+            )
 
             # Prepare messages for token calculation (include system prompt if missing)
             calc_messages = candidate_messages
@@ -3248,7 +3374,12 @@ class Filter:
                         )
 
                 # Re-assemble
-                candidate_messages = head_messages + [summary_msg] + preserved_system_messages + tail_messages
+                candidate_messages = (
+                    head_messages
+                    + [summary_msg]
+                    + preserved_system_messages
+                    + tail_messages
+                )
 
                 await self._log(
                     "[Inlet] ✂️ Sent-context history reduced\n"
@@ -3268,7 +3399,9 @@ class Filter:
                 )
                 head_tokens = self._estimate_messages_tokens(head_messages)
                 summary_tokens = self._estimate_content_tokens(summary_content)
-                preserved_system_tokens = self._estimate_messages_tokens(preserved_system_messages)
+                preserved_system_tokens = self._estimate_messages_tokens(
+                    preserved_system_messages
+                )
                 tail_tokens = self._estimate_messages_tokens(tail_messages)
             else:
                 system_tokens = (
@@ -3278,15 +3411,23 @@ class Filter:
                 )
                 head_tokens = self._calculate_messages_tokens(head_messages)
                 summary_tokens = self._count_tokens(summary_content)
-                preserved_system_tokens = self._calculate_messages_tokens(preserved_system_messages)
+                preserved_system_tokens = self._calculate_messages_tokens(
+                    preserved_system_messages
+                )
                 tail_tokens = self._calculate_messages_tokens(tail_messages)
 
             system_info = (
-                f"System({system_tokens + preserved_system_tokens}t)" if (system_prompt_msg or preserved_system_messages) else "System(0t)"
+                f"System({system_tokens + preserved_system_tokens}t)"
+                if (system_prompt_msg or preserved_system_messages)
+                else "System(0t)"
             )
 
             total_section_tokens = (
-                system_tokens + head_tokens + summary_tokens + preserved_system_tokens + tail_tokens
+                system_tokens
+                + head_tokens
+                + summary_tokens
+                + preserved_system_tokens
+                + tail_tokens
             )
 
             await self._log(
@@ -3432,8 +3573,8 @@ class Filter:
                 # Use atomic grouping to preserve tool-calling integrity
                 trimmable = candidate_messages[effective_keep_first:]
                 atomic_groups = self._get_atomic_groups(trimmable)
-                
-                # To follow policy "system messages never lost", we maintain a list of 
+
+                # To follow policy "system messages never lost", we maintain a list of
                 # system messages that were part of dropped groups.
                 dropped_but_preserved_systems = []
 
@@ -3442,8 +3583,8 @@ class Filter:
                     dropped_tokens = 0
                     for _ in range(len(dropped_group_indices)):
                         dropped = trimmable.pop(0)
-                        
-                        # Absolute protections: 
+
+                        # Absolute protections:
                         # 1. External references (often large and specialized)
                         # 2. System messages (instructions)
                         if self._is_external_reference_message(dropped):
@@ -3451,8 +3592,11 @@ class Filter:
                             # Stop dropping this group if we hit a protected message
                             # (Though groups should be pure, this is a safety net)
                             break
-                            
-                        if isinstance(dropped, dict) and dropped.get("role") == "system":
+
+                        if (
+                            isinstance(dropped, dict)
+                            and dropped.get("role") == "system"
+                        ):
                             dropped_but_preserved_systems.append(dropped)
                             # Even if preserved, it counts as "dropped" from the trimmable flow
                             # to avoid infinite loop, but its tokens remain in the budget.
@@ -3471,7 +3615,9 @@ class Filter:
 
                 # Re-assemble: [Head] + [Preserved Systems from Dropped Groups] + [Remaining Trimmable/Tail]
                 candidate_messages = (
-                    candidate_messages[:effective_keep_first] + dropped_but_preserved_systems + trimmable
+                    candidate_messages[:effective_keep_first]
+                    + dropped_but_preserved_systems
+                    + trimmable
                 )
 
                 await self._log(
@@ -3605,7 +3751,7 @@ class Filter:
         # preserve the older DB fallback there only.
         function_calling_mode = self._get_function_calling_mode(body)
         if function_calling_mode == "native":
-            db_messages = self._load_full_chat_messages(chat_id)
+            db_messages = await self._load_full_chat_messages(chat_id)
             messages_to_unfold = (
                 db_messages
                 if (db_messages and len(db_messages) >= len(messages))
@@ -3633,7 +3779,9 @@ class Filter:
             )
 
         restored_count_before = len(summary_messages)
-        summary_messages = self._restore_pending_inlet_messages(chat_id, summary_messages)
+        summary_messages = self._restore_pending_inlet_messages(
+            chat_id, summary_messages
+        )
         if len(summary_messages) != restored_count_before:
             message_source = f"{message_source}+pending"
 
@@ -3969,9 +4117,7 @@ class Filter:
                 )
                 return
 
-            max_context_tokens = self._get_summary_model_context_limit(
-                summary_model_id
-            )
+            max_context_tokens = self._get_summary_model_context_limit(summary_model_id)
             request_limits = self._compute_summary_request_limits(max_context_tokens)
 
             await self._log(
@@ -3994,9 +4140,7 @@ class Filter:
             # When summary_index is None the outlet messages come from raw DB history that
             # has never had the summary injected, so we must load it from DB explicitly.
             if summary_index is None:
-                previous_summary = await asyncio.to_thread(
-                    self._load_summary, chat_id, body
-                )
+                previous_summary = await self._load_summary(chat_id, body)
                 if previous_summary:
                     await self._log(
                         "[🤖 Async Summary Task] Loaded previous summary from DB to pass as context (summary not in messages)",
@@ -4051,7 +4195,9 @@ class Filter:
                     )
                     for _ in range(removed_count):
                         trimmable_middle.pop()
-                    middle_messages = middle_messages[:protected_prefix] + trimmable_middle
+                    middle_messages = (
+                        middle_messages[:protected_prefix] + trimmable_middle
+                    )
                     await self._log(
                         f"[🤖 Async Summary Task] Removed newest atomic group ({removed_count} msgs, est {removed_preview_tokens} Tokens) to fit final request payload",
                         event_call=__event_call__,
@@ -4145,9 +4291,7 @@ class Filter:
                 event_call=__event_call__,
             )
 
-            await asyncio.to_thread(
-                self._save_summary, chat_id, new_summary, saved_compressed_count
-            )
+            await self._save_summary(chat_id, new_summary, saved_compressed_count)
 
             # Send completion status notification
             if __event_emitter__:
@@ -4183,7 +4327,7 @@ class Filter:
                     model_id = body.get("model")
                     if model_id:
                         try:
-                            model_obj = Models.get_model_by_id(model_id)
+                            model_obj = await _call_db(Models.get_model_by_id, model_id)
                             if model_obj and model_obj.params:
                                 params = model_obj.params
                                 if isinstance(params, str):
@@ -4567,12 +4711,12 @@ Return only the XML working memory:
             if not user_id:
                 raise ValueError("Could not get user ID")
 
-            # [Optimization] Get user object in a background thread to avoid blocking the event loop.
+            # [Optimization] Users.get_user_by_id is now async in OpenWebUI 0.9.x.
             await self._log(
-                "[Optimization] Getting user object in a background thread to avoid blocking the event loop.",
+                "[Optimization] Getting user object via async DB call.",
                 event_call=__event_call__,
             )
-            user = await asyncio.to_thread(Users.get_user_by_id, user_id)
+            user = await _call_db(Users.get_user_by_id, user_id)
 
             if not user:
                 raise ValueError(f"Could not find user: {user_id}")
