@@ -3,7 +3,7 @@ title: Export to Word Enhanced
 author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
-version: 0.4.4
+version: 0.4.5
 openwebui_id: fca6a315-2a45-42cc-8c96-55cbc85f87f2
 icon_url: data:image/svg+xml;base64,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9ImN1cnJlbnRDb2xvciIKICBzdHJva2Utd2lkdGg9IjIiCiAgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIgogIHN0cm9rZS1saW5lam9pbj0icm91bmQiCj4KICA8cGF0aCBkPSJNNiAyMmEyIDIgMCAwIDEtMi0yVjRhMiAyIDAgMCAxIDItMmg4YTIuNCAyLjQgMCAwIDEgMS43MDQuNzA2bDMuNTg4IDMuNTg4QTIuNCAyLjQgMCAwIDEgMjAgOHYxMmEyIDIgMCAwIDEtMiAyeiIgLz4KICA8cGF0aCBkPSJNMTQgMnY1YTEgMSAwIDAgMCAxIDFoNSIgLz4KICA8cGF0aCBkPSJNMTAgOUg4IiAvPgogIDxwYXRoIGQ9Ik0xNiAxM0g4IiAvPgogIDxwYXRoIGQ9Ik0xNiAxN0g4IiAvPgo8L3N2Zz4K
 requirements: python-docx, Pygments, latex2mathml, mathml2omml
@@ -82,6 +82,29 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# ── OpenWebUI version detection for async DB compatibility ──────────
+try:
+    from open_webui.env import VERSION as _owui_version
+except ImportError:
+    _owui_version = "0.0.0"
+
+
+def _owui_version_ge(threshold: str) -> bool:
+    try:
+        v = [int(x) for x in _owui_version.split(".")[:3]]
+        t = [int(x) for x in threshold.split(".")[:3]]
+        return v >= t
+    except (ValueError, TypeError):
+        return False
+
+
+async def _call_db(method, *args, **kwargs):
+    if _owui_version_ge("0.9.0"):
+        return await method(*args, **kwargs)
+    else:
+        return method(*args, **kwargs)
+
 
 _AUTO_URL_RE = re.compile(r"(?:https?://|www\.)[^\s<>()]+")
 _DATA_IMAGE_URL_RE = re.compile(
@@ -316,6 +339,9 @@ class Action:
         self._user_lang: str = "en"  # Will be set per-request
         self._api_token: Optional[str] = None
         self._api_base_url: Optional[str] = None
+        self._prefetched_files: dict = (
+            {}
+        )  # file_id -> FileModel, pre-fetched async before sync doc build
 
     def _get_lang_key(self, user_language: str) -> str:
         """Convert user language code to i18n key (e.g., 'zh-CN' -> 'zh', 'en-US' -> 'en')."""
@@ -1048,7 +1074,7 @@ class Action:
             return ""
 
         try:
-            user_obj = Users.get_user_by_id(user_id)
+            user_obj = await _call_db(Users.get_user_by_id, user_id)
             model = body.get("model")
 
             payload = {
@@ -1126,15 +1152,14 @@ class Action:
         if not chat_id:
             return ""
 
-        def _load_chat():
-            if user_id:
-                chat = Chats.get_chat_by_id_and_user_id(id=chat_id, user_id=user_id)
-                if chat:
-                    return chat
-            return Chats.get_chat_by_id(chat_id)
-
         try:
-            chat = await asyncio.to_thread(_load_chat)
+            chat = None
+            if user_id:
+                chat = await _call_db(
+                    Chats.get_chat_by_id_and_user_id, id=chat_id, user_id=user_id
+                )
+            if not chat:
+                chat = await _call_db(Chats.get_chat_by_id, chat_id)
         except Exception as exc:
             logger.warning(f"Failed to load chat {chat_id}: {exc}")
             return ""
@@ -1292,14 +1317,10 @@ class Action:
             )
             return None
 
-        try:
-            file_obj = Files.get_file_by_id(file_id)
-        except Exception as e:
-            logger.error(f"Files.get_file_by_id({file_id}) failed: {e}")
-            return None
-
-        if not file_obj:
-            logger.warning(f"File {file_id} not found in database.")
+        # Use pre-fetched file object (populated async before document build)
+        file_obj = self._prefetched_files.get(file_id)
+        if file_obj is None:
+            logger.warning(f"File {file_id} not found in prefetch cache.")
             return None
 
         # 1. Try data field (DB stored)
@@ -1513,6 +1534,18 @@ class Action:
             self._bookmark_id_counter = 1
             for ref in self._citation_refs:
                 self._citation_anchor_by_index[ref.idx] = ref.anchor
+
+            # Pre-fetch all OWUI file objects referenced in this markdown (needed for sync image embedding)
+            if Files is not None:
+                file_ids = list(set(_OWUI_API_FILE_ID_RE.findall(markdown_text)))
+                self._prefetched_files = {}
+                for fid in file_ids:
+                    try:
+                        fobj = await _call_db(Files.get_file_by_id, fid)
+                        if fobj:
+                            self._prefetched_files[fid] = fobj
+                    except Exception as e:
+                        logger.warning(f"Failed to prefetch file {fid}: {e}")
 
             # Set default fonts
             self.set_document_default_font(doc)

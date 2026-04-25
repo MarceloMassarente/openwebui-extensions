@@ -1,6 +1,6 @@
 # 📝 导出为 Word (增强版)
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.4.4 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.4.5 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,12 +21,9 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## 🔥 v0.4.4 更新内容
+## 🔥 v0.4.5 更新内容
 
-- 🧹 **内容清理加强**: 增强了对 `<details>` 块（通常包含工具调用或思考过程）的清理，确保最终文档整洁。
-- 📄 **文档格式标准化**: 采用了专业的文档排版标准（兼容中文 GB/T 规范），标题居中加粗，各级标题使用标准字号和间距。
-- 🔠 **字体渲染修复**: 修复了 CJK 字符在 Word 中回退到 MS Gothic 的问题；现在正确使用配置的中文字体（例如宋体）。
-- ⚙️ **标题对齐配置**: 新增 `标题对齐方式` Valve，支持配置文档标题的对齐方式（左对齐、居中、右对齐）。
+- ⚡ **Open WebUI 0.9.x 兼容性**: 新增运行时版本检测和异步数据库调用适配器，针对 `Users.get_user_by_id`、`Chats.get_chat_by_id` 及文件预取进行适配 — 确保与 Open WebUI 0.9.x 无缝兼容。
 
 ## ✨ 核心特性
 
