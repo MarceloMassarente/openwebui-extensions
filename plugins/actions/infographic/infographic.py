@@ -4,7 +4,7 @@ author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 icon_url: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogIDxsaW5lIHgxPSIxMiIgeTE9IjIwIiB4Mj0iMTIiIHkyPSIxMCIgLz4KICA8bGluZSB4MT0iMTgiIHkxPSIyMCIgeDI9IjE4IiB5Mj0iNCIgLz4KICA8bGluZSB4MT0iNiIgeTE9IjIwIiB4Mj0iNiIgeTI9IjE2IiAvPgo8L3N2Zz4=
-version: 1.6.1
+version: 1.6.2
 openwebui_id: ad6f0c7f-c571-4dea-821d-8e71697274cf
 description: AI-powered infographic generator based on AntV Infographic. Supports professional templates, auto-icon matching, and SVG/PNG downloads.
 """
@@ -20,6 +20,29 @@ import asyncio
 
 from open_webui.utils.chat import generate_chat_completion
 from open_webui.models.users import Users
+
+# ── OpenWebUI version detection for async DB compatibility ──────────
+try:
+    from open_webui.env import VERSION as _owui_version
+except ImportError:
+    _owui_version = "0.0.0"
+
+
+def _owui_version_ge(threshold: str) -> bool:
+    try:
+        v = [int(x) for x in _owui_version.split(".")[:3]]
+        t = [int(x) for x in threshold.split(".")[:3]]
+        return v >= t
+    except (ValueError, TypeError):
+        return False
+
+
+async def _call_db(method, *args, **kwargs):
+    if _owui_version_ge("0.9.0"):
+        return await method(*args, **kwargs)
+    else:
+        return method(*args, **kwargs)
+
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -1603,6 +1626,7 @@ class Action:
                 if frontend_res_str and isinstance(frontend_res_str, str):
                     try:
                         import json
+
                         frontend_res = json.loads(frontend_res_str)
                         user_language = frontend_res.get("lang", user_language)
                         user_theme = frontend_res.get("theme", user_theme)
@@ -1623,7 +1647,7 @@ class Action:
         target_lang = lang
         if target_lang in TRANSLATIONS:
             return target_lang
-        if hasattr(self, 'fallback_map') and target_lang in self.fallback_map:
+        if hasattr(self, "fallback_map") and target_lang in self.fallback_map:
             target_lang = self.fallback_map[target_lang]
             if target_lang in TRANSLATIONS:
                 return target_lang
@@ -2140,7 +2164,7 @@ class Action:
         __metadata__: Optional[dict] = None,
         __request__: Optional[Request] = None,
     ) -> Optional[dict]:
-        logger.info("Action: Infographic started (v1.6.0)")
+        logger.info("Action: Infographic started (v1.6.2)")
 
         # Get user information
         user_ctx = await self._get_user_context(__user__, __event_call__, __request__)
@@ -2207,7 +2231,9 @@ class Action:
                 }
 
             await self._emit_notification(
-                __event_emitter__, self._get_translation(user_language, "status_starting"), "info"
+                __event_emitter__,
+                self._get_translation(user_language, "status_starting"),
+                "info",
             )
             await self._emit_status(
                 __event_emitter__,
@@ -2246,7 +2272,7 @@ class Action:
                 "stream": False,
             }
 
-            user_obj = Users.get_user_by_id(user_id)
+            user_obj = await _call_db(Users.get_user_by_id, user_id)
             if not user_obj:
                 raise ValueError(f"Unable to get user object, user ID: {user_id}")
 
@@ -2358,11 +2384,15 @@ class Action:
                     )
 
                 await self._emit_status(
-                    __event_emitter__, self._get_translation(user_language, "status_image_generated"), True
+                    __event_emitter__,
+                    self._get_translation(user_language, "status_image_generated"),
+                    True,
                 )
                 await self._emit_notification(
                     __event_emitter__,
-                    self._get_translation(user_language, "notification_image_success", user_name=user_name),
+                    self._get_translation(
+                        user_language, "notification_image_success", user_name=user_name
+                    ),
                     "success",
                 )
                 logger.info("Infographic generation completed in image mode")
@@ -2373,11 +2403,15 @@ class Action:
             body["messages"][-1]["content"] = f"{original_content}\n\n{html_embed_tag}"
 
             await self._emit_status(
-                __event_emitter__, self._get_translation(user_language, "status_drawing"), True
+                __event_emitter__,
+                self._get_translation(user_language, "status_drawing"),
+                True,
             )
             await self._emit_notification(
                 __event_emitter__,
-                self._get_translation(user_language, "notification_success", user_name=user_name),
+                self._get_translation(
+                    user_language, "notification_success", user_name=user_name
+                ),
                 "success",
             )
             logger.info("Infographic generation completed")
@@ -2391,11 +2425,15 @@ class Action:
             ] = f"{original_content}\n\n❌ **Error:** {user_facing_error}"
 
             await self._emit_status(
-                __event_emitter__, self._get_translation(user_language, "status_failed"), True
+                __event_emitter__,
+                self._get_translation(user_language, "status_failed"),
+                True,
             )
             await self._emit_notification(
                 __event_emitter__,
-                self._get_translation(user_language, "notification_failed", user_name=user_name),
+                self._get_translation(
+                    user_language, "notification_failed", user_name=user_name
+                ),
                 "error",
             )
 
