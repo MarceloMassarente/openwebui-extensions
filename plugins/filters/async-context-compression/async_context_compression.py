@@ -312,6 +312,7 @@ import math
 import time
 import contextlib
 import logging
+from inspect import iscoroutinefunction
 from copy import deepcopy
 from functools import lru_cache
 
@@ -1331,21 +1332,21 @@ class Filter:
         Calculate the index to protect the first N NON-SYSTEM messages.
         All system messages encountered before reaching the Nth non-system message are also kept.
         """
-        if not messages:
+        if not messages or self.valves.keep_first <= 0:
             return 0
 
         non_system_count = 0
-        target_index = 0
 
         for i, msg in enumerate(messages):
             if msg.get("role") != "system":
                 non_system_count += 1
 
-            target_index = i + 1
             if non_system_count >= self.valves.keep_first:
-                break
+                return i + 1
 
-        return target_index
+        # All messages scanned but never reached keep_first non-system messages;
+        # protect everything we have.
+        return len(messages)
 
     def _align_tail_start_to_atomic_boundary(
         self, messages: List[Dict], raw_start_index: int, protected_prefix: int
@@ -1469,7 +1470,6 @@ class Filter:
 
         return self._model_thresholds_cache
 
-    @contextlib.contextmanager
     @contextlib.asynccontextmanager
     async def _async_db_session(self):
         """
@@ -1984,8 +1984,8 @@ class Filter:
         """Saves the summary to the database (async, compatible with 0.9.0 async sessions)."""
         try:
             async with self._async_db_session() as session:
-                # Detect session type by checking for 'execute' (async) vs 'query' (sync) capabilities
-                if hasattr(session, "execute"):
+                # Detect session type: async sessions expose execute as a coroutinefunction
+                if iscoroutinefunction(getattr(session, "execute", None)):
                     # SQLAlchemy 2.0 async style (AsyncSession)
                     from sqlalchemy import select
 
@@ -2061,9 +2061,9 @@ class Filter:
         """Loads the summary record object from the database (async, compatible with 0.9.0)."""
         try:
             async with self._async_db_session() as session:
-                # Detect session type by checking for 'execute' (async) vs 'query' (sync) capabilities
-                if hasattr(session, "execute"):
-                    # SQLAlchemy 2.0 async style
+                # Detect session type: async sessions expose execute as a coroutinefunction
+                if iscoroutinefunction(getattr(session, "execute", None)):
+                    # SQLAlchemy 2.0 async style (AsyncSession)
                     from sqlalchemy import select
 
                     result = await session.execute(
@@ -3965,7 +3965,6 @@ class Filter:
                 await self._log(
                     "[🔍 Background Calculation] ⚡ Full-history threshold triggered\n"
                     f"source_history_tokens={current_tokens} | compression_threshold_tokens={compression_threshold_tokens}",
-                    log_type="warning",
                     event_call=__event_call__,
                 )
 
@@ -4078,7 +4077,12 @@ class Filter:
             # Ensure indices are valid
             if start_index >= end_index:
                 await self._log(
-                    f"[🤖 Async Summary Task] Middle messages empty (Start: {start_index}, End: {end_index}), skipping",
+                    f"[🤖 Async Summary Task] Middle messages empty (Start: {start_index}, End: {end_index}), skipping\n"
+                    f"  summary_index={summary_index} | base_progress={base_progress} | "
+                    f"target_compressed_count={target_compressed_count} | "
+                    f"keep_first={self.valves.keep_first} | keep_last={self.valves.keep_last} | "
+                    f"total_messages={len(messages)}",
+                    log_type="warning",
                     event_call=__event_call__,
                 )
                 return
