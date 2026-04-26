@@ -212,3 +212,5 @@ nav:
       - Copilot Engineering Plan: development/copilot-engineering-plan.md
       - Documentation Guide: development/documentation-guide.md
   - Contributing: contributing.md
+  - Announcements:
+      - announcements/owui-0.9.x-compatibility.md
