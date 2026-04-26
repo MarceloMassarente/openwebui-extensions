@@ -104,7 +104,7 @@
       "title": "OpenWebUI Skills Manager Tool",
       "slug": "openwebui_skills_manager_tool_b4bce8e4",
       "type": "tool",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "author": "Fu-Jie",
       "description": "Standalone OpenWebUI tool for managing native Workspace Skills (list/show/install/create/update/delete) for any model.",
       "downloads": 1480,

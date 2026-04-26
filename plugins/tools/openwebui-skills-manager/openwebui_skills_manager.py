@@ -3,7 +3,7 @@ title: OpenWebUI Skills Manager Tool
 author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
-version: 0.3.1
+version: 0.3.2
 openwebui_id: b4bce8e4-08e7-4f90-bea7-dc31d463a0bb
 requirements:
 description: Standalone OpenWebUI tool for managing native Workspace Skills (list/show/install/create/update/delete) for any model.
@@ -13,16 +13,17 @@ import asyncio
 import json
 import logging
 import re
-import tempfile
 import tarfile
+import tempfile
 import uuid
-import zipfile
 import urllib.parse
 import urllib.request
+import zipfile
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Tuple
 
 from pydantic import BaseModel, Field
+from inspect import isawaitable, iscoroutinefunction
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +226,7 @@ TRANSLATIONS = {
         "status_installing": "URL에서 스킬 설치 중...",
         "status_installing_batch": "스킬 {total}개를 설치하는 중...",
         "status_discovering_skills": "{url}에서 스킬 발견 중...",
-        "status_detecting_repo_root": "GitHub 저장소 루트 검출: {url}. 자동 발견 모드로 변환 중...",
+        "status_detecting_repo_root": "GitHub 저장소 루트 검출: {url}。자동 발견 모드로 변환 중...",
         "status_batch_duplicates_removed": "배치에서 {count}개의 중복 URL을 제거했습니다.",
         "status_duplicate_skill_name": "경고: 스킬 이름 '{name}'이 중복됨 - {action}이 여러 번 실행됨.",
         "status_creating": "스킬 생성 중...",
@@ -565,6 +566,25 @@ async def _get_user_context(
     }
 
 
+async def _resolve_awaitable_compat(value: Any) -> Any:
+    if isawaitable(value):
+        return await value
+    return value
+
+
+async def _call_openwebui_compat(
+    func: Any,
+    *args: Any,
+    prefer_thread_for_sync: bool = False,
+    **kwargs: Any,
+) -> Any:
+    if prefer_thread_for_sync and not iscoroutinefunction(func):
+        result = await asyncio.to_thread(func, *args, **kwargs)
+    else:
+        result = func(*args, **kwargs)
+    return await _resolve_awaitable_compat(result)
+
+
 
 async def _emit_notification(
     emitter: Optional[Any],
@@ -577,17 +597,6 @@ async def _emit_notification(
             {"type": "notification", "data": {"type": ntype, "content": content}}
         )
 
-
-async def _emit_notification(
-    emitter: Optional[Any],
-    content: str,
-    ntype: str = "info",
-):
-    """Emit notification event (info, success, warning, error)."""
-    if emitter:
-        await emitter(
-            {"type": "notification", "data": {"type": ntype, "content": content}}
-        )
 
 async def _emit_status(
     valves,
@@ -611,18 +620,23 @@ def _require_skills_model():
         raise RuntimeError("skills_model_unavailable")
 
 
-def _user_skills(user_id: str, access: str = "read") -> List[Any]:
+async def _user_skills(user_id: str, access: str = "read") -> List[Any]:
     """Load user-scoped skills using OpenWebUI Skills model."""
-    return Skills.get_skills_by_user_id(user_id, access) or []
+    return await _call_openwebui_compat(
+        Skills.get_skills_by_user_id,
+        user_id,
+        access,
+        prefer_thread_for_sync=True,
+    ) or []
 
 
-def _find_skill(
+async def _find_skill(
     user_id: str,
     skill_id: str = "",
     name: str = "",
 ) -> Optional[Any]:
     """Find a skill by id or case-insensitive name within user scope."""
-    skills = _user_skills(user_id, "read")
+    skills = await _user_skills(user_id, "read")
     target_id = (skill_id or "").strip()
     target_name = (name or "").strip().lower()
 
@@ -1182,7 +1196,7 @@ async def _install_single_skill(
         if not final_name:
             raise ValueError(_t(lang, "err_name_required"))
 
-        existing = _find_skill(user_id=user_id, name=final_name)
+        existing = await _find_skill(user_id=user_id, name=final_name)
         # install_skill always overwrites by default (overwrite=True);
         # ALLOW_OVERWRITE_ON_CREATE valve also controls this.
         allow_overwrite = overwrite or valves.ALLOW_OVERWRITE_ON_CREATE
@@ -1194,7 +1208,8 @@ async def _install_single_skill(
                     "error": f"Skill already exists: {final_name}",
                     "hint": "Pass overwrite=true to replace the existing skill.",
                 }
-            updated = Skills.update_skill_by_id(
+            updated = await _call_openwebui_compat(
+                Skills.update_skill_by_id,
                 sid,
                 {
                     "name": final_name,
@@ -1202,6 +1217,7 @@ async def _install_single_skill(
                     "content": final_content,
                     "is_active": True,
                 },
+                prefer_thread_for_sync=True,
             )
             await _emit_status(valves, __event_emitter__, _t(lang, "status_install_overwrite_done", name=final_name),
                 done=True,
@@ -1214,7 +1230,8 @@ async def _install_single_skill(
                 "source_url": url,
             }
 
-        new_skill = Skills.insert_new_skill(
+        new_skill = await _call_openwebui_compat(
+            Skills.insert_new_skill,
             user_id=user_id,
             form_data=SkillForm(
                 id=str(uuid.uuid4()),
@@ -1224,6 +1241,7 @@ async def _install_single_skill(
                 meta=SkillMeta(),
                 is_active=True,
             ),
+            prefer_thread_for_sync=True,
         )
 
         await _emit_status(valves, __event_emitter__, _t(lang, "status_install_done", name=final_name),
@@ -1300,7 +1318,7 @@ class Tools:
 
             await _emit_status(self.valves, __event_emitter__, _t(lang, "status_listing"))
 
-            skills = _user_skills(user_id, "read")
+            skills = await _user_skills(user_id, "read")
             rows = []
             for skill in skills:
                 row = {
@@ -1357,7 +1375,7 @@ class Tools:
 
             await _emit_status(self.valves, __event_emitter__, _t(lang, "status_showing"))
 
-            skill = _find_skill(user_id=user_id, skill_id=skill_id, name=name)
+            skill = await _find_skill(user_id=user_id, skill_id=skill_id, name=name)
             if not skill:
                 raise ValueError(_t(lang, "err_not_found"))
 
@@ -1611,7 +1629,7 @@ class Tools:
 
             await _emit_status(self.valves, __event_emitter__, _t(lang, "status_creating"))
 
-            existing = _find_skill(user_id=user_id, name=skill_name)
+            existing = await _find_skill(user_id=user_id, name=skill_name)
             allow_overwrite = overwrite or self.valves.ALLOW_OVERWRITE_ON_CREATE
 
             final_description = (description or skill_name).strip()
@@ -1625,7 +1643,8 @@ class Tools:
                     }
 
                 sid = str(getattr(existing, "id", "") or "")
-                updated = Skills.update_skill_by_id(
+                updated = await _call_openwebui_compat(
+                    Skills.update_skill_by_id,
                     sid,
                     {
                         "name": skill_name,
@@ -1633,6 +1652,7 @@ class Tools:
                         "content": final_content,
                         "is_active": True,
                     },
+                    prefer_thread_for_sync=True,
                 )
                 await _emit_status(self.valves, __event_emitter__, _t(lang, "status_create_overwrite_done", name=skill_name),
                     done=True,
@@ -1644,7 +1664,8 @@ class Tools:
                     "name": skill_name,
                 }
 
-            new_skill = Skills.insert_new_skill(
+            new_skill = await _call_openwebui_compat(
+                Skills.insert_new_skill,
                 user_id=user_id,
                 form_data=SkillForm(
                     id=str(uuid.uuid4()),
@@ -1654,6 +1675,7 @@ class Tools:
                     meta=SkillMeta(),
                     is_active=True,
                 ),
+                prefer_thread_for_sync=True,
             )
 
             await _emit_status(self.valves, __event_emitter__, _t(lang, "status_create_done", name=skill_name),
@@ -1709,7 +1731,7 @@ class Tools:
 
             await _emit_status(self.valves, __event_emitter__, _t(lang, "status_updating"))
 
-            skill = _find_skill(user_id=user_id, skill_id=skill_id, name=name)
+            skill = await _find_skill(user_id=user_id, skill_id=skill_id, name=name)
             if not skill:
                 raise ValueError(_t(lang, "err_not_found"))
 
@@ -1721,7 +1743,7 @@ class Tools:
                 # Check for name collision with other skills
                 new_name_clean = new_name.strip()
                 # Check if another skill already has this name (case-insensitive)
-                for other_skill in _user_skills(user_id, "read"):
+                for other_skill in await _user_skills(user_id, "read"):
                     other_id = str(getattr(other_skill, "id", "") or "")
                     other_name = str(getattr(other_skill, "name", "") or "")
                     # Skip the current skill being updated
@@ -1744,7 +1766,7 @@ class Tools:
             if not updates:
                 raise ValueError(_t(lang, "err_no_update_fields"))
 
-            updated = Skills.update_skill_by_id(sid, updates)
+            updated = await _call_openwebui_compat(Skills.update_skill_by_id, sid, updates, prefer_thread_for_sync=True)
             updated_name = str(
                 getattr(updated, "name", "")
                 or updates.get("name")
@@ -1795,13 +1817,13 @@ class Tools:
 
             await _emit_status(self.valves, __event_emitter__, _t(lang, "status_deleting"))
 
-            skill = _find_skill(user_id=user_id, skill_id=skill_id, name=name)
+            skill = await _find_skill(user_id=user_id, skill_id=skill_id, name=name)
             if not skill:
                 raise ValueError(_t(lang, "err_not_found"))
 
             sid = str(getattr(skill, "id", "") or "")
             sname = str(getattr(skill, "name", "") or "")
-            Skills.delete_skill_by_id(sid)
+            await _call_openwebui_compat(Skills.delete_skill_by_id, sid, prefer_thread_for_sync=True)
             deleted_name = sname or sid or "unknown"
 
             await _emit_status(self.valves, __event_emitter__, _t(lang, "status_delete_done", name=deleted_name),
