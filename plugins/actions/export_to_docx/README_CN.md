@@ -1,6 +1,6 @@
 # 📝 导出为 Word (增强版)
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.4.5 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.5.0 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,9 +21,12 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## 🔥 v0.4.5 更新内容
+## 🔥 v0.5.0 更新内容
 
-- ⚡ **Open WebUI 0.9.x 兼容性**: 新增运行时版本检测和异步数据库调用适配器，针对 `Users.get_user_by_id`、`Chats.get_chat_by_id` 及文件预取进行适配 — 确保与 Open WebUI 0.9.x 无缝兼容。
+- 🔠 **标题级别字体自定义**: 新增 `一级标题西文字体`、`一级标题中文字体`、`二级标题西文字体`、`二级标题中文字体` 阀门 — 可为 H1 和 H2 独立配置字体，不再与正文字体绑定。
+- ⬆️ **相对标题算法**: 当内容没有 H1 时，自动提升标题级别（如 `## → #`），确保文档层级结构正确。
+- 🧹 **元数据清理**: Word 文档属性（`author`、`last_modified_by` 等）现在使用真实用户名，不再暴露 `python-docx` 库指纹。
+- 🎨 **标题样式修复**: 清除了 Word 主题字体继承（`w:asciiTheme`、`w:eastAsiaTheme`），涵盖 Title、Heading 1-9 和默认样式，防止 Word 覆盖自定义字体（如宋体回退问题）。移除了标题样式上多余的下划线和边框。
 
 ## ✨ 核心特性
 
@@ -54,6 +57,10 @@
 | **英文字体** | `Calibri` | 英文字体名称 |
 | **中文字体** | `SimSun` | 中文字体名称 |
 | **代码字体** | `Consolas` | 代码块字体名称 |
+| **一级标题西文字体** | `Aptos Display` | H1 西文字体名称 |
+| **一级标题中文字体** | `SimHei` | H1 中文字体名称 |
+| **二级标题西文字体** | `Calibri Light` | H2 西文字体名称 |
+| **二级标题中文字体** | `SimHei` | H2 中文字体名称 |
 | **表头背景色** | `F2F2F2` | 表头背景色（十六进制）|
 | **表格隔行背景色** | `FBFBFB` | 表格隔行背景色（十六进制）|
 | **Mermaid_PNG缩放比例** | `3.0` | Mermaid 图片分辨率倍数 |

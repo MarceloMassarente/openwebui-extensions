@@ -1,7 +1,7 @@
 # Export to Word
 
 <span class="category-badge action">Action</span>
-<span class="version-badge">v0.4.4</span>
+<span class="version-badge">v0.5.0</span>
 
 Export conversation to Word (.docx) with **syntax highlighting**, **native math equations**, **Mermaid diagrams**, **citations**, and **enhanced table formatting**.
 
@@ -39,6 +39,10 @@ You can configure the following settings via the **Valves** button in the plugin
 | `FONT_LATIN` | Font name for Latin characters. | `Times New Roman` |
 | `FONT_ASIAN` | Font name for Asian characters. | `SimSun` |
 | `FONT_CODE` | Font name for code blocks. | `Consolas` |
+| `FONT_H1_LATIN` | Font for Heading 1 Latin characters. | `Aptos Display` |
+| `FONT_H1_ASIAN` | Font for Heading 1 Asian characters. | `SimHei` |
+| `FONT_H2_LATIN` | Font for Heading 2 Latin characters. | `Calibri Light` |
+| `FONT_H2_ASIAN` | Font for Heading 2 Asian characters. | `SimHei` |
 | `TABLE_HEADER_COLOR` | Table header background color (Hex without #). | `F2F2F2` |
 | `TABLE_ZEBRA_COLOR` | Table alternating row background color (Hex without #). | `FBFBFB` |
 | `MERMAID_JS_URL` | URL for the Mermaid.js library. | `https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js` |
@@ -49,12 +53,12 @@ You can configure the following settings via the **Valves** button in the plugin
 | `MERMAID_BACKGROUND` | Background color for Mermaid diagrams (e.g., `white`, `transparent`). | `transparent` |
 | `MERMAID_CAPTIONS_ENABLE` | Enable/disable figure captions for Mermaid diagrams. | `True` |
 | `MERMAID_CAPTION_STYLE` | Paragraph style name for Mermaid captions. | `Caption` |
-| `MERMAID_CAPTION_PREFIX` | Caption prefix label (e.g., 'Figure'). Empty = auto-detect based on language. | `""` |
-| `MATH_ENABLE` | Enable LaTeX math block conversion. | `True` |
-| `MATH_INLINE_DOLLAR_ENABLE` | Enable inline `$ ... $` math conversion. | `True` |
+| `MERMAID_CAPTION_PREF5.0
 
-## 🔥 What's New in v0.4.4
-
+- 🔠 **Heading-Level Font Customization**: New `FONT_H1_LATIN`, `FONT_H1_ASIAN`, `FONT_H2_LATIN`, `FONT_H2_ASIAN` valves — configure H1 and H2 fonts independently from body text.
+- ⬆️ **Relative Heading Algorithm**: When content has no H1, heading levels are automatically promoted (e.g., `## → #`) so the document hierarchy stays correct.
+- 🧹 **Metadata Sanitization**: Word document properties (`author`, `last_modified_by`, etc.) now use the real user name instead of exposing `python-docx` library fingerprints.
+- 🎨 **Heading Style Fixes**: Cleared Word theme font inheritance (`w:asciiTheme`, `w:eastAsiaTheme`) on Title, Heading 1-9, and default styles to prevent Word from overriding custom fonts (e.g., SimSun fallback). Removed spurious underlines and borders from heading styles
 - 🧹 **Content Cleanup**: Enhanced stripping of `<details>` blocks (often used for tool calls/thinking process) to ensure a clean final document.
 - 📄 **Standard Document Formatting**: Applied professional document formatting standards for titles and headings (centered title, bold, optimized font sizes and spacing), including GB/T compliance for Chinese content.
 - 🔠 **Font Rendering Fix**: Fixed an issue where CJK characters would fallback to MS Gothic in Word; now correctly uses the configured Asian font (e.g., SimSun).
@@ -122,7 +126,7 @@ Users can override the following settings in their personal settings:
     - `mathml2omml` - MathML to Office Math (OMML) conversion
 
 ---
-
+5.0
 ## Source Code
 
 [:fontawesome-brands-github: View on GitHub](https://github.com/Fu-Jie/openwebui-extensions/tree/main/plugins/actions/export_to_docx){ .md-button }

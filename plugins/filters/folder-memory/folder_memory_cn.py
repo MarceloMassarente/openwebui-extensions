@@ -22,6 +22,29 @@ from open_webui.models.users import Users
 from open_webui.models.folders import Folders, FolderUpdateForm
 from open_webui.models.chats import Chats
 
+# ── OpenWebUI 版本检测（异步 DB 兼容） ──────────
+try:
+    from open_webui.env import VERSION as _owui_version
+except ImportError:
+    _owui_version = "0.0.0"
+
+
+def _owui_version_ge(threshold: str) -> bool:
+    try:
+        v = [int(x) for x in _owui_version.split(".")[:3]]
+        t = [int(x) for x in threshold.split(".")[:3]]
+        return v >= t
+    except (ValueError, TypeError):
+        return False
+
+
+async def _call_db(method, *args, **kwargs):
+    if _owui_version_ge("0.9.0"):
+        return await method(*args, **kwargs)
+    else:
+        return method(*args, **kwargs)
+
+
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -144,7 +167,7 @@ class Filter:
                 {"type": "status", "data": {"description": description, "done": done}}
             )
 
-    def _get_folder_id(self, body: dict) -> Optional[str]:
+    async def _get_folder_id(self, body: dict) -> Optional[str]:
         # 1. 尝试从 metadata 获取 folder_id
         if "metadata" in body and isinstance(body["metadata"], dict):
             if "folder_id" in body["metadata"]:
@@ -163,7 +186,7 @@ class Filter:
 
         if chat_id:
             try:
-                chat = Chats.get_chat_by_id(chat_id)
+                chat = await _call_db(Chats.get_chat_by_id, chat_id)
                 if chat and chat.folder_id:
                     return chat.folder_id
             except Exception as e:
@@ -238,7 +261,7 @@ Please output the updated Project Rules (请输出更新后的项目规则):
 
         try:
             # 需要用户对象进行权限检查
-            user = Users.get_user_by_id(user_id)
+            user = await _call_db(Users.get_user_by_id, user_id)
             if not user:
                 return current_rules
 
@@ -273,7 +296,9 @@ Please output the updated Project Rules (请输出更新后的项目规则):
             )
 
             # 1. 获取文件夹数据 (ORM)
-            initial_folder = Folders.get_folder_by_id_and_user_id(folder_id, user_id)
+            initial_folder = await _call_db(
+                Folders.get_folder_by_id_and_user_id, folder_id, user_id
+            )
             if not initial_folder:
                 await self._emit_debug_log(
                     __event_emitter__,
@@ -292,8 +317,10 @@ Please output the updated Project Rules (请输出更新后的项目规则):
                 # 向上遍历直到找到没有 parent_id 的根文件夹
                 while target_folder and getattr(target_folder, "parent_id", None):
                     try:
-                        parent = Folders.get_folder_by_id_and_user_id(
-                            target_folder.parent_id, user_id
+                        parent = await _call_db(
+                            Folders.get_folder_by_id_and_user_id,
+                            target_folder.parent_id,
+                            user_id,
                         )
                         if parent:
                             target_folder = parent
@@ -371,7 +398,8 @@ Please output the updated Project Rules (请输出更新后的项目规则):
             # 6. 更新文件夹 (ORM) - 仅更新 'data' 字段
             existing_data["system_prompt"] = updated_sys_prompt
 
-            updated_folder = Folders.update_folder_by_id_and_user_id(
+            updated_folder = await _call_db(
+                Folders.update_folder_by_id_and_user_id,
                 target_folder_id,
                 user_id,
                 FolderUpdateForm(data=existing_data),
@@ -443,7 +471,7 @@ Please output the updated Project Rules (请输出更新后的项目规则):
         if len(messages) % self.valves.MESSAGE_TRIGGER_COUNT != 0:
             return body
 
-        folder_id = self._get_folder_id(body)
+        folder_id = await self._get_folder_id(body)
         if not folder_id:
             await self._emit_debug_log(
                 __event_emitter__,

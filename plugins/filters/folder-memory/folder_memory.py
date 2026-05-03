@@ -22,6 +22,29 @@ from open_webui.models.users import Users
 from open_webui.models.folders import Folders, FolderUpdateForm
 from open_webui.models.chats import Chats
 
+# ── OpenWebUI version detection for async DB compatibility ──────────
+try:
+    from open_webui.env import VERSION as _owui_version
+except ImportError:
+    _owui_version = "0.0.0"
+
+
+def _owui_version_ge(threshold: str) -> bool:
+    try:
+        v = [int(x) for x in _owui_version.split(".")[:3]]
+        t = [int(x) for x in threshold.split(".")[:3]]
+        return v >= t
+    except (ValueError, TypeError):
+        return False
+
+
+async def _call_db(method, *args, **kwargs):
+    if _owui_version_ge("0.9.0"):
+        return await method(*args, **kwargs)
+    else:
+        return method(*args, **kwargs)
+
+
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -148,7 +171,7 @@ class Filter:
                 {"type": "status", "data": {"description": description, "done": done}}
             )
 
-    def _get_folder_id(self, body: dict) -> Optional[str]:
+    async def _get_folder_id(self, body: dict) -> Optional[str]:
         # 1. Try retrieving folder_id specifically from metadata
         if "metadata" in body and isinstance(body["metadata"], dict):
             if "folder_id" in body["metadata"]:
@@ -167,7 +190,7 @@ class Filter:
 
         if chat_id:
             try:
-                chat = Chats.get_chat_by_id(chat_id)
+                chat = await _call_db(Chats.get_chat_by_id, chat_id)
                 if chat and chat.folder_id:
                     return chat.folder_id
             except Exception as e:
@@ -242,7 +265,7 @@ Please output the updated Project Rules:
 
         try:
             # We need a user object for permission checks in generate_chat_completion
-            user = Users.get_user_by_id(user_id)
+            user = await _call_db(Users.get_user_by_id, user_id)
             if not user:
                 return current_rules
 
@@ -277,7 +300,9 @@ Please output the updated Project Rules:
             )
 
             # 1. Fetch Folder Data (ORM)
-            initial_folder = Folders.get_folder_by_id_and_user_id(folder_id, user_id)
+            initial_folder = await _call_db(
+                Folders.get_folder_by_id_and_user_id, folder_id, user_id
+            )
             if not initial_folder:
                 await self._emit_debug_log(
                     __event_emitter__,
@@ -296,8 +321,10 @@ Please output the updated Project Rules:
                 # Traverse up until a folder with no parent_id is found
                 while target_folder and getattr(target_folder, "parent_id", None):
                     try:
-                        parent = Folders.get_folder_by_id_and_user_id(
-                            target_folder.parent_id, user_id
+                        parent = await _call_db(
+                            Folders.get_folder_by_id_and_user_id,
+                            target_folder.parent_id,
+                            user_id,
                         )
                         if parent:
                             target_folder = parent
@@ -377,7 +404,8 @@ Please output the updated Project Rules:
             # 6. Update Folder (ORM) - Only update 'data' field
             existing_data["system_prompt"] = updated_sys_prompt
 
-            updated_folder = Folders.update_folder_by_id_and_user_id(
+            updated_folder = await _call_db(
+                Folders.update_folder_by_id_and_user_id,
                 target_folder_id,
                 user_id,
                 FolderUpdateForm(data=existing_data),
@@ -453,7 +481,7 @@ Please output the updated Project Rules:
         if len(messages) % self.valves.MESSAGE_TRIGGER_COUNT != 0:
             return body
 
-        folder_id = self._get_folder_id(body)
+        folder_id = await self._get_folder_id(body)
         if not folder_id:
             await self._emit_debug_log(
                 __event_emitter__,

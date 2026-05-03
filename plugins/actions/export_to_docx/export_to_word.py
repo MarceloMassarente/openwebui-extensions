@@ -3,7 +3,7 @@ title: Export to Word Enhanced
 author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
-version: 0.4.5
+version: 0.5.0
 openwebui_id: fca6a315-2a45-42cc-8c96-55cbc85f87f2
 icon_url: data:image/svg+xml;base64,PHN2ZwogIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICB3aWR0aD0iMjQiCiAgaGVpZ2h0PSIyNCIKICB2aWV3Qm94PSIwIDAgMjQgMjQiCiAgZmlsbD0ibm9uZSIKICBzdHJva2U9ImN1cnJlbnRDb2xvciIKICBzdHJva2Utd2lkdGg9IjIiCiAgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIgogIHN0cm9rZS1saW5lam9pbj0icm91bmQiCj4KICA8cGF0aCBkPSJNNiAyMmEyIDIgMCAwIDEtMi0yVjRhMiAyIDAgMCAxIDItMmg4YTIuNCAyLjQgMCAwIDEgMS43MDQuNzA2bDMuNTg4IDMuNTg4QTIuNCAyLjQgMCAwIDEgMjAgOHYxMmEyIDIgMCAwIDEtMiAyeiIgLz4KICA8cGF0aCBkPSJNMTQgMnY1YTEgMSAwIDAgMCAxIDFoNSIgLz4KICA8cGF0aCBkPSJNMTAgOUg4IiAvPgogIDxwYXRoIGQ9Ik0xNiAxM0g4IiAvPgogIDxwYXRoIGQ9Ik0xNiAxN0g4IiAvPgo8L3N2Zz4K
 requirements: python-docx, Pygments, latex2mathml, mathml2omml
@@ -199,6 +199,22 @@ class Action:
             default="Consolas",
             description="Font for code blocks and inline code (e.g., 'Consolas', 'Courier New', 'Monaco')",
         )
+        FONT_H1_LATIN: str = Field(
+            default="Aptos Display",
+            description="Font for Heading 1 Latin characters (e.g., 'Aptos Display', 'Calibri Light'). Empty uses FONT_LATIN.",
+        )
+        FONT_H1_ASIAN: str = Field(
+            default="SimHei",
+            description="Font for Heading 1 Asian characters (e.g., 'SimHei', 'Microsoft YaHei'). Empty uses FONT_ASIAN.",
+        )
+        FONT_H2_LATIN: str = Field(
+            default="Calibri Light",
+            description="Font for Heading 2 Latin characters (e.g., 'Aptos Display', 'Calibri Light'). Empty uses FONT_LATIN.",
+        )
+        FONT_H2_ASIAN: str = Field(
+            default="SimHei",
+            description="Font for Heading 2 Asian characters (e.g., 'SimHei', 'Microsoft YaHei'). Empty uses FONT_ASIAN.",
+        )
 
         # Title alignment
         TITLE_ALIGNMENT: str = Field(
@@ -289,6 +305,22 @@ class Action:
         FONT_CODE: Optional[str] = Field(
             default=None,
             description="Font for code blocks and inline code (e.g., 'Consolas', 'Courier New', 'Monaco')",
+        )
+        FONT_H1_LATIN: Optional[str] = Field(
+            default=None,
+            description="Font for Heading 1 Latin characters (e.g., 'Aptos Display', 'Calibri Light'). Empty uses FONT_LATIN.",
+        )
+        FONT_H1_ASIAN: Optional[str] = Field(
+            default=None,
+            description="Font for Heading 1 Asian characters (e.g., 'SimHei', 'Microsoft YaHei'). Empty uses FONT_ASIAN.",
+        )
+        FONT_H2_LATIN: Optional[str] = Field(
+            default=None,
+            description="Font for Heading 2 Latin characters (e.g., 'Aptos Display', 'Calibri Light'). Empty uses FONT_LATIN.",
+        )
+        FONT_H2_ASIAN: Optional[str] = Field(
+            default=None,
+            description="Font for Heading 2 Asian characters (e.g., 'SimHei', 'Microsoft YaHei'). Empty uses FONT_ASIAN.",
         )
         TABLE_HEADER_COLOR: Optional[str] = Field(
             default=None,
@@ -622,15 +654,45 @@ class Action:
 
                 # Create Word document; if no h1 exists, inject chat title as h1
                 has_h1 = bool(re.search(r"^#\s+.+$", message_content, re.MULTILINE))
+
+                # Heading level normalization (Relative Algorithm)
+                if not has_h1:
+                    # Find the minimum heading level in the content
+                    heading_levels = [
+                        len(m.group(1))
+                        for m in re.finditer(r"^(#+)\s+.+$", message_content, re.MULTILINE)
+                    ]
+                    if heading_levels:
+                        min_level = min(heading_levels)
+                        if min_level > 1:
+                            shift = min_level - 1
+                            # Perform promotion: replace ^### with ^##, etc.
+                            def _promote(m):
+                                current_level = len(m.group(1))
+                                new_level = max(1, current_level - shift)
+                                return "#" * new_level + m.group(2)
+
+                            message_content = re.sub(
+                                r"^(#+)(\s+.+)$", _promote, message_content, flags=re.MULTILINE
+                            )
+                            # After promotion, we now have H1
+                            has_h1 = True
+                            await self._emit_debug_log(
+                                __event_emitter__,
+                                "Relative Heading Algorithm",
+                                f"Normalized headings by shifting -{shift} levels.",
+                            )
                 sources = (
                     last_assistant_message.get("sources") or body.get("sources") or []
                 )
                 doc = await self.markdown_to_docx(
                     message_content,
                     top_heading=top_heading,
-                    has_h1=has_h1,
+
                     sources=sources,
                     event_emitter=__event_emitter__,
+                    user_name=user_name,
+                    title=title,
                 )
 
                 # Save to memory
@@ -1513,9 +1575,11 @@ class Action:
         self,
         markdown_text: str,
         top_heading: str = "",
-        has_h1: bool = False,
+
         sources: Optional[List[dict]] = None,
         event_emitter: Optional[Callable] = None,
+        user_name: str = "",
+        title: str = "",
     ) -> Document:
         """
         Convert Markdown text to Word document
@@ -1524,6 +1588,7 @@ class Action:
         LaTeX math to Word equations, and OpenWebUI citations to References.
         """
         doc = Document()
+        self._sanitize_metadata(doc, author=user_name, title=title)
         self._active_doc = doc
         try:
             self._mermaid_figure_counter = 0
@@ -1550,8 +1615,8 @@ class Action:
             # Set default fonts
             self.set_document_default_font(doc)
 
-            # If there is no h1 in content, prepend chat title as h1 when provided
-            if top_heading and not has_h1:
+            # Inject Document Title (Style Level 0)
+            if top_heading:
                 # Remove emojis from title for a professional look
                 clean_title = self._remove_emojis(top_heading)
                 # Use Title style (level 0) for the main document title
@@ -2309,6 +2374,12 @@ class Action:
         rFonts.set(qn("w:hAnsi"), self.valves.FONT_LATIN)
         rFonts.set(qn("w:eastAsia"), self.valves.FONT_ASIAN)
 
+        # CRITICAL: Clear theme fonts to prevent Word from overriding with defaults (like SimSun)
+        rFonts.set(qn("w:asciiTheme"), "")
+        rFonts.set(qn("w:hAnsiTheme"), "")
+        rFonts.set(qn("w:eastAsiaTheme"), "")
+        rFonts.set(qn("w:cstheme"), "")
+
         # Set language to zh-CN to prevent MS Gothic fallback (Japanese font)
         # Even for English interface, we want to prioritize Chinese glyphs over Japanese for CJK
         lang = rPr.find(qn("w:lang"))
@@ -2350,13 +2421,24 @@ class Action:
             title_pf.space_before = Pt(0)
             title_pf.space_after = Pt(24)
 
+            # Explicitly disable underline and borders for Title style
+            title_font.underline = False
+            title_p_el = title_style._element.get_or_add_pPr()
+            title_pbdr = title_p_el.find(qn("w:pBdr"))
+            if title_pbdr is not None:
+                title_p_el.remove(title_pbdr)
+
             t_rPr = title_style._element.get_or_add_rPr()
             t_rFonts = t_rPr.get_or_add_rFonts()
             t_rFonts.set(qn("w:ascii"), self.valves.FONT_LATIN)
             t_rFonts.set(qn("w:hAnsi"), self.valves.FONT_LATIN)
             t_rFonts.set(qn("w:eastAsia"), self.valves.FONT_ASIAN)
 
-            # Set language to zh-CN
+            # Clear theme fonts for Title
+            t_rFonts.set(qn("w:asciiTheme"), "")
+            t_rFonts.set(qn("w:hAnsiTheme"), "")
+            t_rFonts.set(qn("w:eastAsiaTheme"), "")
+
             t_lang = t_rPr.find(qn("w:lang"))
             if t_lang is None:
                 t_lang = OxmlElement("w:lang")
@@ -2381,16 +2463,36 @@ class Action:
             9: {"size": 10.5, "space_before": 6, "space_after": 3},
         }
 
-        # Apply font settings to Heading 1-9
+        # Apply font and formatting settings to Heading 1-9
         for i in range(1, 10):
             style_id = f"Heading {i}"
             if style_id in doc.styles:
                 heading_style = doc.styles[style_id]
                 heading_font = heading_style.font
-                heading_font.name = self.valves.FONT_LATIN
                 heading_font.color.rgb = RGBColor(0, 0, 0)
 
-                # Apply standard formatting
+                # Determine fonts to use (fallback to document defaults)
+                if i == 1:
+                    target_latin = (
+                        self.valves.FONT_H1_LATIN.strip() or self.valves.FONT_LATIN
+                    )
+                    target_asian = (
+                        self.valves.FONT_H1_ASIAN.strip() or self.valves.FONT_ASIAN
+                    )
+                elif i == 2:
+                    target_latin = (
+                        self.valves.FONT_H2_LATIN.strip() or self.valves.FONT_LATIN
+                    )
+                    target_asian = (
+                        self.valves.FONT_H2_ASIAN.strip() or self.valves.FONT_ASIAN
+                    )
+                else:
+                    target_latin = self.valves.FONT_LATIN
+                    target_asian = self.valves.FONT_ASIAN
+
+                heading_font.name = target_latin
+
+                # Apply standard formatting (size, bold, spacing)
                 fmt = heading_formats.get(
                     i, {"size": 11, "space_before": 6, "space_after": 3}
                 )
@@ -2401,14 +2503,26 @@ class Action:
                 heading_pf.space_before = Pt(fmt["space_before"])
                 heading_pf.space_after = Pt(fmt["space_after"])
 
+                # Explicitly disable underline and borders for Heading style
+                heading_font.underline = False
+                h_p_el = heading_style._element.get_or_add_pPr()
+                h_pbdr = h_p_el.find(qn("w:pBdr"))
+                if h_pbdr is not None:
+                    h_p_el.remove(h_pbdr)
+
                 # Ensure rPr exists
                 h_rPr = heading_style._element.get_or_add_rPr()
                 h_rFonts = h_rPr.get_or_add_rFonts()
 
-                # Set fonts
-                h_rFonts.set(qn("w:ascii"), self.valves.FONT_LATIN)
-                h_rFonts.set(qn("w:hAnsi"), self.valves.FONT_LATIN)
-                h_rFonts.set(qn("w:eastAsia"), self.valves.FONT_ASIAN)
+                # Set Latin and Asian fonts explicitly in XML
+                h_rFonts.set(qn("w:ascii"), target_latin)
+                h_rFonts.set(qn("w:hAnsi"), target_latin)
+                h_rFonts.set(qn("w:eastAsia"), target_asian)
+
+                # Clear theme fonts for Headings
+                h_rFonts.set(qn("w:asciiTheme"), "")
+                h_rFonts.set(qn("w:hAnsiTheme"), "")
+                h_rFonts.set(qn("w:eastAsiaTheme"), "")
 
                 # Set language to zh-CN
                 h_lang = h_rPr.find(qn("w:lang"))
@@ -2483,11 +2597,32 @@ class Action:
         if strike:
             run.font.strike = True
 
-        # Explicitly set East Asian font to prevent MS Gothic fallback
-        # Word may not inherit w:eastAsia from style, causing Japanese font fallback for CJK
-        rPr = run._element.get_or_add_rPr()
-        rFonts = rPr.get_or_add_rFonts()
-        rFonts.set(qn("w:eastAsia"), self.valves.FONT_ASIAN)
+        # Explicitly set East Asian font at Run level for heading paragraphs.
+        # Style-level fonts alone are unreliable for headings because Word's theme
+        # font inheritance (w:eastAsiaTheme) on the run's rPr can override style-level
+        # rFonts. Setting it here ensures SimHei (or the configured heading font) wins
+        # regardless of the document template or theme settings.
+        style_name = getattr(getattr(paragraph, "style", None), "name", "") or ""
+        if style_name.startswith("Heading"):
+            # Extract heading level number from style name (e.g., "Heading 1" → 1)
+            parts = style_name.split()
+            heading_level = int(parts[1]) if len(parts) == 2 and parts[1].isdigit() else 0
+            if heading_level == 1:
+                target_asian = (
+                    self.valves.FONT_H1_ASIAN.strip() or self.valves.FONT_ASIAN
+                )
+            elif heading_level == 2:
+                target_asian = (
+                    self.valves.FONT_H2_ASIAN.strip() or self.valves.FONT_ASIAN
+                )
+            else:
+                target_asian = self.valves.FONT_ASIAN
+
+            rPr = run._element.get_or_add_rPr()
+            rFonts = rPr.get_or_add_rFonts()
+            rFonts.set(qn("w:eastAsia"), target_asian)
+            # Clear theme font to prevent Word from overriding our explicit font choice
+            rFonts.set(qn("w:eastAsiaTheme"), "")
 
     def _add_inline_code(self, paragraph, s: str):
         if s == "":
@@ -3318,3 +3453,23 @@ class Action:
             for run in paragraph.runs:
                 run.font.color.rgb = RGBColor(85, 85, 85)  # Dark gray text
                 run.italic = True
+
+    def _sanitize_metadata(self, doc: Document, author: str = "", title: str = ""):
+        """Removes library fingerprints and sets professional defaults."""
+        p = doc.core_properties
+        p.author = author  # Set your preferred author name
+        p.comments = ""  # Clears any default library comments
+        p.title = title  # Initialise as empty; logic fills this later
+        p.keywords = ""
+        p.subject = ""
+        p.last_modified_by = author
+
+        try:
+            from docx.opc.constants import CONTENT_TYPE as CT
+
+            # Setting these to an empty string or a custom value
+            # obscures the default 'python-docx' signature.
+            p.category = ""
+            p.content_status = ""
+        except Exception:
+            pass
