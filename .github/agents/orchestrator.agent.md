@@ -54,7 +54,8 @@ Identify which scenario(s) the user's request maps to, then dispatch accordingly
 | **Release** | release, 发布, publish, version bump | Release Prep | `release-prep`, `version-bumper`, `pr-submitter` | Sequential |
 | **Release (no bump)** | hotfix, 无版本, patch push | (self) | `publish-no-version-bump` | Single skill |
 | **Publish to Community** | marketplace, openwebui.com, 社区发布 | (self) | `release-finalizer` | Single skill |
-| **Issue Reply** | issue, #\d+, 回复, GitHub | (self) | `gh-issue-replier`, `gh-issue-scheduler` | Single skill |
+| **Issue Reply** | issue, #\d+, 回复issue | (self) | `gh-issue-replier`, `gh-issue-scheduler` | Single skill |
+| **Discussion Reply** | discussion, discussions, 功能请求, idea | (self) | `gh-discussion-replier` | Single skill |
 | **Community Announcement** | announcement, 公告, 社区, Discord | (self) | `community-announcer` | Single skill |
 | **Architecture / Analysis** | architect, design, 分析, why, how | Tech Lead | `source-code-analyzer` | Single |
 | **i18n Check** | i18n, translation, 翻译一致性 | Plugin Reviewer | `i18n-validator` | Single |
@@ -118,6 +119,7 @@ release-prep → pr-submitter → pr-reviewer → release-finalizer
 |-------|---------|
 | `gh-issue-scheduler` | Find all open unanswered issues, build response plan |
 | `gh-issue-replier` | Draft and send professional English replies via `gh` CLI |
+| `gh-discussion-replier` | Draft and send professional English replies to Discussions via GraphQL API |
 | `community-announcer` | Write bilingual update announcements for social/community |
 
 ---
