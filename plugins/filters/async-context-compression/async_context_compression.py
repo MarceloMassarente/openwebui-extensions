@@ -3785,6 +3785,35 @@ class Filter:
         if len(summary_messages) != restored_count_before:
             message_source = f"{message_source}+pending"
 
+        # OpenWebUI 0.9.x passes raw DB messages to the outlet (without the
+        # inlet's summary placeholder).  Without the placeholder, the target
+        # boundary is computed against the full raw history, and the atomic-group
+        # alignment can pull it back to the previous boundary – causing
+        # saved_compressed_count == existing.compressed_message_count and the
+        # optimistic-lock check to skip every update (same prompt sent each turn).
+        # Fix: when the placeholder is absent, reload it from the DB and reinsert
+        # it at the correct position so the alignment only scans the NEW tail.
+        if not any(self._is_summary_message(m) for m in summary_messages):
+            existing_record = await self._load_summary_record(chat_id)
+            if existing_record and existing_record.compressed_message_count > 0:
+                boundary = min(
+                    existing_record.compressed_message_count, len(summary_messages)
+                )
+                injected_summary_msg = self._build_summary_message(
+                    existing_record.summary, lang, existing_record.compressed_message_count
+                )
+                summary_messages = (
+                    summary_messages[:boundary]
+                    + [injected_summary_msg]
+                    + summary_messages[boundary:]
+                )
+                message_source = f"{message_source}+summary-reinjected"
+                if self.valves.debug_mode:
+                    logger.info(
+                        f"[Outlet] Reinjected summary placeholder at boundary={boundary} "
+                        f"(compressed_message_count={existing_record.compressed_message_count})"
+                    )
+
         if self.valves.show_debug_log and __event_call__:
             source_progress = self._build_summary_progress_snapshot(summary_messages)
             await self._log(
@@ -4061,6 +4090,18 @@ class Filter:
             summary_state = self._get_summary_view_state(messages)
             summary_index = summary_state["summary_index"]
             base_progress = summary_state["base_progress"] or 0
+
+            # Guard: if the target hasn't advanced beyond the current boundary there
+            # are not enough new tail messages to compress.  Skip to avoid a redundant
+            # LLM call that would produce saved_compressed_count == existing and be
+            # discarded by the optimistic-lock check in _save_summary anyway.
+            if summary_index is not None and target_compressed_count <= base_progress:
+                await self._log(
+                    f"[🤖 Async Summary Task] No new messages beyond current boundary "
+                    f"(target={target_compressed_count} <= base={base_progress}), skipping",
+                    event_call=__event_call__,
+                )
+                return
 
             if summary_index is None:
                 start_index = self._get_effective_keep_first(messages)
