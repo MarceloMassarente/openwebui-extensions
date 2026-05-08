@@ -3,7 +3,7 @@ title: Export to Excel
 author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
-version: 0.3.8
+version: 0.3.9
 openwebui_id: 244b8f9d-7459-47d6-84d3-c7ae8e3ec710
 icon_url: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xNSAySDZhMiAyIDAgMCAwLTIgMnYxNmEyIDIgMCAwIDAgMiAyaDEyYTIgMiAwIDAgMCAyLTJWN1oiLz48cGF0aCBkPSJNMTQgMnY0YTIgMiAwIDAgMCAyIDJoNCIvPjxwYXRoIGQ9Ik04IDEzaDIiLz48cGF0aCBkPSJNMTQgMTNoMiIvPjxwYXRoIGQ9Ik04IDE3aDIiLz48cGF0aCBkPSJNMTQgMTdoMiIvPjwvc3ZnPg==
 description: Extracts tables from chat messages and exports them to Excel (.xlsx) files with smart formatting.
@@ -70,6 +70,14 @@ class Action:
         SHOW_DEBUG_LOG: bool = Field(
             default=False,
             description="Whether to print debug logs in the browser console.",
+        )
+        ROW_HEIGHT: int = Field(
+            default=0,
+            description="Fixed row height in points for data rows. 0 = auto-adjust based on content. Set e.g. 20 for compact single-line rows.",
+        )
+        COLUMN_WIDTH: int = Field(
+            default=0,
+            description="Fixed column width in characters for all data columns. 0 = auto-adjust based on content. Set e.g. 15 for uniform compact columns.",
         )
 
     def __init__(self):
@@ -1231,6 +1239,8 @@ class Action:
                             headers,
                             workbook,
                             formats,
+                            row_height=self.valves.ROW_HEIGHT,
+                            column_width=self.valves.COLUMN_WIDTH,
                         )
 
                     except Exception as e:
@@ -1248,6 +1258,8 @@ class Action:
         headers,
         workbook,
         formats,
+        row_height: int = 0,
+        column_width: int = 0,
     ):
         """
         Apply enhanced formatting with zebra striping
@@ -1258,6 +1270,8 @@ class Action:
         - Sequence: Center aligned
         - Zebra striping: alternating row colors
         - Supports full cell Markdown bold (**text**) and italic (*text*)
+        - row_height: Fixed row height in points. 0 = auto-adjust based on content.
+        - column_width: Fixed column width in characters. 0 = auto-adjust based on content.
         """
         try:
             # Extract format from formats dict
@@ -1380,66 +1394,81 @@ class Action:
                     else:
                         worksheet.write(row_idx + 1, col_idx, value, current_format)
 
-            # 4. Auto-adjust column width
-            for col_idx, column in enumerate(headers):
-                col_letter = self.get_column_letter(col_idx)
+            # 4. Column width
+            if column_width > 0:
+                # Fixed column width mode
+                for col_idx in range(len(headers)):
+                    col_letter = self.get_column_letter(col_idx)
+                    worksheet.set_column(f"{col_letter}:{col_letter}", column_width)
+            else:
+                # Auto-adjust column width based on content
+                for col_idx, column in enumerate(headers):
+                    col_letter = self.get_column_letter(col_idx)
 
-                # Calculate header width
-                header_width = self.calculate_text_width(str(column))
+                    # Calculate header width
+                    header_width = self.calculate_text_width(str(column))
 
-                # Calculate max data width
-                max_data_width = 0
-                if not df.empty and col_idx < len(df.columns):
-                    for value in df.iloc[:, col_idx]:
-                        value_width = self.calculate_text_width(str(value))
-                        max_data_width = max(max_data_width, value_width)
+                    # Calculate max data width
+                    max_data_width = 0
+                    if not df.empty and col_idx < len(df.columns):
+                        for value in df.iloc[:, col_idx]:
+                            value_width = self.calculate_text_width(str(value))
+                            max_data_width = max(max_data_width, value_width)
 
-                # Base width
-                base_width = max(header_width, max_data_width)
+                    # Base width
+                    base_width = max(header_width, max_data_width)
 
-                # Adjust width based on type
-                content_type = column_types.get(col_idx, "text")
-                if content_type == "sequence":
-                    optimal_width = max(8, min(15, base_width + 2))
-                elif content_type == "number":
-                    optimal_width = max(12, min(25, base_width + 3))
-                elif content_type == "date":
-                    optimal_width = max(15, min(20, base_width + 2))
-                else:
-                    if base_width <= 10:
-                        optimal_width = base_width + 3
-                    elif base_width <= 20:
-                        optimal_width = base_width + 4
+                    # Adjust width based on type
+                    content_type = column_types.get(col_idx, "text")
+                    if content_type == "sequence":
+                        optimal_width = max(8, min(15, base_width + 2))
+                    elif content_type == "number":
+                        optimal_width = max(12, min(25, base_width + 3))
+                    elif content_type == "date":
+                        optimal_width = max(15, min(20, base_width + 2))
                     else:
-                        optimal_width = base_width + 5
-                    optimal_width = max(10, min(60, optimal_width))
+                        if base_width <= 10:
+                            optimal_width = base_width + 3
+                        elif base_width <= 20:
+                            optimal_width = base_width + 4
+                        else:
+                            optimal_width = base_width + 5
+                        optimal_width = max(10, min(60, optimal_width))
 
-                worksheet.set_column(f"{col_letter}:{col_letter}", optimal_width)
+                    worksheet.set_column(f"{col_letter}:{col_letter}", optimal_width)
 
-            # 5. Auto-adjust row height
+            # 5. Row height
             worksheet.set_row(0, 35)
 
-            for row_idx, row in df.iterrows():
-                max_row_height = 20
+            if row_height > 0:
+                # Fixed row height mode
+                for row_idx in range(len(df)):
+                    worksheet.set_row(row_idx + 1, row_height)
+            else:
+                # Auto-adjust row height based on content
+                for row_idx, row in df.iterrows():
+                    max_row_height = 20
 
-                for col_idx, value in enumerate(row):
-                    if col_idx < len(headers):
-                        col_width = min(
-                            60,
-                            max(
-                                10, self.calculate_text_width(str(headers[col_idx])) + 5
-                            ),
-                        )
-                    else:
-                        col_width = 15
+                    for col_idx, value in enumerate(row):
+                        if col_idx < len(headers):
+                            col_width = min(
+                                60,
+                                max(
+                                    10,
+                                    self.calculate_text_width(str(headers[col_idx]))
+                                    + 5,
+                                ),
+                            )
+                        else:
+                            col_width = 15
 
-                    cell_lines = self.calculate_text_height(str(value), col_width)
-                    cell_height = cell_lines * 20
+                        cell_lines = self.calculate_text_height(str(value), col_width)
+                        cell_height = cell_lines * 20
 
-                    max_row_height = max(max_row_height, cell_height)
+                        max_row_height = max(max_row_height, cell_height)
 
-                final_height = min(120, max_row_height)
-                worksheet.set_row(row_idx + 1, final_height)
+                    final_height = min(120, max_row_height)
+                    worksheet.set_row(row_idx + 1, final_height)
 
             print(f"Successfully applied enhanced formatting")
 

@@ -1,6 +1,6 @@
 # 📊 Export to Excel
 
-| By [Fu-Jie](https://github.com/Fu-Jie) · v0.3.8 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| By [Fu-Jie](https://github.com/Fu-Jie) · v0.3.9 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,9 +21,10 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 > [!IMPORTANT]
 > If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
 
-## 🔥 What's New in v0.3.8
+## 🔥 What's New in v0.3.9
 
-- ⚡ **Open WebUI 0.9.x Compatibility**: Added runtime version detection and async DB call adapters for `Users.get_user_by_id` and `Chats.get_chat_by_id` — ensuring seamless compatibility with Open WebUI 0.9.x.
+- 📏 **Configurable Row Height**: Added `ROW_HEIGHT` valve to control data row height. Set to `0` (default) for auto-adjust, or a fixed value (e.g., `20`) for compact single-line rows.
+- 📐 **Configurable Column Width**: Added `COLUMN_WIDTH` valve to control column width. Set to `0` (default) for auto-adjust, or a fixed value (e.g., `15`) for uniform compact columns.
 
 ## ✨ Core Features
 
@@ -46,6 +47,8 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 | `MODEL_ID` | `""` | Model ID for AI title generation. Empty uses current chat model. |
 | `SHOW_STATUS` | `True` | Show operation status updates. |
 | `SHOW_DEBUG_LOG` | `False` | Print debug logs in the browser console (F12). |
+| `ROW_HEIGHT` | `0` | Fixed row height in points. `0` = auto-adjust based on content. Set e.g. `20` for compact rows. |
+| `COLUMN_WIDTH` | `0` | Fixed column width in characters. `0` = auto-adjust based on content. Set e.g. `15` for uniform compact columns. |
 
 ## ⭐ Support
 
