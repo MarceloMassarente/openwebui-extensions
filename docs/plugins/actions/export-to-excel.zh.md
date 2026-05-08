@@ -1,13 +1,14 @@
 # Export to Excel（导出到 Excel）
 
 <span class="category-badge action">Action</span>
-<span class="version-badge">v0.3.8</span>
+<span class="version-badge">v0.3.9</span>
 
 将聊天记录导出为 Excel 表格，便于分析、归档和分享。
 
 
-### v0.3.8 更新内容
-- ⚡ **Open WebUI 0.9.x 兼容性**：新增运行时版本检测和异步数据库调用适配器，针对 `Users.get_user_by_id` 和 `Chats.get_chat_by_id` 进行适配 — 确保与 Open WebUI 0.9.x 无缝兼容。
+### v0.3.9 更新内容
+- 📏 **可配置行高**：新增 `ROW_HEIGHT` 配置项，可控制数据行高度。设为 `0`（默认）根据内容自动调整，或设置固定值（如 `20`）以获得紧凑的单行显示。
+- 📐 **可配置列宽**：新增 `COLUMN_WIDTH` 配置项，可控制列宽。设为 `0`（默认）根据内容自动调整，或设置固定值（如 `15`）以获得统一的紧凑列宽。
 
 ---
 
@@ -34,6 +35,8 @@ Export to Excel 插件可以把你的聊天记录下载为 Excel 文件，适用
   - `chat_title`：使用对话标题（默认）。
   - `ai_generated`：使用 AI 根据内容生成简洁标题。
   - `markdown_title`：提取 Markdown 内容中的第一个 H1/H2 标题。
+- **列宽 (COLUMN_WIDTH)**：所有数据列固定列宽（字符数）。`0`（默认）根据内容自动调整，设置如 `15` 可获得统一的紧凑列宽。
+- **行高 (ROW_HEIGHT)**：数据行固定行高（点数）。`0`（默认）根据内容自动调整，设置如 `20` 可获得紧凑的单行显示。
 
 ---
 

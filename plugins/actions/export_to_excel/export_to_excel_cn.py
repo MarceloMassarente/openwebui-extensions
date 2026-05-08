@@ -3,7 +3,7 @@ title: 导出为 Excel
 author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
-version: 0.3.7
+version: 0.3.9
 icon_url: data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xNSAySDZhMiAyIDAgMCAwLTIgMnYxNmEyIDIgMCAwIDAgMiAyaDEyYTIgMiAwIDAgMCAyLTJWN1oiLz48cGF0aCBkPSJNMTQgMnY0YTIgMiAwIDAgMCAyIDJoNCIvPjxwYXRoIGQ9Ik04IDEzaDIiLz48cGF0aCBkPSJNMTQgMTNoMiIvPjxwYXRoIGQ9Ik04IDE3aDIiLz48cGF0aCBkPSJNMTQgMTdoMiIvPjwvc3ZnPg==
 description: 从聊天消息中提取表格并导出为 Excel (.xlsx) 文件，支持智能格式化。
 """
@@ -69,6 +69,14 @@ class Action:
         SHOW_DEBUG_LOG: bool = Field(
             default=False,
             description="是否在浏览器控制台打印调试日志。",
+        )
+        ROW_HEIGHT: int = Field(
+            default=0,
+            description="数据行固定行高（点数）。0 = 根据内容自动调整。例如设置 20 为紧凑的单行显示。",
+        )
+        COLUMN_WIDTH: int = Field(
+            default=0,
+            description="所有数据列固定列宽（字符数）。0 = 根据内容自动调整。例如设置 15 为统一紧凑列宽。",
         )
 
     def __init__(self):
@@ -1383,72 +1391,88 @@ class Action:
                     else:
                         worksheet.write(row_idx + 1, col_idx, value, current_format)
 
-            # 4. 自动调整列宽
-            for col_idx, column in enumerate(headers):
-                col_letter = self.get_column_letter(col_idx)
+            # 4. 列宽设置
+            if self.valves.COLUMN_WIDTH > 0:
+                # 固定列宽模式
+                for col_idx in range(len(headers)):
+                    col_letter = self.get_column_letter(col_idx)
+                    worksheet.set_column(
+                        f"{col_letter}:{col_letter}", self.valves.COLUMN_WIDTH
+                    )
+            else:
+                # 根据内容自动调整列宽
+                for col_idx, column in enumerate(headers):
+                    col_letter = self.get_column_letter(col_idx)
 
-                # 计算表头宽度
-                header_width = self.calculate_text_width(str(column))
+                    # 计算表头宽度
+                    header_width = self.calculate_text_width(str(column))
 
-                # 计算数据列的最大宽度
-                max_data_width = 0
-                if not df.empty and col_idx < len(df.columns):
-                    for value in df.iloc[:, col_idx]:
-                        value_width = self.calculate_text_width(str(value))
-                        max_data_width = max(max_data_width, value_width)
+                    # 计算数据列的最大宽度
+                    max_data_width = 0
+                    if not df.empty and col_idx < len(df.columns):
+                        for value in df.iloc[:, col_idx]:
+                            value_width = self.calculate_text_width(str(value))
+                            max_data_width = max(max_data_width, value_width)
 
-                # 基础宽度：取表头和数据的最大宽度
-                base_width = max(header_width, max_data_width)
+                    # 基础宽度：取表头和数据的最大宽度
+                    base_width = max(header_width, max_data_width)
 
-                # 根据内容类型调整宽度
-                content_type = column_types.get(col_idx, "text")
-                if content_type == "sequence":
-                    # 序号列通常比较窄
-                    optimal_width = max(8, min(15, base_width + 2))
-                elif content_type == "number":
-                    # 数值列需要额外空间显示数字
-                    optimal_width = max(12, min(25, base_width + 3))
-                elif content_type == "date":
-                    # 日期列需要固定宽度
-                    optimal_width = max(15, min(20, base_width + 2))
-                else:
-                    # 文本列根据内容调整
-                    if base_width <= 10:
-                        optimal_width = base_width + 3
-                    elif base_width <= 20:
-                        optimal_width = base_width + 4
+                    # 根据内容类型调整宽度
+                    content_type = column_types.get(col_idx, "text")
+                    if content_type == "sequence":
+                        # 序号列通常比较窄
+                        optimal_width = max(8, min(15, base_width + 2))
+                    elif content_type == "number":
+                        # 数值列需要额外空间显示数字
+                        optimal_width = max(12, min(25, base_width + 3))
+                    elif content_type == "date":
+                        # 日期列需要固定宽度
+                        optimal_width = max(15, min(20, base_width + 2))
                     else:
-                        optimal_width = base_width + 5
-                    optimal_width = max(10, min(60, optimal_width))
+                        # 文本列根据内容调整
+                        if base_width <= 10:
+                            optimal_width = base_width + 3
+                        elif base_width <= 20:
+                            optimal_width = base_width + 4
+                        else:
+                            optimal_width = base_width + 5
+                        optimal_width = max(10, min(60, optimal_width))
 
-                worksheet.set_column(f"{col_letter}:{col_letter}", optimal_width)
+                    worksheet.set_column(f"{col_letter}:{col_letter}", optimal_width)
 
-            # 5. 自动调整行高
+            # 5. 行高设置
             # 设置表头行高为35点
             worksheet.set_row(0, 35)
 
-            # 设置数据行行高
-            for row_idx, row in df.iterrows():
-                max_row_height = 20  # 中国表格规范建议的最小行高
+            if self.valves.ROW_HEIGHT > 0:
+                # 固定行高模式
+                for row_idx in range(len(df)):
+                    worksheet.set_row(row_idx + 1, self.valves.ROW_HEIGHT)
+            else:
+                # 根据内容自动调整行高
+                for row_idx, row in df.iterrows():
+                    max_row_height = 20  # 中国表格规范建议的最小行高
 
-                for col_idx, value in enumerate(row):
-                    if col_idx < len(headers):
-                        col_width = min(
-                            60,
-                            max(
-                                10, self.calculate_text_width(str(headers[col_idx])) + 5
-                            ),
-                        )
-                    else:
-                        col_width = 15
+                    for col_idx, value in enumerate(row):
+                        if col_idx < len(headers):
+                            col_width = min(
+                                60,
+                                max(
+                                    10,
+                                    self.calculate_text_width(str(headers[col_idx]))
+                                    + 5,
+                                ),
+                            )
+                        else:
+                            col_width = 15
 
-                    cell_lines = self.calculate_text_height(str(value), col_width)
-                    cell_height = cell_lines * 20  # 每行20点高度，符合中国规范
+                        cell_lines = self.calculate_text_height(str(value), col_width)
+                        cell_height = cell_lines * 20  # 每行20点高度，符合中国规范
 
-                    max_row_height = max(max_row_height, cell_height)
+                        max_row_height = max(max_row_height, cell_height)
 
-                final_height = min(120, max_row_height)
-                worksheet.set_row(row_idx + 1, final_height)
+                    final_height = min(120, max_row_height)
+                    worksheet.set_row(row_idx + 1, final_height)
 
             print(f"Successfully applied Chinese standard formatting")
 

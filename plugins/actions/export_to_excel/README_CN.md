@@ -1,6 +1,6 @@
 # 📊 导出为 Excel
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.3.8 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v0.3.9 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,9 +21,10 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## 🔥 v0.3.8 更新内容
+## 🔥 v0.3.9 更新内容
 
-- ⚡ **Open WebUI 0.9.x 兼容性**：新增运行时版本检测和异步数据库调用适配器，针对 `Users.get_user_by_id` 和 `Chats.get_chat_by_id` 进行适配 — 确保与 Open WebUI 0.9.x 无缝兼容。
+- 📏 **可配置行高**：新增 `ROW_HEIGHT` 配置项，可控制数据行高度。设为 `0`（默认）根据内容自动调整，或设置固定值（如 `20`）以获得紧凑的单行显示。
+- 📐 **可配置列宽**：新增 `COLUMN_WIDTH` 配置项，可控制列宽。设为 `0`（默认）根据内容自动调整，或设置固定值（如 `15`）以获得统一的紧凑列宽。
 
 ## ✨ 核心特性
 
@@ -46,6 +47,8 @@
 | `MODEL_ID` | `""` | AI 标题生成的模型 ID。为空则使用当前对话模型。 |
 | `SHOW_STATUS` | `True` | 是否显示操作状态更新。 |
 | `SHOW_DEBUG_LOG` | `False` | 是否在浏览器控制台输出调试日志 (F12)。 |
+| `ROW_HEIGHT` | `0` | 数据行固定行高（点数）。`0` = 根据内容自动调整。例如设置 `20` 为紧凑行高。 |
+| `COLUMN_WIDTH` | `0` | 所有数据列固定列宽（字符数）。`0` = 根据内容自动调整。例如设置 `15` 为统一紧凑列宽。 |
 
 ## ⭐ 支持
 
