@@ -1,6 +1,6 @@
 # 📖 精读
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.0.0 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.0.1 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,13 +21,11 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## 🔥 v1.0.0 更新内容
+## 🔥 v1.0.1 更新内容
 
-- ✨ **思维链结构**: 从表面理解一步步深入到战略行动。
-- 🔍 **阶段 01: 全景 (The Context)**: 提供情境与背景的高层级全景视图。
-- 🧠 **阶段 02: 脉络 (The Logic)**: 解构底层推理逻辑与思维模型。
-- 💎 **阶段 03: 洞察 (The Insight)**: 提取非显性价值与隐藏的深层含义。
-- 🚀 **阶段 04: 路径 (The Path)**: 定义具体的、按优先级排列的战略方向。
+- ✨ **统一内核**: 将中英文版本合并为单一且支持 12+ 种语言动态适配的 `deep_dive.py`。
+- ⚡ **异步优化**: 增加了非阻塞 `asyncio` 数据库访问支持，提升了系统并发性能。
+- 🌐 **精准识别**: 增加了带超时保护的前端 `localStorage` 获取机制，可完美探测用户语言偏好。
 - 🎨 **高端 UI**: 现代化的过程导向设计，带有"思维导火索"时间轴。
 - 🌗 **主题自适应**: 自动适配 OpenWebUI 的深色/浅色主题。
 
@@ -100,8 +98,7 @@
 
 ## 📂 文件说明
 
-- `deep_dive.py` - 英文版 (Deep Dive)
-- `deep_dive_cn.py` - 中文版 (精读)
+- `deep_dive.py` - 单一国际化核心文件 (支持 12+ 种语言动态适配)
 
 ## 故障排除 (Troubleshooting) ❓
 

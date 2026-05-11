@@ -73,7 +73,7 @@ Actions are interactive plugins that:
 
     A comprehensive thinking lens that dives deep into any content - Context → Logic → Insight → Path. Supports theme auto-adaptation.
 
-    **Version:** 1.0.0
+    **Version:** 1.0.1
 
     [:octicons-arrow-right-24: Documentation](deep-dive.md)
 
