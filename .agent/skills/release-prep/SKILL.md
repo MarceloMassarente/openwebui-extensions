@@ -80,7 +80,7 @@ Create two versioned release notes files:
 #### Required Sections
 
 Each file must include:
-1. **Title**: `# v{version} Release Notes` (EN) / `# v{version} 版本发布说明` (CN)
+1. **Title**: `# {Plugin Name} v{version} Release Notes` (EN) / `# {Plugin Name} v{version} 版本发布说明` (CN)
 2. **Overview**: One paragraph summarizing this release
 3. **New Features** / **新功能**: Bulleted list of features
 4. **Bug Fixes** / **问题修复**: Bulleted list of fixes

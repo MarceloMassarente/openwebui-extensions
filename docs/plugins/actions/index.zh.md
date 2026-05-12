@@ -33,7 +33,7 @@ Actions 是交互式插件，能够：
 
     使用 AntV 可视化引擎，将文本转成专业的信息图。
 
-    **版本：** 1.6.0
+    **版本：** 1.6.2
 
     [:octicons-arrow-right-24: 查看文档](smart-infographic.md)
 
@@ -73,7 +73,7 @@ Actions 是交互式插件，能够：
 
     全方位的思维透镜 —— 全景 → 脉络 → 洞察 → 路径。支持主题自适应。
 
-    **版本：** 1.0.1
+    **版本：** 1.1.0
 
     [:octicons-arrow-right-24: 查看文档](deep-dive.zh.md)
 

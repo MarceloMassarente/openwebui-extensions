@@ -1,6 +1,6 @@
 # 🌊 Deep Dive
 
-| By [Fu-Jie](https://github.com/Fu-Jie) · v1.0.1 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| By [Fu-Jie](https://github.com/Fu-Jie) · v1.1.0 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,13 +21,11 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 > [!IMPORTANT]
 > If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
 
-## 🔥 What's New in v1.0.1
+## 🔥 What's New in v1.1.0
 
-- ✨ **Unified Core**: Merged `deep_dive_cn.py` into a single, fully internationalized `deep_dive.py` supporting 12+ languages.
-- ⚡ **Async DB Access**: Added non-blocking `asyncio` implementation for database access to improve concurrency.
-- 🌐 **Robust Language Detection**: Added frontend `localStorage` retrieval with timeout protection for perfect i18n detection.
-- 🎨 **Premium UI**: Modern, process-oriented design with a "Thinking Line" timeline.
-- 🌗 **Theme Adaptive**: Automatically adapts to OpenWebUI's light/dark theme.
+- 🛡️ **Robust JSON Extraction**: Added a high-fault-tolerance `_extract_json` method that uses greedy brace matching and Markdown code block detection.
+- 🧹 **Auto-Cleaning**: Automatically corrects common LLM JSON syntax errors (like trailing commas) to ensure parsing success.
+- 🏗️ **Architecture Refactoring**: Decoupled parsing logic from the main processing flow for better maintainability and error handling.
 
 ## ✨ Key Features
 

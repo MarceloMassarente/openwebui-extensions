@@ -1,6 +1,6 @@
 # 📖 精读
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.0.1 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 由 [Fu-Jie](https://github.com/Fu-Jie) 开发 · v1.1.0 | [⭐ Star 这个项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,13 +21,11 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## 🔥 v1.0.1 更新内容
+## 🔥 v1.1.0 更新内容
 
-- ✨ **统一内核**: 将中英文版本合并为单一且支持 12+ 种语言动态适配的 `deep_dive.py`。
-- ⚡ **异步优化**: 增加了非阻塞 `asyncio` 数据库访问支持，提升了系统并发性能。
-- 🌐 **精准识别**: 增加了带超时保护的前端 `localStorage` 获取机制，可完美探测用户语言偏好。
-- 🎨 **高端 UI**: 现代化的过程导向设计，带有"思维导火索"时间轴。
-- 🌗 **主题自适应**: 自动适配 OpenWebUI 的深色/浅色主题。
+- 🛡️ **鲁棒 JSON 提取**：新增了具备高容错性的 `_extract_json` 方法，支持贪心大括号匹配与 Markdown 代码块精准识别。
+- 🧹 **自动清洗**：增加了对常见 JSON 语法错误（如末尾多余逗号）的自动修复机制，确保解析成功率。
+- 🏗️ **架构重构**：将解析逻辑从主处理流程中解耦，提升了代码的可维护性与异常处理能力。
 
 ## ✨ 核心特性
 

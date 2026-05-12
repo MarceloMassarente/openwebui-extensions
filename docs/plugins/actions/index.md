@@ -33,7 +33,7 @@ Actions are interactive plugins that:
 
     Transform text into professional infographics using AntV visualization engine with various templates.
 
-    **Version:** 1.6.0
+    **Version:** 1.6.2
 
     [:octicons-arrow-right-24: Documentation](smart-infographic.md)
 
@@ -73,7 +73,7 @@ Actions are interactive plugins that:
 
     A comprehensive thinking lens that dives deep into any content - Context → Logic → Insight → Path. Supports theme auto-adaptation.
 
-    **Version:** 1.0.1
+    **Version:** 1.1.0
 
     [:octicons-arrow-right-24: Documentation](deep-dive.md)
 
