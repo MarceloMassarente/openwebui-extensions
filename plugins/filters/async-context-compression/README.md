@@ -1,6 +1,6 @@
 # Async Context Compression Filter
 
-| By [Fu-Jie](https://github.com/Fu-Jie) · v1.6.0 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| By [Fu-Jie](https://github.com/Fu-Jie) · v1.6.2 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,11 +21,12 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 > [!IMPORTANT]
 > If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
 
-## What's new in 1.6.0
+## What's new in 1.6.2
 
-- **Fixed `keep_first` Logic**: Re-defined `keep_first` to protect the first N **non-system** messages plus all interleaved system messages. This ensures initial context (e.g., identity, task instructions) is preserved correctly.
-- **Absolute System Message Protection**: System messages are now strictly excluded from compression. Any system message encountered in the history (even late-injected ones) is preserved as an original message in the final context. This ensures dynamic instructions (like live time/location from other plugins) remain accurate and never summarized.
-- **Improved Context Assembly**: Summaries now only target User and Assistant dialogue, ensuring that system instructions injected by other plugins are never "eaten" by the summarizer.
+- **Fixed Repeated Compression** (Issue #68): Outlet no longer re-triggers compression on every message after initial compression. Token threshold check now simulates actual sent-context (head + summary + tail) instead of counting full raw history.
+- **Hysteresis Guard**: Added a guard to prevent wasteful LLM summary calls when only a few new messages have accumulated since the last compression boundary.
+- **More Accurate Token Status**: Tiktoken precise calculation now triggers at 60% of threshold (was 85%) for more accurate context usage display.
+- **Enhanced Debug Logging**: Improved logging for threshold check decisions, showing estimated vs. precise token counts and cutoff values.
 
 ## What's new in 1.5.0
 

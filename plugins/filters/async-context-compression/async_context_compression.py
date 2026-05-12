@@ -5,7 +5,7 @@ author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 description: Reduces token consumption in long conversations while maintaining coherence through intelligent summarization and message compression.
-version: 1.6.1
+version: 1.6.2
 openwebui_id: b1655bc8-6de9-4cad-8cb5-a6f7829a02ce
 license: MIT
 
@@ -3934,31 +3934,80 @@ class Filter:
                 event_call=__event_call__,
             )
 
+            # --- Determine which messages to count for threshold check ---
+            # When a summary marker exists, simulate the "sent context" that inlet
+            # would assemble (head + summary + tail) rather than counting the full
+            # raw history.  The full history always exceeds the threshold once
+            # compression has fired, causing redundant re-compression on every
+            # subsequent message (see GitHub issue #68).
+            summary_state = self._get_summary_view_state(messages)
+            summary_index = summary_state["summary_index"]
+            base_progress = summary_state["base_progress"] or 0
+
+            if summary_index is not None:
+                # Simulate inlet's sent-context assembly:
+                # [head (keep_first)] + [preserved system msgs in gap] + [summary_msg] + [tail]
+                effective_keep_first = self._get_effective_keep_first(messages)
+                head_messages_for_check = (
+                    messages[:effective_keep_first] if effective_keep_first > 0 else []
+                )
+                summary_msg_for_check = messages[summary_index]
+                # In the outlet's reinjected view, tail is everything after summary_index
+                tail_messages_for_check = messages[summary_index + 1:]
+                # Preserved system messages in the gap (between keep_first and summary)
+                preserved_system_for_check = [
+                    m for m in messages[effective_keep_first:summary_index]
+                    if isinstance(m, dict) and m.get("role") == "system"
+                ]
+
+                threshold_check_messages = (
+                    head_messages_for_check
+                    + preserved_system_for_check
+                    + [summary_msg_for_check]
+                    + tail_messages_for_check
+                )
+                await self._log(
+                    f"[🔍 Background Calculation] Summary marker found at index {summary_index}, "
+                    f"simulating sent-context for threshold check: "
+                    f"head={len(head_messages_for_check)} + "
+                    f"preserved_sys={len(preserved_system_for_check)} + "
+                    f"summary(1) + tail={len(tail_messages_for_check)} "
+                    f"= {len(threshold_check_messages)} msgs",
+                    event_call=__event_call__,
+                )
+            else:
+                threshold_check_messages = messages
+
             # --- Fast Estimation Check ---
-            estimated_tokens = self._estimate_messages_tokens(messages)
+            estimated_tokens = self._estimate_messages_tokens(threshold_check_messages)
+            precise_threshold = int(compression_threshold_tokens * 0.60)
 
             # For triggering summary generation, we need to be more precise if we are in the grey zone
-            # Margin is 15% (skip tiktoken if estimated is < 85% of threshold)
+            # Margin is 40% (skip tiktoken if estimated is < 60% of compression threshold)
             # Note: We still use tiktoken if we exceed threshold, because we want an accurate usage status report
-            if estimated_tokens < compression_threshold_tokens * 0.85:
+            if estimated_tokens < precise_threshold:
                 current_tokens = estimated_tokens
                 await self._log(
-                    "[🔍 Background Calculation] Full-history estimate below threshold\n"
-                    f"source_history_tokens_est={current_tokens} | compression_threshold_tokens={compression_threshold_tokens} | precise_count_skipped=true",
+                    "[🔍 Background Calculation] Estimate below precise-check cutoff, skipping tiktoken\n"
+                    f"estimated_tokens={estimated_tokens} | precise_cutoff={precise_threshold} "
+                    f"(60% of {compression_threshold_tokens}) | precise_count_skipped=true",
                     event_call=__event_call__,
                 )
             else:
                 # Calculate Token count precisely in a background thread
                 current_tokens = await asyncio.to_thread(
-                    self._calculate_messages_tokens, messages
+                    self._calculate_messages_tokens, threshold_check_messages
                 )
                 await self._log(
-                    "[🔍 Background Calculation] Full-history precise token count\n"
-                    f"source_history_tokens={current_tokens}",
+                    "[🔍 Background Calculation] Estimate reached precise-check cutoff, running tiktoken\n"
+                    f"estimated_tokens={estimated_tokens} | precise_cutoff={precise_threshold} "
+                    f"(60% of {compression_threshold_tokens}) | precise_tokens={current_tokens}",
                     event_call=__event_call__,
                 )
 
             # Send status notification (Context Usage format)
+            # current_tokens already represents the simulated "sent context" when a
+            # summary marker is present, so use it directly for status display.
             if __event_emitter__:
                 max_context_tokens = thresholds.get(
                     "max_context_tokens", self.valves.max_context_tokens
@@ -3991,6 +4040,28 @@ class Filter:
 
             # Check if compression is needed
             if current_tokens >= compression_threshold_tokens:
+                # --- Hysteresis guard ---
+                # When a summary already exists, avoid re-compressing if only a few
+                # new messages accumulated.  This prevents wasteful LLM calls that
+                # compress only 1-2 messages per turn when compression_threshold is
+                # close to max_context (see GitHub issue #68).
+                # Note: if the sent-context exceeds max_context_tokens, the INLET
+                # handles it by dropping the oldest atomic groups from the tail —
+                # the outlet does not need to force compression for that case.
+                if summary_index is not None:
+                    compressible_gain = max(
+                        0, (target_compressed_count or 0) - base_progress
+                    )
+                    min_compression_gain = max(1, self.valves.keep_last)
+                    if compressible_gain < min_compression_gain:
+                        await self._log(
+                            f"[🔍 Background Calculation] ⏭️ Hysteresis guard: "
+                            f"only {compressible_gain} new messages beyond last boundary "
+                            f"(need >= {min_compression_gain}=keep_last), skipping re-compression",
+                            event_call=__event_call__,
+                        )
+                        return
+
                 await self._log(
                     "[🔍 Background Calculation] ⚡ Full-history threshold triggered\n"
                     f"source_history_tokens={current_tokens} | compression_threshold_tokens={compression_threshold_tokens}",

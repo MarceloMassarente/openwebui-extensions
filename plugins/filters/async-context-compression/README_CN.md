@@ -1,6 +1,6 @@
 # 异步上下文压缩过滤器
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.6.0 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.6.2 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -23,12 +23,12 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
-## 1.6.0 版本更新
+## 1.6.2 版本更新
 
-- **修正 `keep_first` 逻辑**：重新定义了 `keep_first` 的功能，现在它负责保护前 N 条**非系统消息**（以及它们之前的所有系统提示词）。这确保了初始对话背景（如身份设定、任务说明）能被正确保留。
-- **系统消息绝对保护**：系统消息现在被严格排除在压缩范围之外。历史记录中遇到的任何系统消息（甚至是后期注入的消息）都会作为原始消息保留在最终上下文中。
-- **改进的上下文组装**：摘要现在仅针对用户和助手的对话，确保其他插件注入的系统指令永远不会被摘要器“吃掉”。
-
+- **修复重复压缩问题**（Issue #68）：Outlet 不再在首次压缩后每条消息都重复触发压缩。Token 阈值检查现在模拟实际发送上下文（head + summary + tail），而非计算完整原始历史。
+- **滞后守护**：新增守护机制，防止仅积累少量新消息时浪费 LLM 摘要调用。
+- **更准确的 Token 状态显示**：Tiktoken 精确计算触发点从 85% 降至 60%，上下文用量显示更准确。
+- **增强调试日志**：改进阈值检查决策的日志输出，显示估算值、精确值和触发阈值。
 ## 1.5.0 版本更新
 
 - **外部聊天引用摘要**: 新增对引用聊天上下文的摘要支持。现在可以复用缓存摘要、直接注入较小引用聊天，或先为较大的引用聊天生成摘要再注入。
