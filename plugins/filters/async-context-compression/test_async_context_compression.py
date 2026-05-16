@@ -129,6 +129,53 @@ class TestAsyncContextCompression(unittest.TestCase):
     def setUp(self):
         self.filter = module.Filter()
 
+    def test_build_summary_prompt_defaults_to_balanced_style(self):
+        prompt = self.filter._build_summary_prompt("latest conversation")
+
+        self.assertIn("Active style: `balanced`", prompt)
+        self.assertIn(
+            "Balance compactness and continuity.",
+            prompt,
+        )
+
+    def test_build_summary_prompt_supports_aggressive_style(self):
+        self.filter.valves.compression_style = "aggressive"
+
+        prompt = self.filter._build_summary_prompt("latest conversation")
+
+        self.assertIn("Active style: `aggressive`", prompt)
+        self.assertIn(
+            "Prioritize minimum token usage.",
+            prompt,
+        )
+        self.assertIn(
+            "Merge similar items aggressively",
+            prompt,
+        )
+
+    def test_build_summary_prompt_supports_faithful_style(self):
+        self.filter.valves.compression_style = "faithful"
+
+        prompt = self.filter._build_summary_prompt("latest conversation")
+
+        self.assertIn("Active style: `faithful`", prompt)
+        self.assertIn(
+            "Prioritize recall over brevity.",
+            prompt,
+        )
+        self.assertIn(
+            "Do not collapse multiple important concrete points into a vague abstraction",
+            prompt,
+        )
+
+    def test_build_summary_prompt_falls_back_to_balanced_for_unknown_style(self):
+        self.filter.valves.compression_style = "verbose"
+
+        prompt = self.filter._build_summary_prompt("latest conversation")
+
+        self.assertIn("Active style: `balanced`", prompt)
+        self.assertNotIn("Active style: `verbose`", prompt)
+
     def test_inlet_logs_tool_trimming_outcome_when_no_oversized_outputs(self):
         self.filter.valves.show_debug_log = True
         self.filter.valves.enable_tool_output_trimming = True
