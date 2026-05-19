@@ -448,6 +448,75 @@ jobs:
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
+      # Detect whether the HEAD commit was a merge of an external contributor's PR.
+      # Sets: pr_number, pr_author, is_external_contributor (true/false),
+      #       pr_previous_commits (whether author has prior merged PRs).
+      - name: Detect contributor PR
+        id: contributor
+        if: github.event_name == 'push'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          python3 << 'PY'
+          import json, os, urllib.request, urllib.error
+
+          token = os.environ["GITHUB_TOKEN"]
+          repo  = os.environ["REPO"]
+          sha   = os.environ["SHA"]
+          owner = os.environ["REPO_OWNER"].lower()
+          out   = os.environ["GITHUB_OUTPUT"]
+
+          def gh(path, accept="application/vnd.github.v3+json"):
+              req = urllib.request.Request(
+                  f"https://api.github.com{path}",
+                  headers={"Authorization": f"token {token}", "Accept": accept},
+              )
+              try:
+                  with urllib.request.urlopen(req) as r:
+                      return json.loads(r.read())
+              except urllib.error.HTTPError as e:
+                  return None
+
+          # 1. Find PR(s) associated with the merge commit
+          pulls = gh(f"/repos/{repo}/commits/{sha}/pulls") or []
+
+          pr_number = ""
+          pr_author = ""
+          is_external = "false"
+
+          if pulls:
+              pr = pulls[0]
+              pr_number = str(pr.get("number", ""))
+              pr_author = (pr.get("user") or {}).get("login", "")
+              # External = author is not the repo owner
+              if pr_author and pr_author.lower() != owner:
+                  is_external = "true"
+                  # Check whether this contributor has previous merged PRs (first-time contributor?)
+                  prev = gh(f"/repos/{repo}/pulls?state=closed&base=main") or []
+                  authored_merged = [
+                      p for p in prev
+                      if (p.get("user") or {}).get("login", "").lower() == pr_author.lower()
+                      and p.get("merged_at")
+                      and str(p.get("number", "")) != pr_number
+                  ]
+                  first_time = "true" if not authored_merged else "false"
+              else:
+                  first_time = "false"
+          else:
+              first_time = "false"
+
+          with open(out, "a") as f:
+              f.write(f"pr_number={pr_number}\n")
+              f.write(f"pr_author={pr_author}\n")
+              f.write(f"is_external={is_external}\n")
+              f.write(f"first_time={first_time}\n")
+
+          print(f"PR #{pr_number} by @{pr_author} | external={is_external} | first_time={first_time}")
+          PY
+
       - name: Generate release notes
         id: notes
         env:
@@ -458,6 +527,12 @@ jobs:
           CHANGED_PLUGIN_VERSION: ${{ needs.check-changes.outputs.changed_plugin_version }}
           DETECTED_CHANGES: ${{ needs.check-changes.outputs.release_notes }}
           DOC_FILES: ${{ needs.check-changes.outputs.changed_doc_files }}
+          CONTRIBUTOR_PR_NUMBER: ${{ steps.contributor.outputs.pr_number }}
+          CONTRIBUTOR_PR_AUTHOR: ${{ steps.contributor.outputs.pr_author }}
+          CONTRIBUTOR_IS_EXTERNAL: ${{ steps.contributor.outputs.is_external }}
+          CONTRIBUTOR_FIRST_TIME: ${{ steps.contributor.outputs.first_time }}
+          PREVIOUS_RELEASE_TAG: ${{ needs.check-changes.outputs.previous_release_tag }}
+          REPO: ${{ github.repository }}
         run: |
           > release_notes.md
 
@@ -491,19 +566,36 @@ jobs:
             echo "$NOTES" >> release_notes.md
             echo "" >> release_notes.md
           fi
-          
-          cat >> release_notes.md << 'EOF'
-          
-          ---
-          
-          📚 [Documentation Portal](https://fu-jie.github.io/openwebui-extensions/)
-          🐛 [Report Issues](https://github.com/Fu-Jie/openwebui-extensions/issues)
-          EOF
+
+          # 4. Contributor attribution — inject when the release was triggered by an external contributor's PR
+          if [ "$CONTRIBUTOR_IS_EXTERNAL" = "true" ] && [ -n "$CONTRIBUTOR_PR_NUMBER" ] && [ -n "$CONTRIBUTOR_PR_AUTHOR" ]; then
+            echo "## New Contributors" >> release_notes.md
+            echo "" >> release_notes.md
+            if [ "$CONTRIBUTOR_FIRST_TIME" = "true" ]; then
+              echo "* @${CONTRIBUTOR_PR_AUTHOR} made their first contribution in #${CONTRIBUTOR_PR_NUMBER} 🎉" >> release_notes.md
+            else
+              echo "* @${CONTRIBUTOR_PR_AUTHOR} contributed in #${CONTRIBUTOR_PR_NUMBER}" >> release_notes.md
+            fi
+            echo "" >> release_notes.md
+          fi
+
+          # 5. Footer links + Full Changelog comparison link
+          PREV="${PREVIOUS_RELEASE_TAG}"
+          CURR="${VERSION}"
+
+          {
+            echo ""
+            echo "---"
+            echo ""
+            echo "📚 [Documentation Portal](https://fu-jie.github.io/openwebui-extensions/)"
+            echo "🐛 [Report Issues](https://github.com/${REPO}/issues)"
+            if [ -n "$PREV" ]; then
+              echo ""
+              echo "**Full Changelog**: https://github.com/${REPO}/compare/${PREV}...${CURR}"
+            fi
+          } >> release_notes.md
 
           echo "=== Final Release Notes ==="
-          cat release_notes.md
-
-          echo "=== Release Notes ==="
           cat release_notes.md
 
       - name: Create Git Tag

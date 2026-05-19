@@ -146,6 +146,69 @@ Confirm the commit hash and list the number of files changed.
 - [ ] `v{version}.md` and `v{version}_CN.md` created or updated
 - [ ] `python3 scripts/check_version_consistency.py` returns no errors
 - [ ] Commit message is English-only Conventional Commits format
+- [ ] **If release originates from a contributor PR**: Contributor attribution section added (see below)
+
+---
+
+## Contributor PR Handling (External Contributor Releases)
+
+When the release was triggered by merging a PR from an **external contributor** (someone other than `Fu-Jie`), additional steps are required to ensure proper attribution in both the release notes and the home README.
+
+### Step A — Update `v{version}.md` Release Notes File
+
+Add a `## New Contributors` section at the **bottom** of the release notes file, before the footer links:
+
+```markdown
+## New Contributors
+
+- @{github_username} made their first contribution in #{pr_number} 🎉
+```
+
+If the contributor has prior merged PRs (not a first-timer), use:
+```markdown
+## New Contributors
+
+- @{github_username} contributed in #{pr_number}
+```
+
+The workflow (`release.yml`) will detect and inject this automatically when triggered by push. However, if creating release notes manually (e.g., `workflow_dispatch`), this section must be added manually.
+
+### Step B — Update Home README Contributors Table
+
+**Before committing**, verify that the contributor appears in both:
+1. **`README.md`** — `<!-- ALL-CONTRIBUTORS-LIST:START -->` table
+2. **`README_CN.md`** — corresponding `贡献者 ✨` table
+3. **`.all-contributorsrc`** — contributors array
+
+If the contributor is missing, add them following this template (README.md):
+```html
+<td align="center" valign="top" width="14.28%">
+  <a href="https://github.com/{login}">
+    <img src="https://avatars.githubusercontent.com/u/{uid}?v=4?s=100" width="100px;" alt="{login}"/>
+    <br /><sub><b>{display_name}</b></sub>
+  </a>
+  <br />
+  <a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author={login}" title="Code">💻</a>
+</td>
+```
+
+Update the badge count in `README.md` line 3:
+```
+[![All Contributors](https://img.shields.io/badge/all_contributors-N-orange.svg?style=flat-square)](#contributors-)
+```
+
+Also add the contributor to `.all-contributorsrc`:
+```json
+{
+  "login": "{login}",
+  "name": "{display_name}",
+  "avatar_url": "https://avatars.githubusercontent.com/u/{uid}?v=4",
+  "profile": "https://github.com/{login}",
+  "contributions": ["code"]
+}
+```
+
+> ⚠️ **Root cause of past incidents**: When adding a contributor to an already-patched README, always count existing entries first and set the badge to `existing + 1`. Never assume the badge number is accurate; verify by counting `<td align="center"` occurrences.
 
 ---
 
@@ -155,3 +218,4 @@ Confirm the commit hash and list the number of files changed.
 - ❌ Do NOT push or create PR in this skill — use `pr-submitter`
 - ❌ Do NOT use today's date in commit messages; only in badge URLs
 - ❌ Do NOT leave stale What's New content from prior versions
+- ❌ Do NOT assume the current `all_contributors` badge count is correct — always re-count `<td>` entries before incrementing
