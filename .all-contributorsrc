@@ -54,6 +54,25 @@
       "contributions": [
         "ideas"
       ]
+    },
+    {
+      "login": "dvystrcil",
+      "name": "dvystrcil",
+      "avatar_url": "https://avatars.githubusercontent.com/u/72849269?v=4",
+      "profile": "https://github.com/dvystrcil",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "silenceroom",
+      "name": "Colin Chen",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1207878?v=4",
+      "profile": "https://github.com/silenceroom",
+      "contributions": [
+        "bug",
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,
