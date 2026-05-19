@@ -1,6 +1,6 @@
 # OpenWebUI Extensions
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-6-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 English | [中文](./README_CN.md)
@@ -217,6 +217,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/i-iooi-i"><img src="https://avatars.githubusercontent.com/u/1827701?v=4?s=100" width="100px;" alt="ZOLO"/><br /><sub><b>ZOLO</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/issues?q=author%3Ai-iooi-i" title="Bug reports">🐛</a> <a href="#ideas-i-iooi-i" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://perso.crans.org/grande/"><img src="https://avatars.githubusercontent.com/u/469017?v=4?s=100" width="100px;" alt="Johan Grande"/><br /><sub><b>Johan Grande</b></sub></a><br /><a href="#ideas-nahoj" title="Ideas, Planning, & Feedback">🤔</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/abaroni"><img src="https://avatars.githubusercontent.com/u/21365486?v=4?s=100" width="100px;" alt="Alessandro Baroni"/><br /><sub><b>Alessandro Baroni</b></sub></a><br /><a href="#ideas-abaroni" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/lionelvoser"><img src="https://avatars.githubusercontent.com/u/246103490?v=4?s=100" width="100px;" alt="lionelvoser"/><br /><sub><b>lionelvoser</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=lionelvoser" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>

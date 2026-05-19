@@ -196,3 +196,30 @@ Open WebUI 的前端增强扩展：
 4. 粘贴内容并保存。
 
 [贡献指南](./CONTRIBUTING_CN.md) | [更新日志](./CHANGELOG.md)
+
+## 贡献者 ✨
+
+感谢这些出色的贡献者（[emoji 说明](https://allcontributors.org/docs/en/emoji-key)）：
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/rbb-dev"><img src="https://avatars.githubusercontent.com/u/37469229?v=4?s=100" width="100px;" alt="rbb-dev"/><br /><sub><b>rbb-dev</b></sub></a><br /><a href="#ideas-rbb-dev" title="想法、规划和反馈">🤔</a> <a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=rbb-dev" title="代码">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://trade.xyz/?ref=BZ1RJRXWO"><img src="https://avatars.githubusercontent.com/u/7317522?v=4?s=100" width="100px;" alt="Raxxoor"/><br /><sub><b>Raxxoor</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/issues?q=author%3Adhaern" title="问题反馈">🐛</a> <a href="#ideas-dhaern" title="想法、规划和反馈">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/i-iooi-i"><img src="https://avatars.githubusercontent.com/u/1827701?v=4?s=100" width="100px;" alt="ZOLO"/><br /><sub><b>ZOLO</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/issues?q=author%3Ai-iooi-i" title="问题反馈">🐛</a> <a href="#ideas-i-iooi-i" title="想法、规划和反馈">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://perso.crans.org/grande/"><img src="https://avatars.githubusercontent.com/u/469017?v=4?s=100" width="100px;" alt="Johan Grande"/><br /><sub><b>Johan Grande</b></sub></a><br /><a href="#ideas-nahoj" title="想法、规划和反馈">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/abaroni"><img src="https://avatars.githubusercontent.com/u/21365486?v=4?s=100" width="100px;" alt="Alessandro Baroni"/><br /><sub><b>Alessandro Baroni</b></sub></a><br /><a href="#ideas-abaroni" title="想法、规划和反馈">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/lionelvoser"><img src="https://avatars.githubusercontent.com/u/246103490?v=4?s=100" width="100px;" alt="lionelvoser"/><br /><sub><b>lionelvoser</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=lionelvoser" title="代码">💻</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+本项目遵循 [all-contributors](https://github.com/all-contributors/all-contributors) 规范，欢迎任何形式的贡献！
