@@ -70,7 +70,7 @@ description: 简短描述插件的功能
 请为你的插件提供文档：
 
 - `README.md` - 英文文档
-- `README_CN.md` - 中文文档（可选但推荐）
+- `README_CN.md` - 中文文档
 
 文档应包含：
 
@@ -79,6 +79,23 @@ description: 简短描述插件的功能
 - 配置选项
 - 使用示例
 - 故障排除指南
+
+#### 插件更新的发布准备
+
+如果你的插件修改准备发布，请在创建 PR 之前先完成发布面准备：
+
+1. 同步插件文件、双语 README、镜像文档页以及插件索引页中的版本号
+2. 保持 `What's New` / `最新更新` 只保留当前最新一次发布内容
+3. 创建或更新双语版本发布说明，例如 `v1.2.3.md` 和 `v1.2.3_CN.md`
+4. 在请求评审前运行 `python3 scripts/check_version_consistency.py`
+
+#### Agent 辅助发布准备
+
+如果你使用 GitHub Copilot agent 或其他了解仓库结构的 agent，请要求它使用或参考 `.github/skills/release-prep/SKILL.md`。
+
+- 将 `release-prep` 作为 PR 前发布准备的标准流程，用于版本同步、双语发布说明生成、一致性校验和 Conventional Commits 提交信息草拟
+- 这个技能用于在 PR 之前完成发布准备，使后续评审基于完整的发布面进行
+- 技能完成后，再继续下面的 PR 提交流程，以及仓库中的 `docs/release-workflow.zh.md` 发布流程
 
 ---
 
@@ -146,6 +163,7 @@ Update: 插件开发指南添加新示例
 - [ ] 代码遵循项目风格指南
 - [ ] 包含/更新了文档
 - [ ] 插件已在本地测试通过
+- [ ] 对带版本号的插件更新，已完成 release-prep 对应的发布准备
 - [ ] 提交信息清晰
 - [ ] PR 描述说明了所做的更改
 

@@ -70,7 +70,7 @@ Place your plugin in the appropriate directory:
 Please provide documentation for your plugin:
 
 - `README.md` - English documentation
-- `README_CN.md` - Chinese documentation (optional but appreciated)
+- `README_CN.md` - Chinese documentation
 
 Include:
 
@@ -79,6 +79,23 @@ Include:
 - Configuration options
 - Usage examples
 - Troubleshooting guide
+
+#### Release Preparation for Plugin Updates
+
+If your plugin change is intended for release, prepare the release surfaces before opening the PR:
+
+1. Sync the version in the plugin file, bilingual plugin READMEs, mirrored docs pages, and plugin index pages
+2. Keep the `What's New` section limited to the latest release only
+3. Create or update bilingual release notes files such as `v1.2.3.md` and `v1.2.3_CN.md`
+4. Run `python3 scripts/check_version_consistency.py` before requesting review
+
+#### Agent-Assisted Release Prep
+
+If you use GitHub Copilot agents or another repo-aware agent, ask it to use or reference `.github/skills/release-prep/SKILL.md`.
+
+- Use `release-prep` as the repository-standard pre-PR workflow for version sync, bilingual release-note creation, consistency verification, and Conventional Commit drafting
+- The skill is intended for release preparation before a PR, so the resulting changes can be reviewed normally
+- After the skill completes, continue with the PR steps below and the repository release workflow in `docs/release-workflow.md`
 
 ---
 
@@ -146,6 +163,7 @@ Update: Plugin development guide with new examples
 - [ ] Code follows project style guidelines
 - [ ] Documentation is included/updated
 - [ ] Plugin has been tested locally
+- [ ] Release-prep steps are complete for versioned plugin updates
 - [ ] Commit messages are clear
 - [ ] PR description explains the changes
 

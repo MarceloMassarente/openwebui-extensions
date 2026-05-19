@@ -50,6 +50,14 @@ After successful merge, the system will automatically:
 
 ## Release Process
 
+### Agent-Assisted Release Prep
+
+Before opening a PR for a versioned plugin update, contributors or maintainers may use or reference `.github/skills/release-prep/SKILL.md`.
+
+- Use `release-prep` to synchronize version changes across the required code and docs surfaces
+- Use it to create bilingual release notes and draft the Conventional Commit message for the release prep commit
+- The skill stops before `git push` and PR creation, so continue with the PR flow after prep is complete
+
 ### Step 1: Update Plugin Version
 
 When you make changes to a plugin, you **must** update the version number:
