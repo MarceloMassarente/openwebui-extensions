@@ -5,7 +5,7 @@ author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 description: Reduces token consumption in long conversations while maintaining coherence through intelligent summarization and message compression.
-version: 1.6.3
+version: 1.6.4
 openwebui_id: b1655bc8-6de9-4cad-8cb5-a6f7829a02ce
 license: MIT
 
@@ -4783,6 +4783,99 @@ Return only the XML working memory:
 
         return None
 
+    def _extract_summary_text_from_response(self, response: Any) -> str:
+        """Extract assistant text from chat-completions and Responses-style payloads."""
+
+        def collect_text(value: Any) -> str:
+            if isinstance(value, str):
+                return value
+
+            if isinstance(value, dict):
+                item_type = str(value.get("type") or "")
+                attributes = value.get("attributes")
+                attribute_type = (
+                    str(attributes.get("type") or "")
+                    if isinstance(attributes, dict)
+                    else ""
+                )
+                if item_type in {
+                    "reasoning",
+                    "reasoning_text",
+                    "reasoning_summary_text",
+                } or attribute_type == "reasoning_content":
+                    return ""
+
+                for key in ("text", "output_text", "content"):
+                    text = collect_text(value.get(key))
+                    if text.strip():
+                        return text
+                return ""
+
+            if isinstance(value, list):
+                parts = []
+                for item in value:
+                    text = collect_text(item)
+                    if text:
+                        parts.append(text)
+                return "".join(parts)
+
+            return ""
+
+        if not isinstance(response, dict):
+            return ""
+
+        choices = response.get("choices")
+        if isinstance(choices, list) and choices:
+            first_choice = choices[0] if isinstance(choices[0], dict) else {}
+            message = first_choice.get("message")
+            if isinstance(message, dict):
+                text = collect_text(message.get("content"))
+                if text.strip():
+                    return text.strip()
+
+            text = collect_text(first_choice.get("text"))
+            if text.strip():
+                return text.strip()
+
+        for key in ("output_text", "text", "content", "message", "response"):
+            text = collect_text(response.get(key))
+            if text.strip():
+                return text.strip()
+
+        output = response.get("output")
+        if isinstance(output, list):
+            text = collect_text(output)
+            if text.strip():
+                return text.strip()
+
+        return ""
+
+    def _summarize_response_shape(self, response: Any) -> str:
+        """Build a compact description of the payload when no summary text is found."""
+        if not isinstance(response, dict):
+            return type(response).__name__
+
+        parts = [f"keys={sorted(response.keys())}"]
+        choices = response.get("choices")
+        if isinstance(choices, list):
+            parts.append(f"choices={len(choices)}")
+            if choices and isinstance(choices[0], dict):
+                first_choice = choices[0]
+                parts.append(f"choice0_keys={sorted(first_choice.keys())}")
+                message = first_choice.get("message")
+                if isinstance(message, dict):
+                    parts.append(f"message_keys={sorted(message.keys())}")
+                    content = message.get("content")
+                    parts.append(f"message_content_type={type(content).__name__}")
+                    if isinstance(content, str):
+                        parts.append(f"message_content_len={len(content)}")
+
+        output = response.get("output")
+        if isinstance(output, list):
+            parts.append(f"output={len(output)}")
+
+        return " | ".join(parts)
+
     async def _call_summary_llm(
         self,
         new_conversation_text: str,
@@ -4879,12 +4972,7 @@ Return only the XML working memory:
                     f"Full response:\n{response_repr}"
                 )
 
-            if (
-                not response
-                or not isinstance(response, dict)
-                or "choices" not in response
-                or not response["choices"]
-            ):
+            if not response or not isinstance(response, dict):
                 try:
                     response_repr = json.dumps(response, ensure_ascii=False, indent=2)
                 except Exception:
@@ -4894,7 +4982,12 @@ Return only the XML working memory:
                     f"Full response:\n{response_repr}"
                 )
 
-            summary = response["choices"][0]["message"]["content"].strip()
+            summary = self._extract_summary_text_from_response(response)
+            if not summary:
+                raise ValueError(
+                    "LLM response did not contain summary text. "
+                    f"Response shape: {self._summarize_response_shape(response)}"
+                )
 
             await self._log(
                 f"[🤖 LLM Call] ✅ Successfully received summary",

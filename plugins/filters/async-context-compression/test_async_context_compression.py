@@ -752,6 +752,204 @@ class TestAsyncContextCompression(unittest.TestCase):
         self.assertIn("console.error", frontend_calls[0]["data"]["code"])
         self.assertIn("context too long", frontend_calls[0]["data"]["code"])
 
+    def test_extract_summary_text_supports_alternate_response_shapes(self):
+        self.assertEqual(
+            self.filter._extract_summary_text_from_response(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": [
+                                    {
+                                        "type": "output_text",
+                                        "text": "<working_memory>",
+                                    },
+                                    {
+                                        "type": "output_text",
+                                        "text": "<current_goal>test</current_goal></working_memory>",
+                                    },
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ),
+            "<working_memory><current_goal>test</current_goal></working_memory>",
+        )
+        self.assertEqual(
+            self.filter._extract_summary_text_from_response(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": "",
+                                "reasoning_content": "<working_memory><current_goal>reasoning must be ignored</current_goal></working_memory>",
+                            }
+                        }
+                    ]
+                }
+            ),
+            "",
+        )
+        self.assertEqual(
+            self.filter._extract_summary_text_from_response(
+                {
+                    "output": [
+                        {
+                            "type": "message",
+                            "content": [
+                                {
+                                    "type": "output_text",
+                                    "text": "<working_memory><current_goal>responses api</current_goal></working_memory>",
+                                }
+                            ],
+                        }
+                    ]
+                }
+            ),
+            "<working_memory><current_goal>responses api</current_goal></working_memory>",
+        )
+        self.assertEqual(
+            self.filter._extract_summary_text_from_response(
+                {
+                    "output": [
+                        {
+                            "type": "reasoning",
+                            "content": [
+                                {
+                                    "type": "output_text",
+                                    "text": "<working_memory><current_goal>reasoning output ignored</current_goal></working_memory>",
+                                }
+                            ],
+                        },
+                        {
+                            "type": "message",
+                            "content": [
+                                {
+                                    "type": "output_text",
+                                    "text": "<working_memory><current_goal>final answer only</current_goal></working_memory>",
+                                }
+                            ],
+                        },
+                    ]
+                }
+            ),
+            "<working_memory><current_goal>final answer only</current_goal></working_memory>",
+        )
+
+    def test_call_summary_llm_accepts_output_only_response(self):
+        self.filter.valves.summary_model = "fake-summary-model"
+        self.filter.valves.show_debug_log = False
+
+        async def fake_generate_chat_completion(request, payload, user):
+            return {
+                "output": [
+                    {
+                        "type": "message",
+                        "content": [
+                            {
+                                "type": "output_text",
+                                "text": "<working_memory><current_goal>responses api</current_goal></working_memory>",
+                            }
+                        ],
+                    }
+                ]
+            }
+
+        async def noop_log(*args, **kwargs):
+            return None
+
+        original_generate = module.generate_chat_completion
+        original_get_user = getattr(module.Users, "get_user_by_id", None)
+
+        module.generate_chat_completion = fake_generate_chat_completion
+        module.Users.get_user_by_id = staticmethod(
+            lambda user_id: types.SimpleNamespace(email="user@example.com")
+        )
+        self.filter._log = noop_log
+        self.filter._get_model_thresholds = lambda model_id: {
+            "max_context_tokens": 8192
+        }
+        self.filter._build_summary_prompt = (
+            lambda conversation_text, previous_summary=None: conversation_text
+        )
+
+        try:
+            summary = asyncio.run(
+                self.filter._call_summary_llm(
+                    "conversation",
+                    {"model": "fake-summary-model"},
+                    {"id": "user-1"},
+                )
+            )
+        finally:
+            module.generate_chat_completion = original_generate
+            if original_get_user is None:
+                delattr(module.Users, "get_user_by_id")
+            else:
+                module.Users.get_user_by_id = original_get_user
+
+        self.assertEqual(
+            summary,
+            "<working_memory><current_goal>responses api</current_goal></working_memory>",
+        )
+
+    def test_call_summary_llm_rejects_empty_message_content(self):
+        self.filter.valves.summary_model = "fake-summary-model"
+        self.filter.valves.show_debug_log = False
+        self.filter.valves.SUMMARY_FAIL_MODE = "raise"
+
+        async def fake_generate_chat_completion(request, payload, user):
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "",
+                        },
+                        "finish_reason": "stop",
+                    }
+                ]
+            }
+
+        async def noop_log(*args, **kwargs):
+            return None
+
+        original_generate = module.generate_chat_completion
+        original_get_user = getattr(module.Users, "get_user_by_id", None)
+
+        module.generate_chat_completion = fake_generate_chat_completion
+        module.Users.get_user_by_id = staticmethod(
+            lambda user_id: types.SimpleNamespace(email="user@example.com")
+        )
+        self.filter._log = noop_log
+        self.filter._get_model_thresholds = lambda model_id: {
+            "max_context_tokens": 8192
+        }
+        self.filter._build_summary_prompt = (
+            lambda conversation_text, previous_summary=None: conversation_text
+        )
+
+        try:
+            with self.assertRaises(Exception) as exc_info:
+                asyncio.run(
+                    self.filter._call_summary_llm(
+                        "conversation",
+                        {"model": "fake-summary-model"},
+                        {"id": "user-1"},
+                    )
+                )
+        finally:
+            module.generate_chat_completion = original_generate
+            if original_get_user is None:
+                delattr(module.Users, "get_user_by_id")
+            else:
+                module.Users.get_user_by_id = original_get_user
+
+        self.assertIn(
+            "LLM response did not contain summary text", str(exc_info.exception)
+        )
+
     def test_generate_summary_async_status_guides_user_to_browser_console(self):
         self.filter.valves.keep_first = 1
         self.filter.valves.keep_last = 1

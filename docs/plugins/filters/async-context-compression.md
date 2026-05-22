@@ -1,6 +1,6 @@
 # Async Context Compression Filter
 
-| By [Fu-Jie](https://github.com/Fu-Jie) · v1.6.3 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| By [Fu-Jie](https://github.com/Fu-Jie) · v1.6.4 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -21,11 +21,11 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 > [!IMPORTANT]
 > If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
 
-## What's new in 1.6.3
+## What's new in 1.6.4
 
-- **Graceful Summary Failure by Default**: Added the `SUMMARY_FAIL_MODE` valve and made transient summary-model failures non-blocking by default so the chat continues even when the background summary call fails.
-- **Opt-in Strict Raise Mode**: Operators can set `SUMMARY_FAIL_MODE="raise"` to preserve the previous hard-failure behavior for debugging or strict observability workflows.
-- **Regression Coverage for Both Modes**: Added direct tests for the new silent default and the explicit raise path so future summary error handling changes do not regress silently.
+- **Robust summary response parsing**: Background summary generation now extracts text from several provider response shapes, including standard `choices[].message.content`, content-part arrays with `output_text`, and Responses-style `output` message items.
+- **Reasoning-safe persistence**: Reasoning-only fields such as `reasoning_content`, `thinking`, and reasoning output items are ignored so private chain-of-thought is not persisted as chat memory.
+- **Clearer empty-summary diagnostics**: If the summary provider returns no usable text, the filter now reports the compact response shape instead of surfacing a misleading generic format error.
 
 ## What's new in 1.6.0
 
@@ -184,10 +184,11 @@ If this plugin has been useful, a star on [OpenWebUI Extensions](https://github.
 - **Compression effect is weak**: Raise `compression_threshold_tokens` or lower `keep_first` / `keep_last` to allow more aggressive compression.
 - **A referenced chat summary fails**: The current request should continue with a direct-context fallback. Check the browser console (`F12`) if you need the upstream failure details.
 - **A background summary silently seems to do nothing**: Important failures now surface in chat status and the browser console (`F12`).
+- **`Summary generation returned empty result` appears after the LLM call succeeds**: Update or reinstall the filter so the database-stored function content matches v1.6.4. This release can parse alternate provider response shapes, but it intentionally ignores reasoning-only output. If the model returns only `reasoning_content` / `thinking` without a final answer, the browser console will show the response shape and nothing will be saved as memory.
 - **Submit an Issue**: If you encounter any problems, please submit an issue on GitHub: [OpenWebUI Extensions Issues](https://github.com/Fu-Jie/openwebui-extensions/issues)
 
 ## Changelog
 
-See [`v1.6.3` Release Notes](https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/filters/async-context-compression/v1.6.3.md) for the release-specific summary.
+See [`v1.6.4` Release Notes](https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/filters/async-context-compression/v1.6.4.md) for the release-specific summary.
 
 See the full history on GitHub: [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions)

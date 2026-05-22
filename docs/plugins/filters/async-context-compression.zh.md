@@ -1,6 +1,6 @@
 # 异步上下文压缩过滤器
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.6.3 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.6.4 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -22,11 +22,11 @@
 
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
-## 1.6.3 版本更新
+## 1.6.4 版本更新
 
-- **默认静默处理摘要失败**：新增 `SUMMARY_FAIL_MODE` 配置项，默认在摘要模型出现瞬时错误时只记录错误并跳过本轮摘要，不再打断当前聊天。
-- **保留可选的严格抛错模式**：如需保留旧行为，可将 `SUMMARY_FAIL_MODE="raise"`，用于调试或希望强制暴露摘要链路故障的场景。
-- **补齐双模式回归测试**：新增 silent 默认路径与 raise 显式路径的直接测试，避免后续摘要错误处理回归时无提示。
+- **更稳健的摘要响应解析**：后台摘要现在会从多种 provider 返回结构中提取文本，包括标准的 `choices[].message.content`、带 `output_text` 的 content parts，以及 Responses 风格 `output` 里的 message 内容。
+- **更安全的 reasoning 过滤**：`reasoning_content`、`thinking` 和 reasoning 类型 output 会被明确忽略，避免把模型思考过程写入聊天记忆。
+- **更清晰的空摘要诊断**：如果摘要模型没有返回任何可用文本，过滤器现在会报告精简后的响应结构，而不是抛出含义模糊的通用格式错误。
 ## 1.6.0 版本更新
 
 - **修正 `keep_first` 逻辑**：重新定义了 `keep_first` 的功能，现在它负责保护前 N 条**非系统消息**（以及它们之前的所有系统提示词）。这确保了初始对话背景（如身份设定、任务说明）能被正确保留。
@@ -218,10 +218,11 @@ flowchart TD
 - **压缩效果不明显**：提高 `compression_threshold_tokens`，或降低 `keep_first` / `keep_last` 以增强压缩力度。
 - **引用聊天摘要失败**：当前请求现在应该会继续执行，并回退为直接注入上下文。如果要看上游失败原因，请打开浏览器控制台 (`F12`)。
 - **后台摘要看起来“没反应”**：重要失败现在会同时出现在状态提示和浏览器控制台 (`F12`) 中。
+- **LLM 调用成功后仍出现 `Summary generation returned empty result`**：请更新或重新安装过滤器，确保数据库里保存的 function 内容已经是 v1.6.4。这个版本可以解析多种 provider 响应结构，但会刻意忽略 reasoning-only 输出；如果模型只返回 `reasoning_content` / `thinking` 而没有最终答案文本，浏览器控制台会显示响应结构，插件不会把思考过程保存为记忆。
 - **提交 Issue**: 如果遇到任何问题，请在 GitHub 上提交 Issue：[OpenWebUI Extensions Issues](https://github.com/Fu-Jie/openwebui-extensions/issues)
 
 ## 更新日志
 
-请查看 [`v1.6.3` 版本发布说明](https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/filters/async-context-compression/v1.6.3_CN.md) 获取本次版本的独立发布摘要。
+请查看 [`v1.6.4` 版本发布说明](https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/filters/async-context-compression/v1.6.4_CN.md) 获取本次版本的独立发布摘要。
 
 完整历史请查看 GitHub 项目： [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions)
