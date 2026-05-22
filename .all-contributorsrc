@@ -82,6 +82,24 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "NexZhu",
+      "name": "Nex Zhu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/4370605?v=4",
+      "profile": "https://github.com/NexZhu",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "mhajder",
+      "name": "Mateusz Hajder",
+      "avatar_url": "https://avatars.githubusercontent.com/u/6783135?v=4",
+      "profile": "https://github.com/mhajder",
+      "contributions": [
+        "translation"
+      ]
     }
   ],
   "contributorsPerLine": 7,

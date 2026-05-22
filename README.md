@@ -1,6 +1,6 @@
 # OpenWebUI Extensions
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 English | [中文](./README_CN.md)
@@ -220,6 +220,10 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/dvystrcil"><img src="https://avatars.githubusercontent.com/u/72849269?v=4?s=100" width="100px;" alt="dvystrcil"/><br /><sub><b>dvystrcil</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=dvystrcil" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/silenceroom"><img src="https://avatars.githubusercontent.com/u/1207878?v=4?s=100" width="100px;" alt="Colin Chen"/><br /><sub><b>Colin Chen</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/issues?q=author%3Asilenceroom" title="Bug reports">🐛</a> <a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=silenceroom" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/lionelvoser"><img src="https://avatars.githubusercontent.com/u/246103490?v=4?s=100" width="100px;" alt="lionelvoser"/><br /><sub><b>lionelvoser</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=lionelvoser" title="Code">💻</a></td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/NexZhu"><img src="https://avatars.githubusercontent.com/u/4370605?v=4?s=100" width="100px;" alt="Nex Zhu"/><br /><sub><b>Nex Zhu</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=NexZhu" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mhajder"><img src="https://avatars.githubusercontent.com/u/6783135?v=4?s=100" width="100px;" alt="Mateusz Hajder"/><br /><sub><b>Mateusz Hajder</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=mhajder" title="Translation">🌍</a></td>
     </tr>
   </tbody>
 </table>

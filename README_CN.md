@@ -216,6 +216,10 @@ Open WebUI 的前端增强扩展：
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/silenceroom"><img src="https://avatars.githubusercontent.com/u/1207878?v=4?s=100" width="100px;" alt="Colin Chen"/><br /><sub><b>Colin Chen</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/issues?q=author%3Asilenceroom" title="问题反馈">🐛</a> <a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=silenceroom" title="代码">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/lionelvoser"><img src="https://avatars.githubusercontent.com/u/246103490?v=4?s=100" width="100px;" alt="lionelvoser"/><br /><sub><b>lionelvoser</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=lionelvoser" title="代码">💻</a></td>
     </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/NexZhu"><img src="https://avatars.githubusercontent.com/u/4370605?v=4?s=100" width="100px;" alt="Nex Zhu"/><br /><sub><b>Nex Zhu</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=NexZhu" title="代码">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/mhajder"><img src="https://avatars.githubusercontent.com/u/6783135?v=4?s=100" width="100px;" alt="Mateusz Hajder"/><br /><sub><b>Mateusz Hajder</b></sub></a><br /><a href="https://github.com/Fu-Jie/openwebui-extensions/commits?author=mhajder" title="翻译">🌍</a></td>
+    </tr>
   </tbody>
 </table>
 
