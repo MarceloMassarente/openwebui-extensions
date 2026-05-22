@@ -1,6 +1,6 @@
 # 异步上下文压缩过滤器
 
-| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.6.4 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
+| 作者：[Fu-Jie](https://github.com/Fu-Jie) · v1.6.5 | [⭐ 点个 Star 支持项目](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -23,11 +23,17 @@
 > [!IMPORTANT]
 > 如果你已经安装了 OpenWebUI 官方社区里的同名版本，请先删除旧版本，否则重新安装时可能报错。删除后，Batch Install Plugins 后续就可以继续负责更新这个插件。
 
+## 1.6.5 版本更新
+
+- **新增压缩风格控制**：新增 `compression_style` 配置项，支持 `aggressive`、`balanced`、`faithful` 三档，可以直接控制摘要更偏“省 token”还是更偏“保留上下文细节”。
+- **新增 faithful 提示词模式**：当 `compression_style=faithful` 时，摘要 prompt 会明确要求模型更多保留关键论证链、评估标准、仍在比较中的候选方案和细微上下文，而不是过度抽象化。
+
 ## 1.6.4 版本更新
 
 - **更稳健的摘要响应解析**：后台摘要现在会从多种 provider 返回结构中提取文本，包括标准的 `choices[].message.content`、带 `output_text` 的 content parts，以及 Responses 风格 `output` 里的 message 内容。
 - **更安全的 reasoning 过滤**：`reasoning_content`、`thinking` 和 reasoning 类型 output 会被明确忽略，避免把模型思考过程写入聊天记忆。
 - **更清晰的空摘要诊断**：如果摘要模型没有返回任何可用文本，过滤器现在会报告精简后的响应结构，而不是抛出含义模糊的通用格式错误。
+
 ## 1.5.0 版本更新
 
 - **外部聊天引用摘要**: 新增对引用聊天上下文的摘要支持。现在可以复用缓存摘要、直接注入较小引用聊天，或先为较大的引用聊天生成摘要再注入。
@@ -52,6 +58,7 @@
 - ✅ **外部聊天引用摘要**: 支持复用缓存摘要、小聊天直接注入，以及大聊天先摘要后注入。
 - ✅ **结构感知裁剪**: 智能折叠过长消息，保留文档骨架（标题、首尾）。
 - ✅ **原生工具输出裁剪**: 支持裁剪冗长的工具调用输出。
+- ✅ **可配置压缩风格**: 可在更省 token、默认平衡和高保真摘要之间切换。
 - ✅ **实时监控**: 实时监控上下文使用情况，超过 90% 发出警告。
 - ✅ **快速预估 + 精确回退**: 提供更快的多语言 Token 预估，并在必要时回退到精确统计，便于调试。
 - ✅ **智能模型匹配**: 自定义模型自动继承基础模型的阈值配置。
@@ -168,6 +175,7 @@ flowchart TD
 | `max_summary_tokens`  | `16384` | 生成摘要时允许的最大输出 Token 数。它不是摘要输入窗口上限。                                                                                 |
 | `summary_temperature` | `0.1`   | 控制摘要生成的随机性，较低的值结果更稳定。                                                                                                  |
 | `SUMMARY_FAIL_MODE`   | `silent` | 控制摘要 LLM 调用失败时的行为。`silent` 会记录错误并跳过本轮摘要；`raise` 会保留之前的硬抛错行为。                                         |
+| `compression_style`   | `balanced` | 控制摘要压缩风格。`aggressive` 更省 token，`balanced` 在紧凑和保真之间取中间值，`faithful` 会尽量保留更多细节、论证和上下文层次。 |
 
 ### 高级配置
 
@@ -213,11 +221,12 @@ flowchart TD
 - **压缩效果不明显**：提高 `compression_threshold_tokens`，或降低 `keep_first` / `keep_last` 以增强压缩力度。
 - **引用聊天摘要失败**：当前请求现在应该会继续执行，并回退为直接注入上下文。如果要看上游失败原因，请打开浏览器控制台 (`F12`)。
 - **后台摘要看起来“没反应”**：重要失败现在会同时出现在状态提示和浏览器控制台 (`F12`) 中。
-- **LLM 调用成功后仍出现 `Summary generation returned empty result`**：请更新或重新安装过滤器，确保数据库里保存的 function 内容已经是 v1.6.4。这个版本可以解析多种 provider 响应结构，但会刻意忽略 reasoning-only 输出；如果模型只返回 `reasoning_content` / `thinking` 而没有最终答案文本，浏览器控制台会显示响应结构，插件不会把思考过程保存为记忆。
+- **LLM 调用成功后仍出现 `Summary generation returned empty result`**：请更新或重新安装过滤器，确保数据库里保存的 function 内容已经是 v1.6.4 或更新版本。这个版本可以解析多种 provider 响应结构，但会刻意忽略 reasoning-only 输出；如果模型只返回 `reasoning_content` / `thinking` 而没有最终答案文本，浏览器控制台会显示响应结构，插件不会把思考过程保存为记忆。
+- **摘要过短或过长**：调整 `compression_style`。如果追求最大 token 节省，使用 `aggressive`；如果希望维持默认折中，使用 `balanced`；如果更重视推理脉络、评估标准和候选方案，使用 `faithful`。
 - **提交 Issue**: 如果遇到任何问题，请在 GitHub 上提交 Issue：[OpenWebUI Extensions Issues](https://github.com/Fu-Jie/openwebui-extensions/issues)
 
 ## 更新日志
 
-请查看 [`v1.6.4` 版本发布说明](https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/filters/async-context-compression/v1.6.4_CN.md) 获取本次版本的独立发布摘要。
+请查看 [`v1.6.5` 版本发布说明](https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/filters/async-context-compression/v1.6.5_CN.md) 获取本次版本的独立发布摘要。
 
 完整历史请查看 GitHub 项目： [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions)

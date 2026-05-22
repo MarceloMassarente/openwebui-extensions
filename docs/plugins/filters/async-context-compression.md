@@ -1,6 +1,6 @@
 # Async Context Compression Filter
 
-| By [Fu-Jie](https://github.com/Fu-Jie) · v1.6.4 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
+| By [Fu-Jie](https://github.com/Fu-Jie) · v1.6.5 | [⭐ Star this repo](https://github.com/Fu-Jie/openwebui-extensions) |
 | :--- | ---: |
 
 | ![followers](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_followers.json&label=%F0%9F%91%A5&style=flat) | ![points](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_points.json&label=%E2%AD%90&style=flat) | ![top](https://img.shields.io/badge/%F0%9F%8F%86-Top%20%3C1%25-10b981?style=flat) | ![contributions](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_contributions.json&label=%F0%9F%93%A6&style=flat) | ![downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_downloads.json&label=%E2%AC%87%EF%B8%8F&style=flat) | ![saves](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_saves.json&label=%F0%9F%92%BE&style=flat) | ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2FFu-Jie%2Fdb3d95687075a880af6f1fba76d679c6%2Fraw%2Fbadge_views.json&label=%F0%9F%91%81%EF%B8%8F&style=flat) |
@@ -20,6 +20,11 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 
 > [!IMPORTANT]
 > If the official OpenWebUI Community version is already installed, remove it first. After that, Batch Install Plugins can keep this plugin updated in future runs.
+
+## What's new in 1.6.5
+
+- **Compression style control**: Added a new `compression_style` valve with `aggressive`, `balanced`, and `faithful` modes so you can directly tune summaries for minimum token use or higher context fidelity.
+- **Faithful prompt mode**: `compression_style=faithful` now tells the summary model to spend more of the available budget on key reasoning chains, evaluation criteria, active alternatives, and nuanced context instead of compressing them into abstract notes.
 
 ## What's new in 1.6.4
 
@@ -57,6 +62,7 @@ When the selection dialog opens, search for this plugin, check it, and continue.
 - ✅ External chat reference summarization with cached-summary reuse, direct injection for small chats, and generated summaries for larger chats.
 - ✅ Structure-aware trimming that preserves document structure (headers, intro, conclusion).
 - ✅ Native tool output trimming for cleaner context when using function calling.
+- ✅ Configurable compression style for token-minimal, balanced, or high-fidelity summaries.
 - ✅ Real-time context usage monitoring with warning notifications (>90%).
 - ✅ Fast multilingual token estimation plus exact token fallback for precise debugging and optimization.
 - ✅ **Smart Model Matching**: Automatically inherits configuration from base models for custom presets.
@@ -164,6 +170,7 @@ flowchart TD
 | `max_summary_tokens`           | `16384`  | Maximum output length for the generated summary. This is not the summary-input context limit.                                                                         |
 | `summary_temperature`          | `0.1`    | Randomness for summary generation. Lower is more deterministic.                                                                                                       |
 | `SUMMARY_FAIL_MODE`            | `silent` | Controls what happens when the summary LLM call fails. `silent` logs the error and skips summary generation for that turn; `raise` preserves the previous hard-failure behavior. |
+| `compression_style`            | `balanced` | Controls summary compactness. `aggressive` minimizes tokens, `balanced` keeps key context with moderate detail, and `faithful` preserves more nuance and reasoning context. |
 | `model_thresholds`             | `{}`     | Per-model overrides for `compression_threshold_tokens` and `max_context_tokens` (useful for mixed models).                                                            |
 | `enable_tool_output_trimming`  | `true`   | When enabled for `function_calling: "native"`, trims oversized native tool outputs while keeping the tool-call chain intact.                                          |
 | `tool_trim_threshold_chars`     | `600`    | Trim native tool output blocks once their total content length reaches this threshold.                                                                                 |
@@ -184,11 +191,12 @@ If this plugin has been useful, a star on [OpenWebUI Extensions](https://github.
 - **Compression effect is weak**: Raise `compression_threshold_tokens` or lower `keep_first` / `keep_last` to allow more aggressive compression.
 - **A referenced chat summary fails**: The current request should continue with a direct-context fallback. Check the browser console (`F12`) if you need the upstream failure details.
 - **A background summary silently seems to do nothing**: Important failures now surface in chat status and the browser console (`F12`).
-- **`Summary generation returned empty result` appears after the LLM call succeeds**: Update or reinstall the filter so the database-stored function content matches v1.6.4. This release can parse alternate provider response shapes, but it intentionally ignores reasoning-only output. If the model returns only `reasoning_content` / `thinking` without a final answer, the browser console will show the response shape and nothing will be saved as memory.
+- **`Summary generation returned empty result` appears after the LLM call succeeds**: Update or reinstall the filter so the database-stored function content matches v1.6.4 or later. This release can parse alternate provider response shapes, but it intentionally ignores reasoning-only output. If the model returns only `reasoning_content` / `thinking` without a final answer, the browser console will show the response shape and nothing will be saved as memory.
+- **Summaries are too short or too detailed**: Adjust `compression_style`. Use `aggressive` for maximum token savings, `balanced` for the default tradeoff, or `faithful` when preserving reasoning context and active alternatives matters more than brevity.
 - **Submit an Issue**: If you encounter any problems, please submit an issue on GitHub: [OpenWebUI Extensions Issues](https://github.com/Fu-Jie/openwebui-extensions/issues)
 
 ## Changelog
 
-See [`v1.6.4` Release Notes](https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/filters/async-context-compression/v1.6.4.md) for the release-specific summary.
+See [`v1.6.5` Release Notes](https://github.com/Fu-Jie/openwebui-extensions/blob/main/plugins/filters/async-context-compression/v1.6.5.md) for the release-specific summary.
 
 See the full history on GitHub: [OpenWebUI Extensions](https://github.com/Fu-Jie/openwebui-extensions)

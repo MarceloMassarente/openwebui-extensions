@@ -5,7 +5,7 @@ author: Fu-Jie
 author_url: https://github.com/Fu-Jie/openwebui-extensions
 funding_url: https://github.com/open-webui
 description: Reduces token consumption in long conversations while maintaining coherence through intelligent summarization and message compression.
-version: 1.6.4
+version: 1.6.5
 openwebui_id: b1655bc8-6de9-4cad-8cb5-a6f7829a02ce
 license: MIT
 
@@ -22,6 +22,7 @@ Core Features:
   ✅ Persistent storage with database support (PostgreSQL and SQLite)
   ✅ Flexible retention policy (keep first N non-system messages + last N messages)
   ✅ Absolute system message protection (never compressed or discarded)
+  ✅ Configurable compression style (aggressive, balanced, faithful)
   ✅ Structure-aware trimming to preserve document skeleton
   ✅ Native tool output trimming for function calling support
 
@@ -170,6 +171,14 @@ max_summary_tokens
 summary_temperature
   Default: 0.1
   Description: The temperature for summary generation. Lower values produce more deterministic output.
+
+compression_style
+  Default: balanced
+  Description: Controls summary compactness and fidelity.
+  Options:
+    - aggressive: minimize tokens and keep only high-impact facts.
+    - balanced: preserve key context with moderate detail.
+    - faithful: spend more budget to retain nuance, reasoning chains, and active alternatives.
 
 enable_tool_output_trimming
   Default: true
@@ -1640,6 +1649,10 @@ class Filter:
                 "summary this turn; 'raise' propagates the wrapped exception to "
                 "the caller (useful for debugging or surfacing breakage hard)."
             ),
+        )
+        compression_style: Literal["aggressive", "balanced", "faithful"] = Field(
+            default="balanced",
+            description="Controls summary compactness. aggressive minimizes tokens, balanced preserves key context with moderate detail, faithful spends more of the available budget to keep nuance and reasoning context.",
         )
         debug_mode: bool = Field(
             default=False, description="Enable detailed logging for debugging."
@@ -4681,11 +4694,23 @@ class Filter:
         previous_summary: Optional[str] = None,
     ) -> str:
         """Build the exact summary prompt sent to the LLM."""
+        compression_style = self._get_compression_style()
         previous_summary_block = (
             f"<previous_working_memory>\n{previous_summary}\n</previous_working_memory>\n\n"
             if previous_summary
             else ""
         )
+        style_instructions = {
+            "aggressive": """### Compression Style
+Active style: `aggressive`
+Prioritize minimum token usage. Keep only the facts most likely to change the next reply. Merge similar items aggressively, collapse rationale unless it materially changes future decisions, and omit secondary examples, alternatives, and resolved detail.""",
+            "balanced": """### Compression Style
+Active style: `balanced`
+Balance compactness and continuity. Preserve decisive facts, key rationale, active alternatives, important constraints, and unresolved questions, but still remove repetition and low-value detail.""",
+            "faithful": """### Compression Style
+Active style: `faithful`
+Prioritize recall over brevity. Use the available token budget generously when needed. Preserve key reasoning chains, evaluation criteria, candidate options still under consideration, materially distinct facts, and examples that clarify why a decision or preference matters. Do not collapse multiple important concrete points into a vague abstraction just to make the summary shorter.""",
+        }[compression_style]
         return f"""You are an expert Conversation-and-Tool-State Compression Engine. Produce a compact, low-loss working memory for continuing a multi-turn chat that may include repeated tool usage, external references, and partial/trimmed content.
 
 ### Primary Objective
@@ -4708,6 +4733,8 @@ Preserve the information that most helps the NEXT response stay accurate, consis
 14. **Preference Evidence Rule**: Only record user preferences when they are explicitly stated, repeatedly demonstrated, or materially affect future replies. Do not infer durable preferences from a single request.
 15. **Loss-Minimization Bias**: When unsure whether a fact may matter later, keep a short factual note instead of deleting it, but place it in the least-strong section that fits.
 16. **General-Chat Coverage**: Even without tools or code, preserve unanswered questions, promised follow-ups, personal constraints, and conversation commitments that the next reply should honor.
+
+{style_instructions}
 
 ### Output Constraints
 * **Format**: Output XML only. No markdown. No prose outside the XML root.
@@ -4764,6 +4791,15 @@ Use this exact top-level structure:
 
 Return only the XML working memory:
 """
+
+    def _get_compression_style(self) -> str:
+        """Return a normalized compression style with a safe fallback."""
+        style = getattr(self.valves, "compression_style", "balanced")
+        if isinstance(style, str):
+            normalized = style.strip().lower()
+            if normalized in {"aggressive", "balanced", "faithful"}:
+                return normalized
+        return "balanced"
 
     def _extract_provider_error(self, response: Any) -> Optional[str]:
         """Extract upstream provider error details from non-standard response dicts."""
