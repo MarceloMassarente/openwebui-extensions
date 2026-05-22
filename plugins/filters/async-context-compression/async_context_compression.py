@@ -1640,7 +1640,7 @@ class Filter:
             le=2.0,
             description="The temperature for summary generation.",
         )
-        SUMMARY_FAIL_MODE: Literal["silent", "raise"] = Field(
+        summary_fail_mode: Literal["silent", "raise"] = Field(
             default="silent",
             description=(
                 "What to do when the summary LLM call fails (e.g. upstream 502 "
@@ -5079,6 +5079,6 @@ Return only the XML working memory:
             # same as the existing empty-input path (see line 4817) — chat
             # continues without a summary. 'raise' preserves the prior behavior
             # for operators who want hard failures during debugging.
-            if self.valves.SUMMARY_FAIL_MODE == "raise":
+            if self.valves.summary_fail_mode == "raise":
                 raise wrapped_error
             return ""

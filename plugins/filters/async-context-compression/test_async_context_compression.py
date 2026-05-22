@@ -742,7 +742,7 @@ class TestAsyncContextCompression(unittest.TestCase):
     def test_call_summary_llm_raises_provider_error_dict_when_fail_mode_is_raise(self):
         self.filter.valves.summary_model = "fake-summary-model"
         self.filter.valves.show_debug_log = False
-        self.filter.valves.SUMMARY_FAIL_MODE = "raise"
+        self.filter.valves.summary_fail_mode = "raise"
 
         async def fake_generate_chat_completion(request, payload, user):
             return {"error": {"message": "context too long", "code": 400}}
@@ -944,7 +944,7 @@ class TestAsyncContextCompression(unittest.TestCase):
     def test_call_summary_llm_rejects_empty_message_content(self):
         self.filter.valves.summary_model = "fake-summary-model"
         self.filter.valves.show_debug_log = False
-        self.filter.valves.SUMMARY_FAIL_MODE = "raise"
+        self.filter.valves.summary_fail_mode = "raise"
 
         async def fake_generate_chat_completion(request, payload, user):
             return {
